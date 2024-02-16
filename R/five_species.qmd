@@ -1,0 +1,848 @@
+---
+title: "Occupancy five species. Parita Bay, Panama"
+subtitle: "spatial prediction"
+date: "`r Sys.Date()`"
+author: 
+  - name: Diego J. Lizcano
+    orcid: https://orcid.org/0000-0002-9648-0576
+  - name: Jorge Velásquez-Tibata
+    orcid: https://orcid.org/0000-0002-7773-7348
+license: CC BY-SA
+toc: true
+format: 
+  html:
+    theme: cosmo
+    code-fold: true
+    code-block-bg: "gray70"
+---
+
+
+# Read spatial layers
+
+```{r}
+#| warning: false
+#| message: false
+
+# load function
+source("C:/CodigoR/AudubonPanama/R/matrix_creator.R")
+############### load Packages
+library(readr) # readr 
+library(readxl) # read excel
+library(tidyverse) # 
+library(unmarked) # occupancy by maximun likelihood
+library(sf) # simple feature
+library(mapview) # view map
+library(ubms) # occupancy by Bayesian made easy
+library(stocc) # spatial data for example
+library(terra) 
+library(raster)
+library(RColorBrewer)
+library(rasterVis)
+
+
+############### load data
+# old 
+# parita_data_full <- read_delim("C:/CodigoR/AudubonPanama/data/all_records_audubon_panama_to_occu.csv", 
+#                               delim = "\t", escape_double = FALSE, 
+#                               col_types = cols(eventDate = col_date(format = "%Y-%m-%d")), 
+#                               trim_ws = TRUE)
+
+# new
+parita_data_full <- read_excel("C:/CodigoR/AudubonPanama/data/all_records_audubon_panama_Darwin_Core_revision.xlsx", 
+    col_types = c("text", "text", "text", 
+        "date", "text", "text", "numeric", 
+        "numeric", "text", "text", "numeric", 
+        "text", "numeric", "numeric", "text", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "text", "text", 
+        "numeric", "text", "numeric", "text", 
+        "text", "text", "text", "text", "numeric", 
+        "text", "numeric", "text", "numeric", 
+        "text", "text"))
+
+covs <- read_csv("C:/CodigoR/AudubonPanama/shp/sites_covs_parita_nona.csv")
+
+## Nyctidromus albicollis
+## Aramus guarauna
+## Buteogallus anthracinus
+## Dryocopus lineatus
+## Piranga rubra
+
+# filter by threshold and species
+parita_data_5sp <-  parita_data_full %>% 
+                      filter(confidence >= threshold) %>%
+                      filter(scientificName == c("Nyctidromus albicollis", 
+                                                 "Aramus guarauna",
+                                                 "Buteogallus anthracinus",
+                                                 "Dryocopus lineatus",
+                                                 "Piranga rubra"
+                                                 ))  
+
+# insert Max and min to get matrix limits
+# start_date
+parita_data2 <- parita_data_5sp %>% 
+  group_by(locationID) %>% 
+  mutate(start_date = min(eventDate),
+         end_date= max(eventDate))
+
+# apply function to get matrix per species
+parita <- f.matrix.creator2(data = parita_data2, year = 2023)
+
+
+# centroide for terra
+# centoide <- centroids(puntos, TRUE)
+centroide <- c(mean(as.numeric(parita_data_5sp$decimalLongitude)), mean(as.numeric(parita_data_5sp$decimalLatitude)))
+clip_window <- extent(-80.67105, -80.05822, 7.713744, 8.489888) # 7.932311, -80.612233  8.360073, -80.180109
+bb <- c(-80.612233, -80.180109, 7.932311, 8.360073)
+srtm <- raster::getData('SRTM', lon=centroide[1], lat=centroide[2])
+
+# crop the  raster using the vector extent
+srtm_crop <- raster::crop(srtm, clip_window)
+ #rast(srtm_crop) # convert to terra
+
+
+# altitud <- elevation_3s(-72.893262, 7.664081007, path="data")
+# altitud <- as.numeric(Camptostoma_obsoletum_occu_dia$Altitude)
+
+# convierte covs a puntos terra
+puntos <- vect(covs, geom=c("Longitude", "Latitude"), crs="EPSG:4326")
+# convierte a sf
+puntos_sf <- sf::st_as_sf(puntos)
+# extract elev from raster
+cam_covs <- raster::extract(srtm_crop, puntos_sf)
+
+
+AGB_Spawn <- rast("C:/CodigoR/AudubonPanama/raster/AGB Spawn.tif")
+NDVI <- rast("C:/CodigoR/AudubonPanama/raster/S2_NDVI_median_v2.tif")
+roads <- rast("C:/CodigoR/AudubonPanama/raster/roads_final_v2.tif")
+carbon_stock <- rast("C:/CodigoR/AudubonPanama/raster/soil_organic_carbon_stock_0-30m.tif")
+canopy <- rast("C:/CodigoR/AudubonPanama/raster/canopy_height_jetz2.tif")
+# make elevation equal
+srtm_projected <- projectRaster(srtm_crop, crs=projection(NDVI), method="ngb") 
+elev <- mask(resample(rast(srtm_projected), NDVI), NDVI)
+
+
+
+# list of terras SpatRasters  
+many_rasters <- list(AGB_Spawn, NDVI, roads, carbon_stock, elev, canopy)
+# terra stack
+covs_raster <- rast(many_rasters)
+names(covs_raster) <- c("AGB_Spawn", "NDVI", "roads", "carbon_stock", "elevation", "canopy")
+
+# change NA to 0 
+covs_raster0 <- subst(covs_raster, NA, 0)
+# extract covariates
+covs_raster_val <- extract(covs_raster0, puntos_sf)
+
+plot(covs_raster)
+
+##########
+# chk names of species
+# dete es hora, occur es presencia en el dia
+# names(parita$dete[]) 
+
+
+```
+
+
+# *Buteogallus anthracinus*
+
+### One species, single season
+
+```{r}
+#| warning: false
+#| message: false
+
+# Make UMF object
+umf_y_full_2<- unmarkedFrameOccu(y= as.data.frame(parita$occur[[2]])) #"Aramus guarauna"
+siteCovs(umf_y_full_2) <- data.frame(elevation =  covs_raster_val$elevation,
+                                   AGB_Spawn = covs_raster_val$AGB_Spawn,
+                                   roads = covs_raster_val$roads,
+                                   carbon = covs_raster_val$carbon_stock,
+                                   NDVI = covs_raster_val$NDVI,
+                                   canopy = covs_raster_val$canopy
+) # data.frame(Elev=full_covs$Elev) # Full
+
+
+plot(umf_y_full_2, main="Buteogallus anthracinus")  #""Buteogallus anthracinus 
+
+# obscanop<-matrix(rep(covs_raster_val$canopy_height_jetz2,27),ncol = 27) # make elevetion per observation
+
+# detection
+obsCovs(umf_y_full_2) <- list(hour = matrix(parita$dete[[2]]),
+                              canopy = covs_raster_val$canopy ) # hora
+
+
+# fit unmarked
+fit_unm_sp2_0 <- unmarked::occu(~1~1, data=umf_y_full_2) # ok!
+fit_unm_sp2_0h <- unmarked::occu(~scale(hour)~1, data=umf_y_full_2) # It work!
+fit_unm_sp2_0c <- unmarked::occu(~scale(canopy)~1, data=umf_y_full_2) # It work!
+fit_unm_sp2_1 <- unmarked::occu(~1~scale(elevation), data=umf_y_full_2)
+fit_unm_sp2_2 <- unmarked::occu(~1~scale(AGB_Spawn), data=umf_y_full_2)
+fit_unm_sp2_3 <- unmarked::occu(~1~scale(roads), data=umf_y_full_2) # ok!
+fit_unm_sp2_4 <- unmarked::occu(~1~scale(carbon), data=umf_y_full_2)
+fit_unm_sp2_5 <- unmarked::occu(~1~scale(NDVI), data=umf_y_full_2)
+fit_unm_sp2_6 <- unmarked::occu(~1~scale(canopy), data=umf_y_full_2)
+
+
+# fit list for detection
+fms1<-fitList("p(.) Ocu(.)"=fit_unm_sp2_0,
+              #"p(h) Ocu(.)"=fit_unm_sp2_0h, # NA problem!
+              "p(c) Ocu(.)"=fit_unm_sp2_0c)#,
+#              "p(.) Ocu(elev)"=fit_unm_sp2_1,
+#              "p(.) Ocu(slope)"=fit_unm_sp2_2,
+#              "p(.) Ocu(aspect)"=fit_unm_sp2_3,
+#              "p(.) Ocu(roughness)"=fit_unm_sp2_4,
+#              "p(elev^2) Ocu(elev^2)"=fit_unm_sp2_5 )
+
+# model selection detection unmarked
+modSel(fms1) #problem!.. null model ranks better
+
+# fit list for detection
+fms2<-fitList("p(.) Ocu(.)"=fit_unm_sp2_0,
+              #"p(h) Ocu(.)"=fit_unm_sp2_0h, #,
+              #"p(c) Ocu(.)"=fit_unm_sp2_0c,
+              "p(.) Ocu(elev)"=fit_unm_sp2_1,
+              "p(.) Ocu(AGB_Spawn)"=fit_unm_sp2_2,
+              "p(.) Ocu(roads)"=fit_unm_sp2_3,
+              "p(.) Ocu(carbon)"=fit_unm_sp2_4,
+              "p(.) Ocu(NDVI)"=fit_unm_sp2_5,
+              "p(.) Ocu(canopy)"=fit_unm_sp2_6)
+
+# model selection detection unmarked
+modSel(fms2)
+
+######## ubms, bayesian occupancy
+# Double formula: first part is for detection, second for occupancy
+#  form <- ~detCov1 + detCov2 ~habCov1 + habCov2 + RSR(x, y, threshold=1)
+
+# fit stan
+fit_stan_sp2_0 <- stan_occu(~1~1, data=umf_y_full_2, chains=3, iter=500, cores=3)
+fit_stan_sp2_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_2, chains=3, iter=500, cores=3)
+fit_stan_sp2_0c <- stan_occu(~scale(canopy)~1, data=umf_y_full_2, chains=3, iter=500, cores=3)
+fit_stan_sp2_1 <- stan_occu(~scale(hour)~scale(elevation), data=umf_y_full_2, chains=3, iter=500, cores=3)
+fit_stan_sp2_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_2, chains=3, iter=500, cores=3)
+fit_stan_sp2_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_2, chains=3, iter=500, cores=3)
+fit_stan_sp2_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_2, chains=3, iter=500, cores=3)
+fit_stan_sp2_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_2, chains=3, iter=500, cores=3)
+fit_stan_sp2_6 <- stan_occu(~scale(hour)~scale(canopy), data=umf_y_full_2, chains=3, iter=500, cores=3)
+
+
+mods2 <- fitList(fit_stan_sp2_0,
+                fit_stan_sp2_0h,
+                fit_stan_sp2_0c,
+                fit_stan_sp2_1,
+                fit_stan_sp2_2,
+                fit_stan_sp2_3,
+                fit_stan_sp2_4,
+                fit_stan_sp2_5,
+                fit_stan_sp2_6)
+
+# model selection
+round(modSel(mods2), 3)
+
+# plot top model
+print("Hour")
+plot_effects(fit_stan_sp2_5, "det") # Detection
+print("NDVI")
+plot_effects(fit_stan_sp2_5, "state") # Occupancy
+
+```
+
+### Spatial Prediction
+
+```{r}
+#| warning: false
+#| message: false
+
+#### predict
+
+
+# srtm_crop_s <- mask(elev, NDVI)#stack(raster(elev))#, 
+#scale(roughness)) # scale altitud
+# names(srtm_crop_s) <- c("elevation")#, "roughness")
+# crs(srtm_crop_s) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+nd2 <- NDVI # mask(elev, NDVI) #data.frame(srtm_crop_s, hour=0.5)
+names(nd2) <- "NDVI"
+# newd <- data.frame(srtm_crop_s, hour=0.5)
+pred_psi_s_unm <-predict(fit_unm_sp2_5, type="state", newdata=nd2)
+#pred_psi_s_stan <-predict(fit_stan_sp2_1, submodel="state", newdata=nd, na.rm=FALSE)
+#pred_psi_ras <- raster(srtm_crop_s) # make raster = to elev 
+#pred_psi_ras[] <- pred_psi_s_stan$Predicted # drape on top
+
+
+# pred_psi_r <- pred_psi_s # * sd(full_covs$elevation) + mean(full_covs$elevation)
+# crs(pred_psi_ras) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+clr <- colorRampPalette(brewer.pal(9, "YlGn"))
+# mapview (pred_psi_r[[1]], col.regions = clr,  legend = TRUE, alpha=0.7)
+# plot(pred_psi_s[[1]], main="Occupancy")
+levelplot(pred_psi_s_unm[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Ocupancy")
+
+pal = mapviewPalette("mapviewSpectralColors")
+mapview(raster(pred_psi_s_unm[[1]]), map.types = c("Esri.WorldImagery"), alpha=0.5, col.regions = pal(10)) + mapview(puntos_sf)
+
+
+```
+
+
+# *Dryocopus lineatus*
+
+### One species, single season
+
+
+```{r}
+#| warning: false
+#| message: false
+
+# Make UMF object
+umf_y_full_3<- unmarkedFrameOccu(y= as.data.frame(parita$occur[[3]])) #Dryocopus lineatus
+siteCovs(umf_y_full_3) <- data.frame(elevation =  covs_raster_val$elevation,
+                                   AGB_Spawn = covs_raster_val$AGB_Spawn,
+                                   roads = covs_raster_val$roads,
+                                   carbon = covs_raster_val$carbon_stock,
+                                   NDVI = covs_raster_val$NDVI,
+                                   canopy = covs_raster_val$canopy
+) # data.frame(Elev=full_covs$Elev) # Full
+
+
+plot(umf_y_full_3, main="Dryocopus lineatus")  #""Buteogallus anthracinus no converge
+
+# obscanop<-matrix(rep(covs_raster_val$canopy_height_jetz2,27),ncol = 27) # make elevetion per observation
+
+# detection
+obsCovs(umf_y_full_3) <- list(hour = matrix(parita$dete[[3]]),
+                              canopy = covs_raster_val$canopy ) # hora
+
+
+# fit unmarked
+fit_unm_sp3_0 <- unmarked::occu(~1~1, data=umf_y_full_3) # ok!
+fit_unm_sp3_0h <- unmarked::occu(~scale(hour)~1, data=umf_y_full_3) # It work!
+fit_unm_sp3_0c <- unmarked::occu(~scale(canopy)~1, data=umf_y_full_3) # It work!
+fit_unm_sp3_1 <- unmarked::occu(~1~scale(elevation), data=umf_y_full_3)
+fit_unm_sp3_2 <- unmarked::occu(~1~scale(AGB_Spawn), data=umf_y_full_3)
+fit_unm_sp3_3 <- unmarked::occu(~1~scale(roads), data=umf_y_full_3) # ok!
+fit_unm_sp3_4 <- unmarked::occu(~1~scale(carbon), data=umf_y_full_3)
+fit_unm_sp3_5 <- unmarked::occu(~1~scale(NDVI), data=umf_y_full_3)
+fit_unm_sp3_6 <- unmarked::occu(~1~scale(canopy), data=umf_y_full_3)
+
+
+# fit list for detection
+fms1<-fitList("p(.) Ocu(.)"=fit_unm_sp3_0,
+              # "p(h) Ocu(.)"=fit_unm_sp3_0h, # NA problem!
+              "p(c) Ocu(.)"=fit_unm_sp3_0c)#,
+#              "p(.) Ocu(elev)"=fit_unm_sp2_1,
+#              "p(.) Ocu(slope)"=fit_unm_sp2_2,
+#              "p(.) Ocu(aspect)"=fit_unm_sp2_3,
+#              "p(.) Ocu(roughness)"=fit_unm_sp2_4,
+#              "p(elev^2) Ocu(elev^2)"=fit_unm_sp2_5 )
+
+# model selection detection unmarked
+modSel(fms1) #problem!.. null model ranks better
+
+# fit list for detection
+fms2<-fitList("p(.) Ocu(.)"=fit_unm_sp3_0,
+              #"p(h) Ocu(.)"=fit_unm_sp2_0h, #,
+              #"p(c) Ocu(.)"=fit_unm_sp3_0c,
+              "p(.) Ocu(elev)"=fit_unm_sp3_1,
+              "p(.) Ocu(AGB_Spawn)"=fit_unm_sp3_2,
+              "p(.) Ocu(roads)"=fit_unm_sp3_3,
+              "p(.) Ocu(carbon)"=fit_unm_sp3_4,
+              "p(.) Ocu(NDVI)"=fit_unm_sp3_5,
+              "p(.) Ocu(canopy)"=fit_unm_sp3_6)
+
+# model selection detection unmarked
+modSel(fms2)
+
+# fit stan
+fit_stan_sp3_0 <- stan_occu(~1~1, data=umf_y_full_3, chains=3, iter=500, cores=3)
+fit_stan_sp3_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_3, chains=3, iter=500, cores=3)
+fit_stan_sp3_1 <- stan_occu(~scale(hour)~scale(elevation), data=umf_y_full_3, chains=3, iter=500, cores=3)
+fit_stan_sp3_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_3, chains=3, iter=500, cores=3)
+fit_stan_sp3_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_3, chains=3, iter=500, cores=3)
+fit_stan_sp3_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_3, chains=3, iter=500, cores=3)
+fit_stan_sp3_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_3, chains=3, iter=500, cores=3)
+fit_stan_sp3_6 <- stan_occu(~scale(hour)~scale(canopy), data=umf_y_full_3, chains=3, iter=500, cores=3)
+
+
+mods3 <- fitList(fit_stan_sp3_0,
+                fit_stan_sp3_0h,
+                fit_stan_sp3_1,
+                fit_stan_sp3_2,
+                fit_stan_sp3_3,
+                fit_stan_sp3_4,
+                fit_stan_sp3_5,
+                fit_stan_sp3_6)
+
+# model selection
+round(modSel(mods3), 3) #AGB_Spawn
+
+# plot top model
+print("Hour")
+plot_effects(fit_stan_sp3_5, "det") # Detectiom
+print("NDVI")
+plot_effects(fit_stan_sp3_5, "state") # Ocupancy
+
+```
+
+
+### Spatial Prediction
+
+```{r}
+#| warning: false
+#| message: false
+
+#### predict
+
+# srtm_crop_s <- mask(elev, NDVI)#stack(raster(elev))#, 
+# scale(roughness)) # scale altitud
+# names(srtm_crop_s) <- c("elevation")#, "roughness")
+# crs(srtm_crop_s) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+nd3 <- NDVI #mask(AGB_Spawn, NDVI) #data.frame(srtm_crop_s, hour=0.5)
+names(nd3) <- "NDVI"
+# newd <- data.frame(srtm_crop_s, hour=0.5)
+pred_psi_s_unm <-predict(fit_unm_sp3_5, type="state", newdata=nd3)
+#pred_psi_s_stan <-predict(fit_stan_sp2_1, submodel="state", newdata=nd, na.rm=FALSE)
+#pred_psi_ras <- raster(srtm_crop_s) # make raster = to elev 
+#pred_psi_ras[] <- pred_psi_s_stan$Predicted # drape on top
+
+
+# pred_psi_r <- pred_psi_s # * sd(full_covs$elevation) + mean(full_covs$elevation)
+# crs(pred_psi_ras) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+clr <- colorRampPalette(brewer.pal(9, "YlGn"))
+# mapview (pred_psi_r[[1]], col.regions = clr,  legend = TRUE, alpha=0.7)
+# plot(pred_psi_s[[1]], main="Occupancy")
+levelplot(pred_psi_s_unm[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Ocupancy")
+
+pal = mapviewPalette("mapviewSpectralColors")
+mapview(raster(pred_psi_s_unm[[1]]), map.types = c("Esri.WorldImagery"), alpha=0.5, col.regions = pal(10)) + mapview(puntos_sf)
+
+
+```
+
+
+
+# *Nyctidromus albicollis*
+
+### One species, single season
+
+
+```{r}
+#| warning: false
+#| message: false
+
+# Make UMF object
+umf_y_full_4<- unmarkedFrameOccu(y= as.data.frame(parita$occur[[4]])) #Dryocopus lineatus
+siteCovs(umf_y_full_4) <- data.frame(elevation =  covs_raster_val$elevation,
+                                   AGB_Spawn = covs_raster_val$AGB_Spawn,
+                                   roads = covs_raster_val$roads,
+                                   carbon = covs_raster_val$carbon_stock,
+                                   NDVI = covs_raster_val$NDVI,
+                                   canopy = covs_raster_val$canopy
+) # data.frame(Elev=full_covs$Elev) # Full
+
+
+plot(umf_y_full_4, main="Nyctidromus albicollis")  #""Buteogallus anthracinus no converge
+
+# obscanop<-matrix(rep(covs_raster_val$canopy_height_jetz2,27),ncol = 27) # make elevetion per observation
+
+# detection
+obsCovs(umf_y_full_4) <- list(hour = matrix(parita$dete[[4]]),
+                              canopy = covs_raster_val$canopy ) # hora
+
+
+# fit unmarked
+fit_unm_sp4_0 <- unmarked::occu(~1~1, data=umf_y_full_4) # ok!
+fit_unm_sp4_0h <- unmarked::occu(~scale(hour)~1, data=umf_y_full_4) # It work!
+fit_unm_sp4_0c <- unmarked::occu(~scale(canopy)~1, data=umf_y_full_4) # It work!
+fit_unm_sp4_1 <- unmarked::occu(~scale(canopy)~scale(elevation), data=umf_y_full_4)
+fit_unm_sp4_2 <- unmarked::occu(~scale(canopy)~scale(AGB_Spawn), data=umf_y_full_4)
+fit_unm_sp4_3 <- unmarked::occu(~scale(canopy)~scale(roads), data=umf_y_full_4) # ok!
+fit_unm_sp4_4 <- unmarked::occu(~scale(canopy)~scale(carbon), data=umf_y_full_4)
+fit_unm_sp4_5 <- unmarked::occu(~scale(canopy)~scale(NDVI), data=umf_y_full_4)
+fit_unm_sp4_6 <- unmarked::occu(~scale(canopy)~scale(canopy), data=umf_y_full_4)
+fit_unm_sp4_2b <- unmarked::occu(~1~scale(AGB_Spawn), data=umf_y_full_4)
+
+
+
+# fit list for detection
+fms1<-fitList("p(.) Ocu(.)"=fit_unm_sp4_0,
+              # "p(h) Ocu(.)"=fit_unm_sp3_0h, # NA problem!
+              "p(c) Ocu(.)"=fit_unm_sp4_0c)#,
+#              "p(.) Ocu(elev)"=fit_unm_sp2_1,
+#              "p(.) Ocu(slope)"=fit_unm_sp2_2,
+#              "p(.) Ocu(aspect)"=fit_unm_sp2_3,
+#              "p(.) Ocu(roughness)"=fit_unm_sp2_4,
+#              "p(elev^2) Ocu(elev^2)"=fit_unm_sp2_5 )
+
+# model selection detection unmarked
+modSel(fms1) #good!.. canopy  model ranks better
+
+# fit list for detection
+fms2<-fitList("p(.) Ocu(.)"=fit_unm_sp4_0,
+              #"p(h) Ocu(.)"=fit_unm_sp2_0h, #,
+              "p(c) Ocu(.)"=fit_unm_sp4_0c,
+              "p(c) Ocu(elev)"=fit_unm_sp4_1,
+              "p(c) Ocu(AGB_Spawn)"=fit_unm_sp4_2,
+              "p(c) Ocu(roads)"=fit_unm_sp4_3,
+              "p(c) Ocu(carbon)"=fit_unm_sp4_4,
+              "p(c) Ocu(NDVI)"=fit_unm_sp4_5,
+              "p(c) Ocu(canopy)"=fit_unm_sp4_6)
+
+# model selection detection unmarked
+modSel(fms2)
+
+# fit stan
+fit_stan_sp4_0 <- stan_occu(~1~1, data=umf_y_full_4, chains=3, iter=500, cores=3)
+fit_stan_sp4_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_4, chains=3, iter=500, cores=3)
+fit_stan_sp4_0c <- stan_occu(~scale(canopy)~1, data=umf_y_full_4, chains=3, iter=500, cores=3)
+fit_stan_sp4_1 <- stan_occu(~1~scale(elevation), data=umf_y_full_4, chains=3, iter=500, cores=3)
+fit_stan_sp4_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_4, chains=3, iter=500, cores=3)
+fit_stan_sp4_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_4, chains=3, iter=500, cores=3)
+fit_stan_sp4_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_4, chains=3, iter=500, cores=3)
+fit_stan_sp4_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_4, chains=3, iter=500, cores=3)
+
+
+mods4 <- fitList(fit_stan_sp4_0,
+                fit_stan_sp4_0h,
+                fit_stan_sp4_0c,
+                fit_stan_sp4_1,
+                fit_stan_sp4_2,
+                fit_stan_sp4_3,
+                fit_stan_sp4_4,
+                fit_stan_sp4_5)
+
+# model selection stan
+round(modSel(mods4), 3)
+
+# plot top model
+print("Hour")
+plot_effects(fit_stan_sp4_2, "det") # Detection
+print("AGB_Spawn")
+plot_effects(fit_stan_sp4_2, "state") # Occupancy
+
+```
+
+
+### Spatial Prediction
+
+```{r}
+#| warning: false
+#| message: false
+
+#### predict
+
+# srtm_crop_s <- mask(elev, NDVI)#stack(raster(elev))#, 
+# scale(roughness)) # scale altitud
+# names(srtm_crop_s) <- c("elevation")#, "roughness")
+# crs(srtm_crop_s) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+nd4 <- mask(AGB_Spawn, NDVI) #data.frame(srtm_crop_s, hour=0.5)
+names(nd4) <- "AGB_Spawn"
+# newd <- data.frame(srtm_crop_s, hour=0.5)
+pred_psi_s_unm <-predict(fit_unm_sp4_2b, type="state", newdata=nd4)
+#pred_psi_s_stan <-predict(fit_stan_sp2_1, submodel="state", newdata=nd, na.rm=FALSE)
+#pred_psi_ras <- raster(srtm_crop_s) # make raster = to elev 
+#pred_psi_ras[] <- pred_psi_s_stan$Predicted # drape on top
+
+
+# pred_psi_r <- pred_psi_s # * sd(full_covs$elevation) + mean(full_covs$elevation)
+# crs(pred_psi_ras) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+clr <- colorRampPalette(brewer.pal(9, "YlGn"))
+# mapview (pred_psi_r[[1]], col.regions = clr,  legend = TRUE, alpha=0.7)
+# plot(pred_psi_s[[1]], main="Occupancy")
+levelplot(pred_psi_s_unm[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Ocupancy")
+
+pal = mapviewPalette("mapviewSpectralColors")
+mapview(raster(pred_psi_s_unm[[1]]), map.types = c("Esri.WorldImagery"), alpha=0.5, col.regions = pal(10)) + mapview(puntos_sf)
+
+
+```
+
+
+
+
+# *Piranga rubra*
+
+### One species, single season
+
+
+```{r}
+#| warning: false
+#| message: false
+
+# Make UMF object
+umf_y_full_5<- unmarkedFrameOccu(y= as.data.frame(parita$occur[[5]])) #Dryocopus lineatus
+siteCovs(umf_y_full_5) <- data.frame(elevation =  covs_raster_val$elevation,
+                                   AGB_Spawn = covs_raster_val$AGB_Spawn,
+                                   roads = covs_raster_val$roads,
+                                   carbon = covs_raster_val$carbon_stock,
+                                   NDVI = covs_raster_val$NDVI,
+                                   canopy = covs_raster_val$canopy
+) # data.frame(Elev=full_covs$Elev) # Full
+
+
+plot(umf_y_full_5, main="Piranga rubra")  #""Buteogallus anthracinus no converge
+
+# detection
+obsCovs(umf_y_full_5) <- list(hour = matrix(parita$dete[[5]]),
+                              canopy = covs_raster_val$canopy ) # hora
+
+# Double formula: first part is for detection, second for occupancy
+#  form <- ~detCov1 + detCov2 ~habCov1 + habCov2 + RSR(x, y, threshold=1)
+
+# fit unmarked
+fit_unm_sp5_0 <- unmarked::occu(~1~1, data=umf_y_full_5) # ok!
+# fit_unm_sp4_0h <- unmarked::occu(~hour~1, data=umf_y_full_4) # Does not work!
+fit_unm_sp5_0c <- unmarked::occu(~scale(canopy)~1, data=umf_y_full_5) # Does not work!
+fit_unm_sp5_1 <- unmarked::occu(~scale(canopy)~scale(elevation), data=umf_y_full_5)
+fit_unm_sp5_2 <- unmarked::occu(~scale(canopy)~scale(AGB_Spawn), data=umf_y_full_5)
+fit_unm_sp5_3 <- unmarked::occu(~scale(canopy)~scale(roads), data=umf_y_full_5) # ok!
+fit_unm_sp5_4 <- unmarked::occu(~scale(canopy)~scale(carbon), data=umf_y_full_5)
+fit_unm_sp5_5 <- unmarked::occu(~scale(canopy)~scale(NDVI), data=umf_y_full_5)
+fit_unm_sp5_2b <- unmarked::occu(~1~scale(AGB_Spawn), data=umf_y_full_5)
+
+
+# fit list for detection
+fms1<-fitList("p(.) Ocu(.)"=fit_unm_sp5_0,
+              # "p(h) Ocu(.)"=fit_unm_sp3_0h, # NA problem!
+              "p(c) Ocu(.)"=fit_unm_sp5_0c)#,
+#              "p(.) Ocu(elev)"=fit_unm_sp2_1,
+#              "p(.) Ocu(slope)"=fit_unm_sp2_2,
+#              "p(.) Ocu(aspect)"=fit_unm_sp2_3,
+#              "p(.) Ocu(roughness)"=fit_unm_sp2_4,
+#              "p(elev^2) Ocu(elev^2)"=fit_unm_sp2_5 )
+
+# model selection detection unmarked
+modSel(fms1) #good!.. canopy  model ranks better
+
+# fit list for detection
+fms2<-fitList("p(.) Ocu(.)"=fit_unm_sp4_0,
+              #"p(h) Ocu(.)"=fit_unm_sp2_0h, #,
+              "p(c) Ocu(.)"=fit_unm_sp4_0c,
+              "p(c) Ocu(elev)"=fit_unm_sp4_1,
+              "p(c) Ocu(AGB_Spawn)"=fit_unm_sp4_2,
+              "p(c) Ocu(roads)"=fit_unm_sp4_3,
+              "p(c) Ocu(carbon)"=fit_unm_sp4_4,
+              "p(c) Ocu(NDVI)"=fit_unm_sp4_5,
+              "p(c) Ocu(canopy)"=fit_unm_sp4_6)
+
+# model selection detection unmarked
+modSel(fms2)
+
+
+# fit stan
+fit_stan_sp5_0 <- stan_occu(~1~1, data=umf_y_full_5, chains=3, iter=500, cores=3)
+fit_stan_sp5_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_5, chains=3, iter=500, cores=3)
+fit_stan_sp5_0c <- stan_occu(~scale(canopy)~1, data=umf_y_full_5, chains=3, iter=500, cores=3)
+fit_stan_sp5_1 <- stan_occu(~scale(hour)~scale(elevation), data=umf_y_full_5, chains=3, iter=500, cores=3)
+fit_stan_sp5_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_5, chains=3, iter=500, cores=3)
+fit_stan_sp5_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_5, chains=3, iter=500, cores=3)
+fit_stan_sp5_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_5, chains=3, iter=500, cores=3)
+fit_stan_sp5_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_5, chains=3, iter=500, cores=3)
+fit_stan_sp5_6 <- stan_occu(~scale(hour)~scale(canopy), data=umf_y_full_5, chains=3, iter=500, cores=3)
+
+
+mods5 <- fitList(fit_stan_sp5_0,
+                fit_stan_sp5_0h,
+                fit_stan_sp5_0c,
+                fit_stan_sp5_1,
+                fit_stan_sp5_2,
+                fit_stan_sp5_3,
+                fit_stan_sp5_4,
+                fit_stan_sp5_5)
+
+# model selection
+round(modSel(mods5), 3)
+
+# plot top model
+print("Hour")
+plot_effects(fit_stan_sp5_2, "det") # Detection
+print("AGB_Spawn")
+plot_effects(fit_stan_sp5_2, "state") # Occupancy
+
+```
+
+
+### Spatial Prediction
+
+```{r}
+#| warning: false
+#| message: false
+
+#### predict
+
+# srtm_crop_s <- mask(elev, NDVI)#stack(raster(elev))#, 
+# scale(roughness)) # scale altitud
+# names(srtm_crop_s) <- c("elevation")#, "roughness")
+# crs(srtm_crop_s) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+nd5 <- mask(AGB_Spawn, NDVI) #data.frame(srtm_crop_s, hour=0.5)
+names(nd5) <- "AGB_Spawn"
+# newd <- data.frame(srtm_crop_s, hour=0.5)
+pred_psi_s_unm <-predict(fit_unm_sp5_2b, type="state", newdata=nd5)
+#pred_psi_s_stan <-predict(fit_stan_sp2_1, submodel="state", newdata=nd, na.rm=FALSE)
+#pred_psi_ras <- raster(srtm_crop_s) # make raster = to elev 
+#pred_psi_ras[] <- pred_psi_s_stan$Predicted # drape on top
+
+
+# pred_psi_r <- pred_psi_s # * sd(full_covs$elevation) + mean(full_covs$elevation)
+# crs(pred_psi_ras) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+clr <- colorRampPalette(brewer.pal(9, "YlGn"))
+# mapview (pred_psi_r[[1]], col.regions = clr,  legend = TRUE, alpha=0.7)
+# plot(pred_psi_s[[1]], main="Occupancy")
+levelplot(pred_psi_s_unm[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Ocupancy")
+
+pal = mapviewPalette("mapviewSpectralColors")
+mapview(raster(pred_psi_s_unm[[1]]), map.types = c("Esri.WorldImagery"), alpha=0.5, col.regions = pal(10)) + mapview(puntos_sf)
+
+
+```
+
+
+
+
+
+
+# *Aramus guarauna*
+
+### One species, single season
+
+
+```{r}
+#| warning: false
+#| message: false
+
+# Make UMF object
+umf_y_full_1<- unmarkedFrameOccu(y= as.data.frame(parita$occur[[1]])) #Aramus guarauna
+siteCovs(umf_y_full_1) <- data.frame(elevation =  covs_raster_val$elevation,
+                                   AGB_Spawn = covs_raster_val$AGB_Spawn,
+                                   roads = covs_raster_val$roads,
+                                   carbon = covs_raster_val$carbon_stock,
+                                   NDVI = covs_raster_val$NDVI,
+                                   canopy = covs_raster_val$canopy
+) # data.frame(Elev=full_covs$Elev) # Full
+
+
+plot(umf_y_full_1, main="Aramus guarauna")  #""Buteogallus anthracinus no converge
+
+# detection
+obsCovs(umf_y_full_1) <- list(hour = matrix(parita$dete[[1]]),
+                              canopy = covs_raster_val$canopy ) # hora
+
+# Double formula: first part is for detection, second for occupancy
+#  form <- ~detCov1 + detCov2 ~habCov1 + habCov2 + RSR(x, y, threshold=1)
+
+# fit unmarked
+fit_unm_sp1_0 <- unmarked::occu(~1~1, data=umf_y_full_1) # Model did not converge!
+fit_unm_sp1_0h <- unmarked::occu(~hour~1, data=umf_y_full_1) # Does work but not comparable!
+fit_unm_sp1_0c <- unmarked::occu(~scale(canopy)~1, data=umf_y_full_1) # Does work!
+fit_unm_sp1_1 <- unmarked::occu(~1~scale(elevation), data=umf_y_full_1)
+fit_unm_sp1_2 <- unmarked::occu(~1~scale(AGB_Spawn), data=umf_y_full_1)
+fit_unm_sp1_3 <- unmarked::occu(~1~scale(roads), data=umf_y_full_1) # ok!
+fit_unm_sp1_4 <- unmarked::occu(~1~scale(carbon), data=umf_y_full_1)
+fit_unm_sp1_5 <- unmarked::occu(~1~scale(NDVI), data=umf_y_full_1)
+fit_unm_sp1_6 <- unmarked::occu(~1~scale(canopy), data=umf_y_full_1)
+fit_unm_sp1_2b <- unmarked::occu(~1~scale(AGB_Spawn), data=umf_y_full_1)
+
+
+# fit list for detection
+fms1<-fitList("p(.) Ocu(.)"=fit_unm_sp1_0,
+              #"p(h) Ocu(.)"=fit_unm_sp1_0h, # NA problem!
+              "p(c) Ocu(.)"=fit_unm_sp1_0c)#,
+#              "p(.) Ocu(elev)"=fit_unm_sp2_1,
+#              "p(.) Ocu(slope)"=fit_unm_sp2_2,
+#              "p(.) Ocu(aspect)"=fit_unm_sp2_3,
+#              "p(.) Ocu(roughness)"=fit_unm_sp2_4,
+#              "p(elev^2) Ocu(elev^2)"=fit_unm_sp2_5 )
+
+# model selection detection unmarked
+modSel(fms1) #bad!.. null  model ranks better
+
+# fit list for detection
+fms2<-fitList("p(.) Ocu(.)"=fit_unm_sp1_0,
+              #"p(h) Ocu(.)"=fit_unm_sp2_0h, #,
+              "p(c) Ocu(.)"=fit_unm_sp1_0c,
+              "p(.) Ocu(elev)"=fit_unm_sp1_1,
+              "p(.) Ocu(AGB_Spawn)"=fit_unm_sp1_2,
+              "p(.) Ocu(roads)"=fit_unm_sp1_3,
+              "p(.) Ocu(carbon)"=fit_unm_sp1_4,
+              "p(.) Ocu(NDVI)"=fit_unm_sp1_5,
+              "p(.) Ocu(canopy)"=fit_unm_sp1_6)
+
+# model selection detection unmarked
+modSel(fms2)
+
+
+# fit stan
+fit_stan_sp1_0 <- stan_occu(~1~1, data=umf_y_full_1, chains=3, iter=500, cores=3)
+fit_stan_sp1_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_1, chains=3, iter=500, cores=3)
+fit_stan_sp1_0c <- stan_occu(~scale(canopy)~1, data=umf_y_full_1, chains=3, iter=500, cores=3)
+fit_stan_sp1_1 <- stan_occu(~scale(hour)~scale(elevation), data=umf_y_full_1, chains=3, iter=500, cores=3)
+fit_stan_sp1_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_1, chains=3, iter=500, cores=3)
+fit_stan_sp1_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_1, chains=3, iter=500, cores=3)
+fit_stan_sp1_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_1, chains=3, iter=500, cores=3)
+fit_stan_sp1_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_1, chains=3, iter=500, cores=3)
+fit_stan_sp1_6 <- stan_occu(~scale(hour)~scale(canopy), data=umf_y_full_1, chains=3, iter=500, cores=3)
+
+
+mods5 <- fitList(fit_stan_sp1_0,
+                fit_stan_sp1_0h,
+                fit_stan_sp1_0c,
+                fit_stan_sp1_1,
+                fit_stan_sp1_2,
+                fit_stan_sp1_3,
+                fit_stan_sp1_4,
+                fit_stan_sp1_5)
+
+# model selection
+round(modSel(mods5), 3)
+
+
+# plot top model
+print("Hour")
+plot_effects(fit_stan_sp1_5, "det") # Detection
+print("NDVI")
+plot_effects(fit_stan_sp1_5, "state") # Occupancy
+
+```
+
+
+### Spatial Prediction
+
+```{r}
+#| warning: false
+#| message: false
+
+#### predict
+
+# srtm_crop_s <- mask(elev, NDVI)#stack(raster(elev))#, 
+# scale(roughness)) # scale altitud
+# names(srtm_crop_s) <- c("elevation")#, "roughness")
+# crs(srtm_crop_s) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+nd1 <- NDVI #data.frame(srtm_crop_s, hour=0.5)
+names(nd1) <- "NDVI"
+# newd <- data.frame(srtm_crop_s, hour=0.5)
+pred_psi_s_unm <-predict(fit_unm_sp1_5, type="state", newdata=nd1)
+#pred_psi_s_stan <-predict(fit_stan_sp2_1, submodel="state", newdata=nd, na.rm=FALSE)
+#pred_psi_ras <- raster(srtm_crop_s) # make raster = to elev 
+#pred_psi_ras[] <- pred_psi_s_stan$Predicted # drape on top
+
+
+# pred_psi_r <- pred_psi_s # * sd(full_covs$elevation) + mean(full_covs$elevation)
+# crs(pred_psi_ras) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+clr <- colorRampPalette(brewer.pal(9, "YlGn"))
+# mapview (pred_psi_r[[1]], col.regions = clr,  legend = TRUE, alpha=0.7)
+# plot(pred_psi_s[[1]], main="Occupancy")
+levelplot(pred_psi_s_unm[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Ocupancy")
+
+pal = mapviewPalette("mapviewSpectralColors")
+mapview(raster(pred_psi_s_unm[[1]]), map.types = c("Esri.WorldImagery"), alpha=0.5, col.regions = pal(10)) + mapview(puntos_sf)
+
+
+```
+
+## Información de la sesión en R.
+
+```{r sesion, results='markup'}
+print(sessionInfo(), locale = FALSE)
+```
+
+
