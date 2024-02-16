@@ -4,4 +4,5 @@ To update:
 copy files from:
  C:\CodigoR\AudubonPanama  
  to 
- C:\github\Audubon_Panama
+ C:\github\Audubon_Panama\docs
+ 
