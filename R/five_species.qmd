@@ -217,15 +217,15 @@ modSel(fms2)
 #  form <- ~detCov1 + detCov2 ~habCov1 + habCov2 + RSR(x, y, threshold=1)
 
 # fit stan
-fit_stan_sp2_0 <- stan_occu(~1~1, data=umf_y_full_2, chains=3, iter=500, cores=3)
-fit_stan_sp2_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_2, chains=3, iter=500, cores=3)
-fit_stan_sp2_0c <- stan_occu(~scale(canopy)~1, data=umf_y_full_2, chains=3, iter=500, cores=3)
-fit_stan_sp2_1 <- stan_occu(~scale(hour)~scale(elevation), data=umf_y_full_2, chains=3, iter=500, cores=3)
-fit_stan_sp2_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_2, chains=3, iter=500, cores=3)
-fit_stan_sp2_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_2, chains=3, iter=500, cores=3)
-fit_stan_sp2_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_2, chains=3, iter=500, cores=3)
-fit_stan_sp2_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_2, chains=3, iter=500, cores=3)
-fit_stan_sp2_6 <- stan_occu(~scale(hour)~scale(canopy), data=umf_y_full_2, chains=3, iter=500, cores=3)
+fit_stan_sp2_0 <- stan_occu(~1~1, data=umf_y_full_2, chains=3, iter=1000, cores=3)
+fit_stan_sp2_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_2, chains=3, iter=1000, cores=3)
+fit_stan_sp2_0c <- stan_occu(~scale(canopy)~1, data=umf_y_full_2, chains=3, iter=1000, cores=3)
+fit_stan_sp2_1 <- stan_occu(~scale(hour)~scale(elevation), data=umf_y_full_2, chains=3, iter=1000, cores=3)
+fit_stan_sp2_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_2, chains=3, iter=1000, cores=3)
+fit_stan_sp2_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_2, chains=3, iter=1000, cores=3)
+fit_stan_sp2_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_2, chains=3, iter=1000, cores=3)
+fit_stan_sp2_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_2, chains=3, iter=1000, cores=3)
+fit_stan_sp2_6 <- stan_occu(~scale(hour)~scale(canopy), data=umf_y_full_2, chains=3, iter=1000, cores=3)
 
 
 mods2 <- fitList(fit_stan_sp2_0,
@@ -354,14 +354,14 @@ fms2<-fitList("p(.) Ocu(.)"=fit_unm_sp3_0,
 modSel(fms2)
 
 # fit stan
-fit_stan_sp3_0 <- stan_occu(~1~1, data=umf_y_full_3, chains=3, iter=500, cores=3)
-fit_stan_sp3_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_3, chains=3, iter=500, cores=3)
-fit_stan_sp3_1 <- stan_occu(~scale(hour)~scale(elevation), data=umf_y_full_3, chains=3, iter=500, cores=3)
-fit_stan_sp3_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_3, chains=3, iter=500, cores=3)
-fit_stan_sp3_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_3, chains=3, iter=500, cores=3)
-fit_stan_sp3_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_3, chains=3, iter=500, cores=3)
-fit_stan_sp3_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_3, chains=3, iter=500, cores=3)
-fit_stan_sp3_6 <- stan_occu(~scale(hour)~scale(canopy), data=umf_y_full_3, chains=3, iter=500, cores=3)
+fit_stan_sp3_0 <- stan_occu(~1~1, data=umf_y_full_3, chains=3, iter=1000, cores=3)
+fit_stan_sp3_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_3, chains=3, iter=1000, cores=3)
+fit_stan_sp3_1 <- stan_occu(~scale(hour)~scale(elevation), data=umf_y_full_3, chains=3, iter=1000, cores=3)
+fit_stan_sp3_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_3, chains=3, iter=1000, cores=3)
+fit_stan_sp3_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_3, chains=3, iter=1000, cores=3)
+fit_stan_sp3_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_3, chains=3, iter=1000, cores=3)
+fit_stan_sp3_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_3, chains=3, iter=1000, cores=3)
+fit_stan_sp3_6 <- stan_occu(~scale(hour)~scale(canopy), data=umf_y_full_3, chains=3, iter=1000, cores=3)
 
 
 mods3 <- fitList(fit_stan_sp3_0,
@@ -492,14 +492,14 @@ fms2<-fitList("p(.) Ocu(.)"=fit_unm_sp4_0,
 modSel(fms2)
 
 # fit stan
-fit_stan_sp4_0 <- stan_occu(~1~1, data=umf_y_full_4, chains=3, iter=500, cores=3)
-fit_stan_sp4_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_4, chains=3, iter=500, cores=3)
-fit_stan_sp4_0c <- stan_occu(~scale(canopy)~1, data=umf_y_full_4, chains=3, iter=500, cores=3)
-fit_stan_sp4_1 <- stan_occu(~1~scale(elevation), data=umf_y_full_4, chains=3, iter=500, cores=3)
-fit_stan_sp4_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_4, chains=3, iter=500, cores=3)
-fit_stan_sp4_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_4, chains=3, iter=500, cores=3)
-fit_stan_sp4_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_4, chains=3, iter=500, cores=3)
-fit_stan_sp4_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_4, chains=3, iter=500, cores=3)
+fit_stan_sp4_0 <- stan_occu(~1~1, data=umf_y_full_4, chains=3, iter=1000, cores=3)
+fit_stan_sp4_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_4, chains=3, iter=1000, cores=3)
+fit_stan_sp4_0c <- stan_occu(~scale(canopy)~1, data=umf_y_full_4, chains=3, iter=1000, cores=3)
+fit_stan_sp4_1 <- stan_occu(~1~scale(elevation), data=umf_y_full_4, chains=3, iter=1000, cores=3)
+fit_stan_sp4_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_4, chains=3, iter=1000, cores=3)
+fit_stan_sp4_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_4, chains=3, iter=1000, cores=3)
+fit_stan_sp4_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_4, chains=3, iter=1000, cores=3)
+fit_stan_sp4_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_4, chains=3, iter=1000, cores=3)
 
 
 mods4 <- fitList(fit_stan_sp4_0,
@@ -630,15 +630,15 @@ modSel(fms2)
 
 
 # fit stan
-fit_stan_sp5_0 <- stan_occu(~1~1, data=umf_y_full_5, chains=3, iter=500, cores=3)
-fit_stan_sp5_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_5, chains=3, iter=500, cores=3)
-fit_stan_sp5_0c <- stan_occu(~scale(canopy)~1, data=umf_y_full_5, chains=3, iter=500, cores=3)
-fit_stan_sp5_1 <- stan_occu(~scale(hour)~scale(elevation), data=umf_y_full_5, chains=3, iter=500, cores=3)
-fit_stan_sp5_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_5, chains=3, iter=500, cores=3)
-fit_stan_sp5_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_5, chains=3, iter=500, cores=3)
-fit_stan_sp5_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_5, chains=3, iter=500, cores=3)
-fit_stan_sp5_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_5, chains=3, iter=500, cores=3)
-fit_stan_sp5_6 <- stan_occu(~scale(hour)~scale(canopy), data=umf_y_full_5, chains=3, iter=500, cores=3)
+fit_stan_sp5_0 <- stan_occu(~1~1, data=umf_y_full_5, chains=3, iter=1000, cores=3)
+fit_stan_sp5_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_5, chains=3, iter=1000, cores=3)
+fit_stan_sp5_0c <- stan_occu(~scale(canopy)~1, data=umf_y_full_5, chains=3, iter=1000, cores=3)
+fit_stan_sp5_1 <- stan_occu(~scale(hour)~scale(elevation), data=umf_y_full_5, chains=3, iter=1000, cores=3)
+fit_stan_sp5_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_5, chains=3, iter=1000, cores=3)
+fit_stan_sp5_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_5, chains=3, iter=1000, cores=3)
+fit_stan_sp5_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_5, chains=3, iter=1000, cores=3)
+fit_stan_sp5_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_5, chains=3, iter=1000, cores=3)
+fit_stan_sp5_6 <- stan_occu(~scale(hour)~scale(canopy), data=umf_y_full_5, chains=3, iter=1000, cores=3)
 
 
 mods5 <- fitList(fit_stan_sp5_0,
@@ -772,15 +772,15 @@ modSel(fms2)
 
 
 # fit stan
-fit_stan_sp1_0 <- stan_occu(~1~1, data=umf_y_full_1, chains=3, iter=500, cores=3)
-fit_stan_sp1_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_1, chains=3, iter=500, cores=3)
-fit_stan_sp1_0c <- stan_occu(~scale(canopy)~1, data=umf_y_full_1, chains=3, iter=500, cores=3)
-fit_stan_sp1_1 <- stan_occu(~scale(hour)~scale(elevation), data=umf_y_full_1, chains=3, iter=500, cores=3)
-fit_stan_sp1_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_1, chains=3, iter=500, cores=3)
-fit_stan_sp1_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_1, chains=3, iter=500, cores=3)
-fit_stan_sp1_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_1, chains=3, iter=500, cores=3)
-fit_stan_sp1_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_1, chains=3, iter=500, cores=3)
-fit_stan_sp1_6 <- stan_occu(~scale(hour)~scale(canopy), data=umf_y_full_1, chains=3, iter=500, cores=3)
+fit_stan_sp1_0 <- stan_occu(~1~1, data=umf_y_full_1, chains=3, iter=1000, cores=3)
+fit_stan_sp1_0h <- stan_occu(~scale(hour)~1, data=umf_y_full_1, chains=3, iter=1000, cores=3)
+fit_stan_sp1_0c <- stan_occu(~scale(canopy)~1, data=umf_y_full_1, chains=3, iter=1000, cores=3)
+fit_stan_sp1_1 <- stan_occu(~scale(hour)~scale(elevation), data=umf_y_full_1, chains=3, iter=1000, cores=3)
+fit_stan_sp1_2 <- stan_occu(~scale(hour)~scale(AGB_Spawn), data=umf_y_full_1, chains=3, iter=1000, cores=3)
+fit_stan_sp1_3 <- stan_occu(~scale(hour)~scale(roads), data=umf_y_full_1, chains=3, iter=1000, cores=3)
+fit_stan_sp1_4 <- stan_occu(~scale(hour)~scale(carbon), data=umf_y_full_1, chains=3, iter=1000, cores=3)
+fit_stan_sp1_5 <- stan_occu(~scale(hour)~scale(NDVI), data=umf_y_full_1, chains=3, iter=1000, cores=3)
+fit_stan_sp1_6 <- stan_occu(~scale(hour)~scale(canopy), data=umf_y_full_1, chains=3, iter=1000, cores=3)
 
 
 mods5 <- fitList(fit_stan_sp1_0,

@@ -1,0 +1,114 @@
+---
+title: "Panama-Blue-Natural"
+description: |
+  Welcome to the website. I hope you enjoy it!
+site: distill::distill_website
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+EBIRD_KEY <- "3ii0vc31fr8d"
+
+# register_google(key = "[your key]", write = TRUE)
+
+# Learn more about creating websites with Distill at:
+# https://rstudio.github.io/distill/website.html
+
+```
+
+## Load Packages
+
+```{r warning=FALSE, message=FALSE}
+library(rebird) # ebird api
+library(tidyverse) # fix data
+library(sf) # vector map
+library(mapview) # maps easy
+library(readr) # read table
+
+library(traitdata)
+
+
+```
+
+## Get species from Hotspots around Parita bay
+### Playa de Juan Hombrón y El_Salado
+```{r}
+
+# get hotspots
+
+hotspots <- ebirdhotspotlist(lat = 8.201565, lng = -80.4833, dist = 25) # 25 km around
+
+taxonomy <- ebirdtaxonomy() # get the eBird taxonomy
+localSpecies_1 <- ebirdregionspecies(hotspots$locId[1]) # specific hotspot
+localSpecies_2 <- ebirdregionspecies(hotspots$locId[2]) # specific hotspot
+localSpecies_3 <- ebirdregionspecies(hotspots$locId[3]) # specific hotspot
+localSpecies_4 <- ebirdregionspecies(hotspots$locId[4]) # specific hotspot
+localSpecies_5 <- ebirdregionspecies(hotspots$locId[5]) # specific hotspot
+localSpecies_6 <- ebirdregionspecies(hotspots$locId[6]) # specific hotspot
+localSpecies_7 <- ebirdregionspecies(hotspots$locId[7]) # specific hotspot
+localSpecies_8 <- ebirdregionspecies(hotspots$locId[8]) # specific hotspot
+
+# Loop to get species per hotspot and taxonomy
+sp_by_hotspot <- list()
+for(i in 1:length(hotspots)) {
+  sp_by_hotspot[[i]] <- inner_join(ebirdregionspecies(hotspots$locId[i]), taxonomy)
+}
+
+# make table with uniques
+sp_all_hotspot <- sp_by_hotspot %>% bind_rows() %>% 
+                  select("speciesCode","sciName", "comName") %>% 
+                  unique()
+                
+# read birdnet species
+BirdNet_sp <- read_delim("data/BirdNet_sp.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+
+
+# identifiable using BirdNet
+identify_sp <- sp_all_hotspot %>% inner_join(BirdNet_sp)
+identify_sp$scientificNameStd <- identify_sp$sciName # add common column name
+
+# open bird trait
+data(bird_behav) # Usar Elton Dieta, estrato forrajeo, habitat primario 
+
+# add traits... Note remove some species by non congruent taxonomy
+identify_sp_trait <- bird_behav %>% inner_join(identify_sp)
+
+
+# # Recent observations 
+# JuanHumbron <- ebirdregion(loc = 'L3478798')
+# Laguna_JuanHumbron <- ebirdregion(loc ="L2878306")
+# Agallito <- ebirdregion(loc = 'L685264')
+# El_Salado <- ebirdregion(loc = "L4808970")
+# Santa_Ana <- ebirdregion(loc = "L15935148")
+# Cenegon_del_Mangle <- ebirdregion(loc = "L4903804")
+# Salinas_de_Aguadulce <- ebirdregion(loc = "L1345898")
+# 
+# # historical observations
+# # View(ebirdchecklistfeed(loc = "L2878306", date = "2020-01-10", max = 10))
+# 
+# # for some reason just two retrived data...!
+# 
+# # join
+# all_sites <- JuanHumbron %>% full_join(El_Salado, by)
+
+
+```
+
+## plot
+
+```{r}
+all_sites_sf <- st_as_sf(hotspots, coords= c("lng", "lat"), crs = st_crs(4326))
+
+mapview(all_sites_sf, zcol = c("locName"), map.types = c("Esri.WorldShadedRelief", "OpenStreetMap.DE"))
+
+
+
+
+
+```
+
+
+
+
+

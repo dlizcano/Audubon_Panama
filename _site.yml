@@ -11,4 +11,10 @@ navbar:
       href: about.html
     - text: "Spatial prediction"
       href: five_species.html
+    - text: "Spatial prediction2"
+      href: five_species_v2.html
+    - icon: github
+      href: https://github.com/dlizcano/Audubon_Panama
+      aria-label: GitHub
+
 output: distill::distill_article

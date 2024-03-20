@@ -1,4 +1,4 @@
-# function to make matrix per species per day, extracting hour 
+# function to make matrix per species per day, extracting and averaging hour 
 # Modified from CI-TEAM Network code by Diego Lizcano
 # October 2023
 # Creates a nested list by species. One list presence another hour
@@ -83,7 +83,7 @@ f.matrix.creator2<-function(data,year){
       mat_h[row,col]<-as.numeric((hours.cameras[j])) # remove hms
     }
     mat_h.nas<-is.na(mat)
-    sum.nas<-apply(mat_h.nas,2,sum)
+    sum.nas<-apply(mat_h.nas,2,mean)# instead of sum
     indx.nas<-which(sum.nas==rows)
     if(length(indx.nas)>0){
       mat_h<-mat_h[,-indx.nas]
@@ -103,5 +103,57 @@ f.matrix.creator2<-function(data,year){
   #res<-lapply(res,f.dum)
   return(list(occur=occur, dete=dete))
   
+}
+
+########################################
+
+
+#code to shrink the matrix to exactly 9 columns: collapsing by 3 days
+f.shrink.matrix.to9<-function(matrix){
+  nc<-dim(matrix)[2]
+  if(!nc%%9){ # of the number of columns is exactly divisible by 9
+    newc<-nc%/%9
+    old.cols<-seq(1,nc,newc)
+    new.matrix<-matrix(NA,nr=nrow(matrix),nc=9)
+    for(i in 1:9){
+      new.matrix[,i]<-apply(matrix[,old.cols[i]:(old.cols[i]+newc-1)],1,max,na.rm=T)
+    }
+  } else{
+    rem<-nc%%9
+    newc<-nc%/%9
+    old.cols<-seq(1,nc-rem,newc)
+    new.matrix<-matrix(NA,nr=nrow(matrix),nc=9)
+    for(i in 1:8)
+      new.matrix[,i]<-apply(matrix[,old.cols[i]:(old.cols[i]+newc-1)],1,max,na.rm=T)
+    new.matrix[,9]<-apply(matrix[,old.cols[9]:nc],1,max,na.rm=T) 
+  }
+  new.matrix[new.matrix=="-Inf"]<-NA
+  rownames(new.matrix)<-rownames(matrix)
+  new.matrix
+}
+
+
+#code to shrink the hour matrix to exactly 9 columns: collapsing by 3 days
+f.shrink.matrix.h.to9<-function(matrix){
+  nc<-dim(matrix)[2]
+  if(!nc%%9){ # of the number of columns is exactly divisible by 9
+    newc<-nc%/%9
+    old.cols<-seq(1,nc,newc)
+    new.matrix<-matrix(NA,nr=nrow(matrix),nc=9)
+    for(i in 1:9){
+      new.matrix[,i]<-apply(matrix[,old.cols[i]:(old.cols[i]+newc-1)],1,mean,na.rm=T)
+    }
+  } else{
+    rem<-nc%%9
+    newc<-nc%/%9
+    old.cols<-seq(1,nc-rem,newc)
+    new.matrix<-matrix(NA,nr=nrow(matrix),nc=9)
+    for(i in 1:8)
+      new.matrix[,i]<-apply(matrix[,old.cols[i]:(old.cols[i]+newc-1)],1,mean,na.rm=T)
+    new.matrix[,9]<-apply(matrix[,old.cols[9]:nc],1,mean,na.rm=T) 
+  }
+  new.matrix[new.matrix=="-Inf"]<-NA
+  rownames(new.matrix)<-rownames(matrix)
+  new.matrix
 }
 
