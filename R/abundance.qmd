@@ -1,5 +1,5 @@
 ---
-title: "Occupancy five species. Parita Bay, Panama"
+title: "Abundance five species. Parita Bay, Panama"
 subtitle: "spatial prediction"
 date: "`r Sys.Date()`"
 author: 
@@ -16,6 +16,9 @@ format:
     code-block-bg: "gray70"
 ---
 
+Fit the occupancy model of Royle and Nichols (2003), which relates probability of detection of the species to the number of individuals available for detection at each site.
+
+Royle, J. A. and Nichols, J. D. (2003) Estimating Abundance from Repeated Presence-Absence Data or Point Counts. Ecology, 84(3) pp. 777–790.
 
 # Read spatial layers
 
@@ -181,24 +184,24 @@ obsCovs(umf_y_full_2) <- list(hour = data.frame(f.shrink.matrix.h.to9(parita$det
 
 
 # fit unmarked
-fit_unm_sp2_0 <- unmarked::occu(~1~1, data=umf_y_full_2) # ok!
+fit_unm_sp2_0 <- unmarked::occuRN(~1~1, data=umf_y_full_2) # ok!
 #fit_unm_sp2_0h <- unmarked::occu(~scale(hour)~1, data=umf_y_full_2) # It work!
 # fit_unm_sp2_0c <- unmarked::occu(~scale(canopy)~1, data=umf_y_full_2) # It work!
-fit_unm_sp2_1 <- unmarked::occu(~1~scale(BGB_Spawn), data=umf_y_full_2)
-fit_unm_sp2_2 <- unmarked::occu(~1~scale(human_foot), data=umf_y_full_2)
-fit_unm_sp2_3 <- unmarked::occu(~1~scale(NDVI), data=umf_y_full_2) # ok!
-fit_unm_sp2_4 <- unmarked::occu(~1~scale(river), data=umf_y_full_2)
-fit_unm_sp2_4s <- unmarked::occu(~1~scale(I(river^2)), data=umf_y_full_2)
-fit_unm_sp2_5 <- unmarked::occu(~1~scale(carbon), data=umf_y_full_2)
-fit_unm_sp2_6 <- unmarked::occu(~1~scale(canopy), data=umf_y_full_2)
-fit_unm_sp2_7 <- unmarked::occu(~1~scale(canopy)+
+fit_unm_sp2_1 <- unmarked::occuRN(~1~scale(BGB_Spawn), data=umf_y_full_2)
+fit_unm_sp2_2 <- unmarked::occuRN(~1~scale(human_foot), data=umf_y_full_2)
+fit_unm_sp2_3 <- unmarked::occuRN(~1~scale(NDVI), data=umf_y_full_2) # ok!
+fit_unm_sp2_4 <- unmarked::occuRN(~1~scale(river), data=umf_y_full_2)
+fit_unm_sp2_4s <- unmarked::occuRN(~1~scale(I(river^2)), data=umf_y_full_2)
+fit_unm_sp2_5 <- unmarked::occuRN(~1~scale(carbon), data=umf_y_full_2)
+fit_unm_sp2_6 <- unmarked::occuRN(~1~scale(canopy), data=umf_y_full_2)
+fit_unm_sp2_7 <- unmarked::occuRN(~1~scale(canopy)+
                                 scale(BGB_Spawn), data=umf_y_full_2)
-fit_unm_sp2_8 <- unmarked::occu(~1~scale(BGB_Spawn)+
+fit_unm_sp2_8 <- unmarked::occuRN(~1~scale(BGB_Spawn)+
                                   scale(human_foot), data=umf_y_full_2, 
                                 starts=c(1,1,1,1), method = "BFGS",
                                 control = list(maxit = 20000),
                                 engine = "C")
-fit_unm_sp2_9 <- unmarked::occu(~1~scale(canopy)+
+fit_unm_sp2_9 <- unmarked::occuRN(~1~scale(canopy)+
                                   scale(BGB_Spawn)+
                                   scale(carbon)+
                                   scale(river)+
@@ -222,28 +225,52 @@ fit_unm_sp2_9 <- unmarked::occu(~1~scale(canopy)+
 # modSel(fms1) #problem!.. null model ranks better
 
 # fit list for occupancy
-fms2<-fitList("p(.) Ocu(.)"=fit_unm_sp2_0,
+fms2<-fitList("p(.) lambda(.)"=fit_unm_sp2_0,
               #"p(h) Ocu(.)"=fit_unm_sp2_0h, #,
               #"p(c) Ocu(.)"=fit_unm_sp2_0c,
-              "p(.) Ocu(BGB_Spawn)"=fit_unm_sp2_1,
-              "p(.) Ocu(human_foot)"=fit_unm_sp2_2,
-              "p(.) Ocu(NDVI)"=fit_unm_sp2_3,
-              "p(.) Ocu(river)"=fit_unm_sp2_4,
+              "p(.) lambda(BGB_Spawn)"=fit_unm_sp2_1,
+              "p(.) lambda(human_foot)"=fit_unm_sp2_2,
+              "p(.) lambda(NDVI)"=fit_unm_sp2_3,
+              "p(.) lambda(river)"=fit_unm_sp2_4,
               #"p(.) Ocu(river^2)"=fit_unm_sp2_4s,
-              "p() Ocu(carbon)"=fit_unm_sp2_5,
-              "p() Ocu(canopy)"=fit_unm_sp2_6,
-              "p() Ocu(canopy+BGB_Spawn)"=fit_unm_sp2_7,
-              "p() Ocu(BGB_Spawn+human_foot)"=fit_unm_sp2_8,
-              "p() Ocu(ALL)"=fit_unm_sp2_9
+              "p() lambda(carbon)"=fit_unm_sp2_5,
+              "p() lambda(canopy)"=fit_unm_sp2_6,
+              "p() lambda(canopy+BGB_Spawn)"=fit_unm_sp2_7,
+              "p() lambda(BGB_Spawn+human_foot)"=fit_unm_sp2_8,
+              "p() lambda(ALL)"=fit_unm_sp2_9
               )
 
 # model selection detection unmarked
 modSel(fms2)
 
-summary(fit_unm_sp2_0) #### Null MODEL !!!!!!!!!!
+summary(fit_unm_sp2_1) #### Null MODEL !!!!!!!!!!
 
-print("Predicted Occupancy values")
-predict(fit_unm_sp2_0, type="state")
+# Empirical Bayes estimates of abundance at each site
+re <- ranef(fit_unm_sp2_1)
+plot(re)
+print(re)
+
+
+newdat_range<-data.frame(BGB_Spawn=seq(min(covs_raster_val$BGB_Spawn),                                       max(covs_raster_val$BGB_Spawn),length=100),
+                         human_foot=seq(min(covs_raster_val$human_foot),                                       max(covs_raster_val$human_foot),length=100),
+                         NDVI=seq(min(covs_raster_val$NDVI),                                                  max(covs_raster_val$NDVI),length=100),
+                         river=seq(min(covs_raster_val$river),                                                  max(covs_raster_val$river),length=100),
+                         carbon_stock=seq(min(covs_raster_val$carbon),                                                  max(covs_raster_val$carbon),length=100),
+                         canopy=seq(min(covs_raster_val$canopy),                                                  max(covs_raster_val$canopy),length=100)
+                         )
+
+
+
+pred_psi <-predict(fit_unm_sp2_1, type="state", newdata=newdat_range, appendData=TRUE) 
+
+###  Plot occupancy en escala original
+plot(Predicted~BGB_Spawn, pred_psi,type="l",col="blue", ylim=c(0,80),
+     xlab="canopy",
+     ylab="Abundance RN")
+lines(lower~BGB_Spawn, pred_psi,type="l",col=gray(0.5))
+lines(upper~BGB_Spawn, pred_psi,type="l",col=gray(0.5))
+
+
 
 # ######## ubms, bayesian occupancy
 # # Double formula: first part is for detection, second for occupancy
@@ -289,6 +316,25 @@ predict(fit_unm_sp2_0, type="state")
 #| message: false
 
 #### predict
+
+newdata_terra = c(covs_raster[[1]])#,
+                 #covs_raster[[5]],
+                 #covs_raster[[6]])
+
+occuPred <- terra::predict(newdata_terra, fit_unm_sp2_1, type="state", cores=3, na.rm=TRUE, progress = 'text')
+
+
+#### predict map
+
+clr <- colorRampPalette(brewer.pal(9, "YlGn"))
+# mapview (pred_psi_r[[1]], col.regions = clr,  legend = TRUE, alpha=0.7)
+# plot(pred_psi_s[[1]], main="Occupancy")
+levelplot(occuPred[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Abundance")
+
+pal = mapviewPalette("mapviewSpectralColors")
+mapview(raster(occuPred[[1]]), map.types = c("Esri.WorldImagery"), alpha=0.5, col.regions = pal(10)) + mapview(puntos_sf)
+
+
 
 # 
 # # srtm_crop_s <- mask(elev, NDVI)#stack(raster(elev))#, 
@@ -351,36 +397,36 @@ obsCovs(umf_y_full_3) <- list(hour = data.frame(f.shrink.matrix.h.to9(parita$det
 
 
 # fit unmarked
-fit_unm_sp3_0 <- unmarked::occu(~1~1, data=umf_y_full_3) # ok!
+fit_unm_sp3_0 <- unmarked::occuRN(~1~1, data=umf_y_full_3) # ok!
 #fit_unm_sp2_0h <- unmarked::occu(~scale(hour)~1, data=umf_y_full_2) # It work!
 # fit_unm_sp2_0c <- unmarked::occu(~scale(canopy)~1, data=umf_y_full_2) # It work!
-fit_unm_sp3_1 <- unmarked::occu(~1~scale(BGB_Spawn), data=umf_y_full_3,  starts=c(1,1,1), method = "BFGS",
+fit_unm_sp3_1 <- unmarked::occuRN(~1~scale(BGB_Spawn), data=umf_y_full_3,  starts=c(1,1,1), method = "BFGS",
                control = list(maxit = 20000),
                engine = "C")
 
-fit_unm_sp3_2 <- unmarked::occu(~1~scale(human_foot), data=umf_y_full_3)
-fit_unm_sp3_3 <- unmarked::occu(~1~scale(NDVI), data=umf_y_full_3) # ok!
-fit_unm_sp3_4 <- unmarked::occu(~1~scale(river), data=umf_y_full_3)
-fit_unm_sp3_4s <- unmarked::occu(~1~scale(I(river^2)), data=umf_y_full_3)
-fit_unm_sp3_5 <- unmarked::occu(~1~scale(carbon_stock), data=umf_y_full_3)
-fit_unm_sp3_6 <- unmarked::occu(~1~scale(canopy), data=umf_y_full_3)
-fit_unm_sp3_7 <- unmarked::occu(~1~scale(canopy)+
+fit_unm_sp3_2 <- unmarked::occuRN(~1~scale(human_foot), data=umf_y_full_3)
+fit_unm_sp3_3 <- unmarked::occuRN(~1~scale(NDVI), data=umf_y_full_3) # ok!
+fit_unm_sp3_4 <- unmarked::occuRN(~1~scale(river), data=umf_y_full_3)
+fit_unm_sp3_4s <- unmarked::occuRN(~1~scale(I(river^2)), data=umf_y_full_3)
+fit_unm_sp3_5 <- unmarked::occuRN(~1~scale(carbon_stock), data=umf_y_full_3)
+fit_unm_sp3_6 <- unmarked::occuRN(~1~scale(canopy), data=umf_y_full_3)
+fit_unm_sp3_7 <- unmarked::occuRN(~1~scale(canopy)+
                                   scale(BGB_Spawn), data=umf_y_full_3)
-fit_unm_sp3_8 <- unmarked::occu(~1~scale(BGB_Spawn)+
+fit_unm_sp3_8 <- unmarked::occuRN(~1~scale(BGB_Spawn)+
                                   scale(human_foot), data=umf_y_full_3, 
                                 starts=c(1,1,1,1), method = "BFGS",
                                 control = list(maxit = 20000),
                                 engine = "C")
-fit_unm_sp3_9 <- unmarked::occu(~1~scale(river)+ # non carbon
+fit_unm_sp3_9 <- unmarked::occuRN(~1~scale(river)+ # non carbon
                                   scale(NDVI)+ 
                                   scale(human_foot), data=umf_y_full_3)
-fit_unm_sp3_10 <- unmarked::occu(~1~scale(canopy)+ # all carbon
+fit_unm_sp3_10 <- unmarked::occuRN(~1~scale(canopy)+ # all carbon
                                   scale(BGB_Spawn)+ 
                                   scale(carbon_stock), data=umf_y_full_3,
                                 starts=c(1,1,1,1,1), method = "BFGS",
                                 control = list(maxit = 20000),
                                 engine = "C")
-fit_unm_sp3_11 <- unmarked::occu(~1~scale(canopy)+
+fit_unm_sp3_11 <- unmarked::occuRN(~1~scale(canopy)+
                                   scale(BGB_Spawn)+ 
                                   scale(carbon_stock)+
                                   scale(river)+ 
@@ -403,50 +449,57 @@ fit_unm_sp3_11 <- unmarked::occu(~1~scale(canopy)+
 # modSel(fms1) #problem!.. null model ranks better
 
 # fit list for occupancy
-fms3<-fitList("p(.) Ocu(.)"=fit_unm_sp3_0,
+fms3<-fitList("p(.) lambda(.)"=fit_unm_sp3_0,
               #"p(h) Ocu(.)"=fit_unm_sp2_0h, #,
               #"p(c) Ocu(.)"=fit_unm_sp2_0c,
-              "p(.) Ocu(BGB_Spawn)"=fit_unm_sp3_1,
-              "p(.) Ocu(human_foot)"=fit_unm_sp3_2,
-              "p(.) Ocu(NDVI)"=fit_unm_sp3_3,
-              "p(.) Ocu(river)"=fit_unm_sp3_4,
+              "p(.) lambda(BGB_Spawn)"=fit_unm_sp3_1,
+              "p(.) lambda(human_foot)"=fit_unm_sp3_2,
+              "p(.) lambda(NDVI)"=fit_unm_sp3_3,
+              "p(.) lambda(river)"=fit_unm_sp3_4,
               #"p(.) Ocu(river^2)"=fit_unm_sp2_4s,
-              "p() Ocu(carbon)"=fit_unm_sp3_5,
-              "p() Ocu(canopy)"=fit_unm_sp3_6,
-              "p() Ocu(canopy+BGB_Spawn)"=fit_unm_sp3_7,
-              "p() Ocu(BGB_Spawn+human_foot)"=fit_unm_sp3_8,
-              "p() Ocu(river+NDVI+human_foot)"=fit_unm_sp3_9,
-              "p() Ocu(canopy+BGB_Spawn+carbon)"=fit_unm_sp3_10,
-              "p() Ocu(ALL)"=fit_unm_sp3_11
+              "p() lambda(carbon)"=fit_unm_sp3_5,
+              "p() lambda(canopy)"=fit_unm_sp3_6,
+              "p() lambda(canopy+BGB_Spawn)"=fit_unm_sp3_7,
+              "p() lambda(BGB_Spawn+human_foot)"=fit_unm_sp3_8,
+              "p() lambda(river+NDVI+human_foot)"=fit_unm_sp3_9,
+              "p() lambda(canopy+BGB_Spawn+carbon)"=fit_unm_sp3_10,
+              "p() lambda(ALL)"=fit_unm_sp3_11
               )
 
 # model selection detection unmarked
 modSel(fms3)
 
-summary(fit_unm_sp3_10)
+summary(fit_unm_sp3_0)
 
-pb_f <- parboot(fit_unm_sp3_10, nsim=500, report=10) 
+pb_f <- parboot(fit_unm_sp3_0, nsim=500, report=10) 
 plot (pb_f)
 
 
-newdat_range<-data.frame(BGB_Spawn=seq(min(covs_raster_val$BGB_Spawn),                                       max(covs_raster_val$BGB_Spawn),length=100),
-                         human_foot=seq(min(covs_raster_val$human_foot),                                       max(covs_raster_val$human_foot),length=100),
-                         NDVI=seq(min(covs_raster_val$NDVI),                                                  max(covs_raster_val$NDVI),length=100),
-                         river=seq(min(covs_raster_val$river),                                                  max(covs_raster_val$river),length=100),
-                         carbon_stock=seq(min(covs_raster_val$carbon),                                                  max(covs_raster_val$carbon),length=100),
-                         canopy=seq(min(covs_raster_val$canopy),                                                  max(covs_raster_val$canopy),length=100)
-                         )
+# Empirical Bayes estimates of abundance at each site
+re <- ranef(fit_unm_sp3_0)
+plot(re)
+print(re)
 
-
-pred_psi <-predict(fit_unm_sp3_10, type="state", newdata=newdat_range, appendData=TRUE) 
-
-###  Plot occupancy en escala original
-plot(Predicted~canopy, pred_psi,type="l",col="blue", ylim=c(-0.1,1.1),
-     xlab="canopy",
-     ylab="Probabilidad de ocupación")
-lines(lower~canopy, pred_psi,type="l",col=gray(0.5))
-lines(upper~canopy, pred_psi,type="l",col=gray(0.5))
-
+# 
+# 
+# newdat_range<-data.frame(BGB_Spawn=seq(min(covs_raster_val$BGB_Spawn),                                       max(covs_raster_val$BGB_Spawn),length=100),
+#                          human_foot=seq(min(covs_raster_val$human_foot),                                       max(covs_raster_val$human_foot),length=100),
+#                          NDVI=seq(min(covs_raster_val$NDVI),                                                  max(covs_raster_val$NDVI),length=100),
+#                          river=seq(min(covs_raster_val$river),                                                  max(covs_raster_val$river),length=100),
+#                          carbon_stock=seq(min(covs_raster_val$carbon),                                                  max(covs_raster_val$carbon),length=100),
+#                          canopy=seq(min(covs_raster_val$canopy),                                                  max(covs_raster_val$canopy),length=100)
+#                          )
+# 
+# 
+# pred_psi <-predict(fit_unm_sp3_8, type="state", newdata=newdat_range, appendData=TRUE) 
+# 
+# ###  Plot occupancy en escala original
+# plot(Predicted~BGB_Spawn, pred_psi,type="l",col="blue", ylim=c(-0.1,1.1),
+#      xlab="BGB_Spawn",
+#      ylab="Probabilidad de ocupación")
+# lines(lower~BGB_Spawn, pred_psi,type="l",col=gray(0.5))
+# lines(upper~BGB_Spawn, pred_psi,type="l",col=gray(0.5))
+# 
 
 
 # # fit stan
@@ -483,9 +536,13 @@ lines(upper~canopy, pred_psi,type="l",col=gray(0.5))
 
 ### Spatial Prediction
 
+None because null model is lowest AIC.
+
 ```{r}
 #| warning: false
 #| message: false
+#| eval: false
+#| echo: false
 
 #spatial
 # occuPred <- unmarked::predict(fit_unm_sp3_10,
@@ -524,7 +581,7 @@ occuPred <- terra::predict(newdata_terra, fit_unm_sp3_10, type="state", cores=3,
 clr <- colorRampPalette(brewer.pal(9, "YlGn"))
 # mapview (pred_psi_r[[1]], col.regions = clr,  legend = TRUE, alpha=0.7)
 # plot(pred_psi_s[[1]], main="Occupancy")
-levelplot(occuPred[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Ocupancy")
+levelplot(occuPred[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Abundance")
 
 pal = mapviewPalette("mapviewSpectralColors")
 mapview(raster(occuPred[[1]]), map.types = c("Esri.WorldImagery"), alpha=0.5, col.regions = pal(10)) + mapview(puntos_sf)
@@ -565,36 +622,36 @@ obsCovs(umf_y_full_4) <- list(hour = data.frame(f.shrink.matrix.h.to9(parita$det
 
 
 # fit unmarked
-fit_unm_sp4_0 <- unmarked::occu(~1~1, data=umf_y_full_4) # ok!
+fit_unm_sp4_0 <- unmarked::occuRN(~1~1, data=umf_y_full_4) # ok!
 #fit_unm_sp2_0h <- unmarked::occu(~scale(hour)~1, data=umf_y_full_2) # It work!
 # fit_unm_sp2_0c <- unmarked::occu(~scale(canopy)~1, data=umf_y_full_2) # It work!
-fit_unm_sp4_1 <- unmarked::occu(~1~scale(BGB_Spawn), data=umf_y_full_4,  starts=c(1,1,1), method = "BFGS",
+fit_unm_sp4_1 <- unmarked::occuRN(~1~scale(BGB_Spawn), data=umf_y_full_4,  starts=c(1,1,1), method = "BFGS",
                control = list(maxit = 20000),
                engine = "C")
 
-fit_unm_sp4_2 <- unmarked::occu(~1~scale(human_foot), data=umf_y_full_4)
-fit_unm_sp4_3 <- unmarked::occu(~1~scale(NDVI), data=umf_y_full_4) # ok!
-fit_unm_sp4_4 <- unmarked::occu(~1~scale(river), data=umf_y_full_4)
-fit_unm_sp4_4s <- unmarked::occu(~1~scale(I(river^2)), data=umf_y_full_4)
-fit_unm_sp4_5 <- unmarked::occu(~1~scale(carbon_stock), data=umf_y_full_4)
-fit_unm_sp4_6 <- unmarked::occu(~1~scale(canopy), data=umf_y_full_4)
-fit_unm_sp4_7 <- unmarked::occu(~1~scale(canopy)+
+fit_unm_sp4_2 <- unmarked::occuRN(~1~scale(human_foot), data=umf_y_full_4)
+fit_unm_sp4_3 <- unmarked::occuRN(~1~scale(NDVI), data=umf_y_full_4) # ok!
+fit_unm_sp4_4 <- unmarked::occuRN(~1~scale(river), data=umf_y_full_4)
+fit_unm_sp4_4s <- unmarked::occuRN(~1~scale(I(river^2)), data=umf_y_full_4)
+fit_unm_sp4_5 <- unmarked::occuRN(~1~scale(carbon_stock), data=umf_y_full_4)
+fit_unm_sp4_6 <- unmarked::occuRN(~1~scale(canopy), data=umf_y_full_4)
+fit_unm_sp4_7 <- unmarked::occuRN(~1~scale(canopy)+
                                   scale(BGB_Spawn), data=umf_y_full_4)
-fit_unm_sp4_8 <- unmarked::occu(~1~scale(BGB_Spawn)+
+fit_unm_sp4_8 <- unmarked::occuRN(~1~scale(BGB_Spawn)+
                                   scale(human_foot), data=umf_y_full_4, 
                                 starts=c(1,1,1,1), method = "BFGS",
                                 control = list(maxit = 20000),
                                 engine = "C")
-fit_unm_sp4_9 <- unmarked::occu(~1~scale(river)+ # non carbon
+fit_unm_sp4_9 <- unmarked::occuRN(~1~scale(river)+ # non carbon
                                   scale(NDVI)+ 
                                   scale(human_foot), data=umf_y_full_4)
-fit_unm_sp4_10 <- unmarked::occu(~1~scale(canopy)+ # all carbon
+fit_unm_sp4_10 <- unmarked::occuRN(~1~scale(canopy)+ # all carbon
                                   scale(BGB_Spawn)+ 
                                   scale(carbon_stock), data=umf_y_full_4,
                                 starts=c(1,1,1,1,1), method = "BFGS",
                                 control = list(maxit = 20000),
                                 engine = "C")
-fit_unm_sp4_11 <- unmarked::occu(~1~scale(canopy)+
+fit_unm_sp4_11 <- unmarked::occuRN(~1~scale(canopy)+
                                   scale(BGB_Spawn)+ 
                                   scale(carbon_stock)+
                                   scale(river)+ 
@@ -618,27 +675,27 @@ fit_unm_sp4_11 <- unmarked::occu(~1~scale(canopy)+
 # modSel(fms1) #problem!.. null model ranks better
 
 # fit list for occupancy
-fms4<-fitList("p(.) Ocu(.)"=fit_unm_sp4_0,
+fms4<-fitList("p(.) lambda(.)"=fit_unm_sp4_0,
               #"p(h) Ocu(.)"=fit_unm_sp2_0h, #,
               #"p(c) Ocu(.)"=fit_unm_sp2_0c,
-              "p(.) Ocu(BGB_Spawn)"=fit_unm_sp4_1,
-              "p(.) Ocu(human_foot)"=fit_unm_sp4_2,
-              "p(.) Ocu(NDVI)"=fit_unm_sp4_3,
-              "p(.) Ocu(river)"=fit_unm_sp4_4,
+              "p(.) lambda(BGB_Spawn)"=fit_unm_sp4_1,
+              "p(.) lambda(human_foot)"=fit_unm_sp4_2,
+              "p(.) lambda(NDVI)"=fit_unm_sp4_3,
+              "p(.) lambda(river)"=fit_unm_sp4_4,
               #"p(.) Ocu(river^2)"=fit_unm_sp4_4s,
-              "p() Ocu(carbon)"=fit_unm_sp4_5,
-              "p() Ocu(canopy)"=fit_unm_sp4_6,
-              "p() Ocu(canopy+BGB_Spawn)"=fit_unm_sp4_7,
-              "p() Ocu(BGB_Spawn+human_foot)"=fit_unm_sp4_8,
-              "p() Ocu(river+NDVI+human_foot)"=fit_unm_sp4_9,
-              "p() Ocu(canopy+BGB_Spawn+carbon)"=fit_unm_sp4_10,
-              "p() Ocu(ALL)"=fit_unm_sp4_11
+              "p() lambda(carbon)"=fit_unm_sp4_5,
+              "p() lambda(canopy)"=fit_unm_sp4_6,
+              "p() lambda(canopy+BGB_Spawn)"=fit_unm_sp4_7,
+              "p() lambda(BGB_Spawn+human_foot)"=fit_unm_sp4_8,
+              "p() lambda(river+NDVI+human_foot)"=fit_unm_sp4_9,
+              "p() lambda(canopy+BGB_Spawn+carbon)"=fit_unm_sp4_10,
+              "p() lambda(ALL)"=fit_unm_sp4_11
               )
 
 # model selection detection unmarked
 modSel(fms4)
 
-summary(fit_unm_sp4_4)
+summary(fit_unm_sp4_10)
 
 #pb_f <- parboot(fit_unm_sp4_4, nsim=500, report=10) 
 #plot (pb_f)
@@ -663,7 +720,7 @@ fitstats <- function(model.name,
 }
 
 # wait!...
-pb <- parboot(fit_unm_sp4_4,
+pb <- parboot(fit_unm_sp4_10,
               fitstats,
               nsim = 1000,
               report = TRUE,
@@ -677,7 +734,7 @@ plot(pb,
 dev.off() # reset par
 
 ############# histogram evaluation
-pb_f <- parboot(fit_unm_sp4_4, nsim=500, report=10) 
+pb_f <- parboot(fit_unm_sp4_10, nsim=500, report=10) 
 plot (pb_f)
 
 
@@ -690,14 +747,14 @@ newdat_range<-data.frame(BGB_Spawn=seq(min(covs_raster_val$BGB_Spawn),          
                          canopy=seq(min(covs_raster_val$canopy),                                                  max(covs_raster_val$canopy),length=100)
                          )
 
-pred_psi <-predict(fit_unm_sp4_4, type="state", newdata=newdat_range, appendData=TRUE) 
+pred_psi <-predict(fit_unm_sp4_10, type="state", newdata=newdat_range, appendData=TRUE) 
 
 ###  Plot occupancy en escala original
-plot(Predicted~river, pred_psi,type="l",col="blue", ylim=c(0,0.95),
-     xlab="river",
-     ylab="Probabilidad de ocupación")
-lines(lower~river, pred_psi,type="l",col=gray(0.5))
-lines(upper~river, pred_psi,type="l",col=gray(0.5))
+plot(Predicted~BGB_Spawn, pred_psi,type="l",col="blue", ylim=c(0,84),
+     xlab="BGB_Spawn",
+     ylab="Abundance RN")
+lines(lower~BGB_Spawn, pred_psi,type="l",col=gray(0.5))
+lines(upper~BGB_Spawn, pred_psi,type="l",col=gray(0.5))
 
 # # fit stan
 # fit_stan_sp3_0 <- stan_occu(~1~1, data=umf_y_full_3, chains=3, iter=1000, cores=3)
@@ -755,11 +812,15 @@ lines(upper~river, pred_psi,type="l",col=gray(0.5))
 #                     na.rm = TRUE,
 #                     inf.rm = TRUE)
 
-newdata_terra = c(covs_raster[[4]])#,
-                 #covs_raster[[5]],
+newdata_terra = c(covs_raster[[1]],#,
+                 covs_raster[[2]],
+                 covs_raster[[3]],#,
+                 covs_raster[[4]],
+                 covs_raster[[5]],#,
+                 covs_raster[[6]])
                  #covs_raster[[6]])
 
-occuPred <- terra::predict(newdata_terra, fit_unm_sp4_4, type="state", cores=3, na.rm=TRUE, progress = 'text')
+occuPred <- terra::predict(newdata_terra, fit_unm_sp4_10, type="state", cores=3, na.rm=TRUE, progress = 'text')
 
 
 
@@ -773,7 +834,7 @@ occuPred <- terra::predict(newdata_terra, fit_unm_sp4_4, type="state", cores=3, 
 clr <- colorRampPalette(brewer.pal(9, "YlGn"))
 # mapview (pred_psi_r[[1]], col.regions = clr,  legend = TRUE, alpha=0.7)
 # plot(pred_psi_s[[1]], main="Occupancy")
-levelplot(occuPred[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Ocupancy")
+levelplot(occuPred[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Abundance")
 
 pal = mapviewPalette("mapviewSpectralColors")
 mapview(raster(occuPred[[1]]), map.types = c("Esri.WorldImagery"), alpha=0.5, col.regions = pal(10)) + mapview(puntos_sf)
@@ -817,36 +878,36 @@ obsCovs(umf_y_full_5) <- list(hour = matrix(parita$dete[[5]]),
 
 # fit unmarked
 # fit unmarked
-fit_unm_sp5_0 <- unmarked::occu(~1~1, data=umf_y_full_5) # ok!
+fit_unm_sp5_0 <- unmarked::occuRN(~1~1, data=umf_y_full_5) # ok!
 #fit_unm_sp2_0h <- unmarked::occu(~scale(hour)~1, data=umf_y_full_2) # It work!
 # fit_unm_sp2_0c <- unmarked::occu(~scale(canopy)~1, data=umf_y_full_2) # It work!
-fit_unm_sp5_1 <- unmarked::occu(~1~scale(BGB_Spawn), data=umf_y_full_5,  starts=c(1,1,1), method = "BFGS",
+fit_unm_sp5_1 <- unmarked::occuRN(~1~scale(BGB_Spawn), data=umf_y_full_5,  starts=c(1,1,1), method = "BFGS",
                control = list(maxit = 20000),
                engine = "C")
 
-fit_unm_sp5_2 <- unmarked::occu(~1~scale(human_foot), data=umf_y_full_5)
-fit_unm_sp5_3 <- unmarked::occu(~1~scale(NDVI), data=umf_y_full_5) # ok!
-fit_unm_sp5_4 <- unmarked::occu(~1~scale(river), data=umf_y_full_5)
-fit_unm_sp5_4s <- unmarked::occu(~1~scale(I(river^2)), data=umf_y_full_5)
-fit_unm_sp5_5 <- unmarked::occu(~1~scale(carbon_stock), data=umf_y_full_5)
-fit_unm_sp5_6 <- unmarked::occu(~1~scale(canopy), data=umf_y_full_5)
-fit_unm_sp5_7 <- unmarked::occu(~1~scale(canopy)+
+fit_unm_sp5_2 <- unmarked::occuRN(~1~scale(human_foot), data=umf_y_full_5)
+fit_unm_sp5_3 <- unmarked::occuRN(~1~scale(NDVI), data=umf_y_full_5) # ok!
+fit_unm_sp5_4 <- unmarked::occuRN(~1~scale(river), data=umf_y_full_5)
+fit_unm_sp5_4s <- unmarked::occuRN(~1~scale(I(river^2)), data=umf_y_full_5)
+fit_unm_sp5_5 <- unmarked::occuRN(~1~scale(carbon_stock), data=umf_y_full_5)
+fit_unm_sp5_6 <- unmarked::occuRN(~1~scale(canopy), data=umf_y_full_5)
+fit_unm_sp5_7 <- unmarked::occuRN(~1~scale(canopy)+
                                   scale(BGB_Spawn), data=umf_y_full_5)
-fit_unm_sp5_8 <- unmarked::occu(~1~scale(BGB_Spawn)+
+fit_unm_sp5_8 <- unmarked::occuRN(~1~scale(BGB_Spawn)+
                                   scale(human_foot), data=umf_y_full_5, 
                                 starts=c(1,1,1,1), method = "BFGS",
                                 control = list(maxit = 20000),
                                 engine = "C")
-fit_unm_sp5_9 <- unmarked::occu(~1~scale(river)+ # non carbon
+fit_unm_sp5_9 <- unmarked::occuRN(~1~scale(river)+ # non carbon
                                   scale(NDVI)+ 
                                   scale(human_foot), data=umf_y_full_5)
-fit_unm_sp5_10 <- unmarked::occu(~1~scale(canopy)+ # all carbon
+fit_unm_sp5_10 <- unmarked::occuRN(~1~scale(canopy)+ # all carbon
                                   scale(BGB_Spawn)+ 
                                   scale(carbon_stock), data=umf_y_full_5,
                                 starts=c(1,1,1,1,1), method = "BFGS",
                                 control = list(maxit = 20000),
                                 engine = "C")
-fit_unm_sp5_11 <- unmarked::occu(~1~scale(canopy)+
+fit_unm_sp5_11 <- unmarked::occuRN(~1~scale(canopy)+
                                   scale(BGB_Spawn)+ 
                                   scale(carbon_stock)+
                                   scale(river)+ 
@@ -870,46 +931,46 @@ fit_unm_sp5_11 <- unmarked::occu(~1~scale(canopy)+
 # modSel(fms1) #problem!.. null model ranks better
 
 # fit list for occupancy
-fms5<-fitList("p(.) Ocu(.)"=fit_unm_sp5_0,
+fms5<-fitList("p(.) lambda(.)"=fit_unm_sp5_0,
               #"p(h) Ocu(.)"=fit_unm_sp2_0h, #,
               #"p(c) Ocu(.)"=fit_unm_sp2_0c,
-              "p(.) Ocu(BGB_Spawn)"=fit_unm_sp5_1,
-              "p(.) Ocu(human_foot)"=fit_unm_sp5_2,
-              "p(.) Ocu(NDVI)"=fit_unm_sp5_3,
-              "p(.) Ocu(river)"=fit_unm_sp5_4,
+              "p(.) lambda(BGB_Spawn)"=fit_unm_sp5_1,
+              "p(.) lambda(human_foot)"=fit_unm_sp5_2,
+              "p(.) lambda(NDVI)"=fit_unm_sp5_3,
+              "p(.) lambda(river)"=fit_unm_sp5_4,
               #"p(.) Ocu(river^2)"=fit_unm_sp4_4s,
-              "p() Ocu(carbon)"=fit_unm_sp5_5,
-              "p() Ocu(canopy)"=fit_unm_sp5_6,
-              "p() Ocu(canopy+BGB_Spawn)"=fit_unm_sp5_7,
-              "p() Ocu(BGB_Spawn+human_foot)"=fit_unm_sp5_8,
-              "p() Ocu(river+NDVI+human_foot)"=fit_unm_sp5_9,
-              "p() Ocu(canopy+BGB_Spawn+carbon)"=fit_unm_sp5_10,
-              "p() Ocu(ALL)"=fit_unm_sp5_11
+              "p() lambda(carbon)"=fit_unm_sp5_5,
+              "p() lambda(canopy)"=fit_unm_sp5_6,
+              "p() lambda(canopy+BGB_Spawn)"=fit_unm_sp5_7,
+              "p() lambda(BGB_Spawn+human_foot)"=fit_unm_sp5_8,
+              "p() lambda(river+NDVI+human_foot)"=fit_unm_sp5_9,
+              "p() lambda(canopy+BGB_Spawn+carbon)"=fit_unm_sp5_10,
+              "p() lambda(ALL)"=fit_unm_sp5_11
               )
 
 # model selection detection unmarked
 modSel(fms5)
 
-summary(fit_unm_sp5_7)
+summary(fit_unm_sp5_11)
 
 ############# histogram evaluation
-pb_f <- parboot(fit_unm_sp5_7, nsim=500, report=10) 
+pb_f <- parboot(fit_unm_sp5_11, nsim=500, report=10) 
 plot (pb_f)
 
 
-pred_psi <-predict(fit_unm_sp5_7, type="state", newdata=newdat_range, appendData=TRUE) 
+pred_psi <-predict(fit_unm_sp5_11, type="state", newdata=newdat_range, appendData=TRUE) 
 
 ###  Plot occupancy en escala original
-plot(Predicted~canopy, pred_psi,type="l",col="blue", ylim=c(0,0.95),
+plot(Predicted~canopy, pred_psi,type="l",col="blue", ylim=c(0,14),
      xlab="canopy",
-     ylab="Probabilidad de ocupación")
+     ylab="Abundance RN")
 lines(lower~canopy, pred_psi,type="l",col=gray(0.5))
 lines(upper~canopy, pred_psi,type="l",col=gray(0.5))
 
 ###  Plot occupancy en escala original
-plot(Predicted~BGB_Spawn, pred_psi,type="l",col="blue", ylim=c(0,0.95),
+plot(Predicted~BGB_Spawn, pred_psi,type="l",col="blue", ylim=c(0,14),
      xlab="BGB_Spawn",
-     ylab="Probabilidad de ocupación")
+     ylab="Abundance RN")
 lines(lower~BGB_Spawn, pred_psi,type="l",col=gray(0.5))
 lines(upper~BGB_Spawn, pred_psi,type="l",col=gray(0.5))
 
@@ -970,10 +1031,13 @@ lines(upper~BGB_Spawn, pred_psi,type="l",col=gray(0.5))
 #pred_psi_ras[] <- pred_psi_s_stan$Predicted # drape on top
 
 newdata_terra = c(covs_raster[[1]],#,
-                 covs_raster[[6]])#,
-                 #covs_raster[[6]])
+                 covs_raster[[2]],
+                 covs_raster[[3]],#,
+                 covs_raster[[4]],
+                 covs_raster[[5]],#,
+                 covs_raster[[6]])
 
-occuPred <- terra::predict(newdata_terra, fit_unm_sp5_7, type="state", cores=3, na.rm=TRUE, progress = 'text')
+occuPred <- terra::predict(newdata_terra, fit_unm_sp5_11, type="state", cores=3, na.rm=TRUE, progress = 'text')
 
 
 
@@ -982,7 +1046,7 @@ occuPred <- terra::predict(newdata_terra, fit_unm_sp5_7, type="state", cores=3, 
 clr <- colorRampPalette(brewer.pal(9, "YlGn"))
 # mapview (pred_psi_r[[1]], col.regions = clr,  legend = TRUE, alpha=0.7)
 # plot(pred_psi_s[[1]], main="Occupancy")
-levelplot(occuPred[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Ocupancy")
+levelplot(occuPred[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Abundance")
 
 pal = mapviewPalette("mapviewSpectralColors")
 mapview(raster(occuPred[[1]]), map.types = c("Esri.WorldImagery"), alpha=0.5, col.regions = pal(10)) + mapview(puntos_sf)
@@ -1027,36 +1091,36 @@ obsCovs(umf_y_full_1) <- list(hour = matrix(parita$dete[[1]]),
 
 # fit unmarked
 # fit unmarked
-fit_unm_sp1_0 <- unmarked::occu(~1~1, data=umf_y_full_1) # ok!
+fit_unm_sp1_0 <- unmarked::occuRN(~1~1, data=umf_y_full_1) # ok!
 #fit_unm_sp2_0h <- unmarked::occu(~scale(hour)~1, data=umf_y_full_2) # It work!
 # fit_unm_sp2_0c <- unmarked::occu(~scale(canopy)~1, data=umf_y_full_2) # It work!
-fit_unm_sp1_1 <- unmarked::occu(~1~scale(BGB_Spawn), data=umf_y_full_1,  starts=c(1,1,1), method = "BFGS",
+fit_unm_sp1_1 <- unmarked::occuRN(~1~scale(BGB_Spawn), data=umf_y_full_1,  starts=c(1,1,1), method = "BFGS",
                control = list(maxit = 20000),
                engine = "C")
 
-fit_unm_sp1_2 <- unmarked::occu(~1~scale(human_foot), data=umf_y_full_1)
-fit_unm_sp1_3 <- unmarked::occu(~1~scale(NDVI), data=umf_y_full_1) # ok!
-fit_unm_sp1_4 <- unmarked::occu(~1~scale(river), data=umf_y_full_1)
-fit_unm_sp1_4s <- unmarked::occu(~1~scale(I(river^2)), data=umf_y_full_1)
-fit_unm_sp1_5 <- unmarked::occu(~1~scale(carbon_stock), data=umf_y_full_1)
-fit_unm_sp1_6 <- unmarked::occu(~1~scale(canopy), data=umf_y_full_1)
-fit_unm_sp1_7 <- unmarked::occu(~1~scale(canopy)+
+fit_unm_sp1_2 <- unmarked::occuRN(~1~scale(human_foot), data=umf_y_full_1)
+fit_unm_sp1_3 <- unmarked::occuRN(~1~scale(NDVI), data=umf_y_full_1) # ok!
+fit_unm_sp1_4 <- unmarked::occuRN(~1~scale(river), data=umf_y_full_1)
+fit_unm_sp1_4s <- unmarked::occuRN(~1~scale(I(river^2)), data=umf_y_full_1)
+fit_unm_sp1_5 <- unmarked::occuRN(~1~scale(carbon_stock), data=umf_y_full_1)
+fit_unm_sp1_6 <- unmarked::occuRN(~1~scale(canopy), data=umf_y_full_1)
+fit_unm_sp1_7 <- unmarked::occuRN(~1~scale(canopy)+
                                   scale(BGB_Spawn), data=umf_y_full_1)
-fit_unm_sp1_8 <- unmarked::occu(~1~scale(BGB_Spawn)+
+fit_unm_sp1_8 <- unmarked::occuRN(~1~scale(BGB_Spawn)+
                                   scale(human_foot), data=umf_y_full_1, 
                                 starts=c(1,1,1,1), method = "BFGS",
                                 control = list(maxit = 20000),
                                 engine = "C")
-fit_unm_sp1_9 <- unmarked::occu(~1~scale(river)+ # non carbon
+fit_unm_sp1_9 <- unmarked::occuRN(~1~scale(river)+ # non carbon
                                   scale(NDVI)+ 
                                   scale(human_foot), data=umf_y_full_1)
-fit_unm_sp1_10 <- unmarked::occu(~1~scale(canopy)+ # all carbon
+fit_unm_sp1_10 <- unmarked::occuRN(~1~scale(canopy)+ # all carbon
                                   scale(BGB_Spawn)+ 
                                   scale(carbon_stock), data=umf_y_full_1,
                                 starts=c(1,1,1,1,1), method = "BFGS",
                                 control = list(maxit = 20000),
                                 engine = "C")
-fit_unm_sp1_11 <- unmarked::occu(~1~scale(canopy)+
+fit_unm_sp1_11 <- unmarked::occuRN(~1~scale(canopy)+
                                   scale(BGB_Spawn)+ 
                                   scale(carbon_stock)+
                                   scale(river)+ 
@@ -1080,42 +1144,42 @@ fit_unm_sp1_11 <- unmarked::occu(~1~scale(canopy)+
 # modSel(fms1) #problem!.. null model ranks better
 
 # fit list for occupancy
-fms1<-fitList("p(.) Ocu(.)"=fit_unm_sp1_0,
+fms1<-fitList("p(.) lambda(.)"=fit_unm_sp1_0,
               #"p(h) Ocu(.)"=fit_unm_sp2_0h, #,
               #"p(c) Ocu(.)"=fit_unm_sp2_0c,
-              "p(.) Ocu(BGB_Spawn)"=fit_unm_sp1_1,
-              "p(.) Ocu(human_foot)"=fit_unm_sp1_2,
-              "p(.) Ocu(NDVI)"=fit_unm_sp1_3,
-              "p(.) Ocu(river)"=fit_unm_sp1_4,
+              "p(.) lambda(BGB_Spawn)"=fit_unm_sp1_1,
+              "p(.) lambda(human_foot)"=fit_unm_sp1_2,
+              "p(.) lambda(NDVI)"=fit_unm_sp1_3,
+              "p(.) lambda(river)"=fit_unm_sp1_4,
               #"p(.) Ocu(river^2)"=fit_unm_sp4_4s,
-              "p() Ocu(carbon)"=fit_unm_sp1_5,
-              "p() Ocu(canopy)"=fit_unm_sp1_6,
-              "p() Ocu(canopy+BGB_Spawn)"=fit_unm_sp1_7,
-              "p() Ocu(BGB_Spawn+human_foot)"=fit_unm_sp1_8,
-              "p() Ocu(river+NDVI+human_foot)"=fit_unm_sp1_9,
-              "p() Ocu(canopy+BGB_Spawn+carbon)"=fit_unm_sp1_10,
-              "p() Ocu(ALL)"=fit_unm_sp1_11
+              "p() lambda(carbon)"=fit_unm_sp1_5,
+              "p() lambda(canopy)"=fit_unm_sp1_6,
+              "p() lambda(canopy+BGB_Spawn)"=fit_unm_sp1_7,
+              "p() lambda(BGB_Spawn+human_foot)"=fit_unm_sp1_8,
+              "p() lambda(river+NDVI+human_foot)"=fit_unm_sp1_9,
+              "p() lambda(canopy+BGB_Spawn+carbon)"=fit_unm_sp1_10,
+              "p() lambda(ALL)"=fit_unm_sp1_11
               )
 
 # model selection detection unmarked
 modSel(fms1)
 
-summary(fit_unm_sp1_1)
+summary(fit_unm_sp1_3)
 
 ############# histogram evaluation
-pb_f <- parboot(fit_unm_sp1_1, nsim=500, report=10) 
+pb_f <- parboot(fit_unm_sp1_3, nsim=500, report=10) 
 plot (pb_f)
 
 
-pred_psi <-predict(fit_unm_sp1_1, type="state", newdata=newdat_range, appendData=TRUE) 
+pred_psi <-predict(fit_unm_sp1_3, type="state", newdata=newdat_range, appendData=TRUE) 
 
 
 ###  Plot occupancy en escala original
-plot(Predicted~BGB_Spawn, pred_psi,type="l",col="blue", ylim=c(-0.1,1.1),
-     xlab="BGB_Spawn",
-     ylab="Probabilidad de ocupación")
-lines(lower~BGB_Spawn, pred_psi,type="l",col=gray(0.5))
-lines(upper~BGB_Spawn, pred_psi,type="l",col=gray(0.5))
+plot(Predicted~NDVI, pred_psi,type="l",col="blue", ylim=c(0,97),
+     xlab="NDVI",
+     ylab="Abundance RN")
+lines(lower~NDVI, pred_psi,type="l",col=gray(0.5))
+lines(upper~NDVI, pred_psi,type="l",col=gray(0.5))
 
 
 
@@ -1144,11 +1208,14 @@ lines(upper~BGB_Spawn, pred_psi,type="l",col=gray(0.5))
 
 
 
-newdata_terra = c(covs_raster[[1]])#,#,
-                 #covs_raster[[6]])#,
-                 #covs_raster[[6]])
+newdata_terra = c(covs_raster[[1]],#,
+                 covs_raster[[2]],
+                 covs_raster[[3]],#,
+                 covs_raster[[4]],
+                 covs_raster[[5]],#,
+                 covs_raster[[6]])
 
-occuPred <- terra::predict(newdata_terra, fit_unm_sp1_1, type="state", cores=3, na.rm=TRUE, progress = 'text')
+occuPred <- terra::predict(newdata_terra, fit_unm_sp1_3, type="state", cores=3, na.rm=TRUE, progress = 'text')
 
 
 
@@ -1157,7 +1224,7 @@ occuPred <- terra::predict(newdata_terra, fit_unm_sp1_1, type="state", cores=3, 
 clr <- colorRampPalette(brewer.pal(9, "YlGn"))
 # mapview (pred_psi_r[[1]], col.regions = clr,  legend = TRUE, alpha=0.7)
 # plot(pred_psi_s[[1]], main="Occupancy")
-levelplot(occuPred[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Ocupancy")
+levelplot(occuPred[[1]], par.settings = YlOrRdTheme(), margin=FALSE, main="Abundance")
 
 pal = mapviewPalette("mapviewSpectralColors")
 mapview(raster(occuPred[[1]]), map.types = c("Esri.WorldImagery"), alpha=0.5, col.regions = pal(10)) + mapview(puntos_sf)

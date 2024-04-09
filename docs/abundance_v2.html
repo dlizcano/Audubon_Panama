@@ -1,0 +1,4927 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Diego J. Lizcano">
+<meta name="author" content="Jorge Velásquez-Tibata">
+<meta name="dcterms.date" content="2024-04-09">
+
+<title>Abundance all species as a function. Parita Bay, Panama</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="abundance_v2_files/libs/clipboard/clipboard.min.js"></script>
+<script src="abundance_v2_files/libs/quarto-html/quarto.js"></script>
+<script src="abundance_v2_files/libs/quarto-html/popper.min.js"></script>
+<script src="abundance_v2_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="abundance_v2_files/libs/quarto-html/anchor.min.js"></script>
+<link href="abundance_v2_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="abundance_v2_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="abundance_v2_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="abundance_v2_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="abundance_v2_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#read-data" id="toc-read-data" class="nav-link active" data-scroll-target="#read-data">Read data</a>
+  <ul class="collapse">
+  <li><a href="#grouping-by-3-days" id="toc-grouping-by-3-days" class="nav-link" data-scroll-target="#grouping-by-3-days">grouping by 3 days</a></li>
+  </ul></li>
+  <li><a href="#function-to-get-abundance" id="toc-function-to-get-abundance" class="nav-link" data-scroll-target="#function-to-get-abundance">function to get abundance</a>
+  <ul class="collapse">
+  <li><a href="#one-species-single-season" id="toc-one-species-single-season" class="nav-link" data-scroll-target="#one-species-single-season">One species, single season</a></li>
+  <li><a href="#use-the-function" id="toc-use-the-function" class="nav-link" data-scroll-target="#use-the-function">use the function</a></li>
+  <li><a href="#information-of-r-session." id="toc-information-of-r-session." class="nav-link" data-scroll-target="#information-of-r-session.">Information of R session.</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Abundance all species as a function. Parita Bay, Panama</h1>
+<p class="subtitle lead">site abundance prediction</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Authors</div>
+    <div class="quarto-title-meta-contents">
+             <p>Diego J. Lizcano <a href="https://orcid.org/https://orcid.org/0000-0002-9648-0576" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+             <p>Jorge Velásquez-Tibata <a href="https://orcid.org/https://orcid.org/0000-0002-7773-7348" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 9, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>Fit the occupancy model of Royle and Nichols (2003), which relates probability of detection of the species to the number of individuals available for detection at each site.</p>
+<p>Royle, J. A. and Nichols, J. D. (2003) Estimating Abundance from Repeated Presence-Absence Data or Point Counts. Ecology, 84(3) pp.&nbsp;777–790.</p>
+<section id="read-data" class="level1">
+<h1>Read data</h1>
+<section id="grouping-by-3-days" class="level2">
+<h2 class="anchored" data-anchor-id="grouping-by-3-days">grouping by 3 days</h2>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load function</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"D:/AudubonPanama/R/matrix_creator.R"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="do">############### load Packages</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr) <span class="co"># readr </span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl) <span class="co"># read excel</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) <span class="co"># </span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(unmarked) <span class="co"># occupancy by maximun likelihood</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf) <span class="co"># simple feature</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mapview) <span class="co"># view map</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ubms) <span class="co"># occupancy by Bayesian made easy</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stocc) <span class="co"># spatial data for example</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra) </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(raster)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RColorBrewer)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rasterVis)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="do">############### load data</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># old </span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co"># parita_data_full &lt;- read_delim("C:/CodigoR/AudubonPanama/data/all_records_audubon_panama_to_occu.csv", </span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">#                               delim = "\t", escape_double = FALSE, </span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co">#                               col_types = cols(eventDate = col_date(format = "%Y-%m-%d")), </span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co">#                               trim_ws = TRUE)</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co"># new</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>parita_data_full <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"D:/AudubonPanama/data/all_records_audubon_panama_Darwin_Core_revision.xlsx"</span>, </span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">col_types =</span> <span class="fu">c</span>(<span class="st">"text"</span>, <span class="st">"text"</span>, <span class="st">"text"</span>, </span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        <span class="st">"date"</span>, <span class="st">"text"</span>, <span class="st">"text"</span>, <span class="st">"numeric"</span>, </span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">"numeric"</span>, <span class="st">"text"</span>, <span class="st">"text"</span>, <span class="st">"numeric"</span>, </span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>        <span class="st">"text"</span>, <span class="st">"numeric"</span>, <span class="st">"numeric"</span>, <span class="st">"text"</span>, </span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>        <span class="st">"numeric"</span>, <span class="st">"numeric"</span>, <span class="st">"numeric"</span>, </span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>        <span class="st">"numeric"</span>, <span class="st">"numeric"</span>, <span class="st">"text"</span>, <span class="st">"text"</span>, </span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>        <span class="st">"numeric"</span>, <span class="st">"text"</span>, <span class="st">"numeric"</span>, <span class="st">"text"</span>, </span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>        <span class="st">"text"</span>, <span class="st">"text"</span>, <span class="st">"text"</span>, <span class="st">"text"</span>, <span class="st">"numeric"</span>, </span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>        <span class="st">"text"</span>, <span class="st">"numeric"</span>, <span class="st">"text"</span>, <span class="st">"numeric"</span>, </span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>        <span class="st">"text"</span>, <span class="st">"text"</span>))</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>covs <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"D:/AudubonPanama/shp/sites_covs_parita_nona.csv"</span>)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="do">## Nyctidromus albicollis</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="do">## Aramus guarauna</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="do">## Buteogallus anthracinus</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="do">## Dryocopus lineatus</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="do">## Piranga rubra</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="co"># filter by threshold and species</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>parita_data_allsp <span class="ot">&lt;-</span>  parita_data_full <span class="sc">%&gt;%</span> </span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">filter</span>(confidence <span class="sc">&gt;=</span> threshold)<span class="co"># %&gt;%</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>                    <span class="co"># filter(scientificName == c("Nyctidromus albicollis", </span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>                    <span class="co">#                             "Aramus guarauna",</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>                    <span class="co">#                             "Buteogallus anthracinus",</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>                    <span class="co">#                             "Dryocopus lineatus",</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>                    <span class="co">#                             "Piranga rubra"</span></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>                    <span class="co">#                             ))  </span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="co"># insert Max and min to get matrix limits</span></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a><span class="co"># start_date</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>parita_data2 <span class="ot">&lt;-</span> parita_data_allsp <span class="sc">%&gt;%</span> </span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(locationID) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">start_date =</span> <span class="fu">min</span>(eventDate),</span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>         <span class="at">end_date=</span> <span class="fu">max</span>(eventDate))</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a><span class="co"># apply function to get matrix per species</span></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>parita <span class="ot">&lt;-</span> <span class="fu">f.matrix.creator2</span>(<span class="at">data =</span> parita_data2, <span class="at">year =</span> <span class="dv">2023</span>)</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a><span class="co"># centroide for terra</span></span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a><span class="co"># centoide &lt;- centroids(puntos, TRUE)</span></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>centroide <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">mean</span>(<span class="fu">as.numeric</span>(parita_data_allsp<span class="sc">$</span>decimalLongitude)), <span class="fu">mean</span>(<span class="fu">as.numeric</span>(parita_data_allsp<span class="sc">$</span>decimalLatitude)))</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>clip_window <span class="ot">&lt;-</span> <span class="fu">extent</span>(<span class="sc">-</span><span class="fl">80.67105</span>, <span class="sc">-</span><span class="fl">80.05822</span>, <span class="fl">7.713744</span>, <span class="fl">8.489888</span>) <span class="co"># 7.932311, -80.612233  8.360073, -80.180109</span></span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>bb <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">80.612233</span>, <span class="sc">-</span><span class="fl">80.180109</span>, <span class="fl">7.932311</span>, <span class="fl">8.360073</span>)</span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>srtm <span class="ot">&lt;-</span> raster<span class="sc">::</span><span class="fu">getData</span>(<span class="st">'SRTM'</span>, <span class="at">lon=</span>centroide[<span class="dv">1</span>], <span class="at">lat=</span>centroide[<span class="dv">2</span>])</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a><span class="co"># crop the  raster using the vector extent</span></span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a><span class="co"># srtm_crop &lt;- raster::crop(srtm, clip_window)</span></span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a> <span class="co">#rast(srtm_crop) # convert to terra</span></span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a><span class="co"># altitud &lt;- elevation_3s(-72.893262, 7.664081007, path="data")</span></span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a><span class="co"># altitud &lt;- as.numeric(Camptostoma_obsoletum_occu_dia$Altitude)</span></span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a><span class="co"># convierte covs a puntos terra</span></span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>puntos <span class="ot">&lt;-</span> <span class="fu">vect</span>(covs, <span class="at">geom=</span><span class="fu">c</span>(<span class="st">"Longitude"</span>, <span class="st">"Latitude"</span>), <span class="at">crs=</span><span class="st">"EPSG:4326"</span>)</span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a><span class="co"># convierte a sf</span></span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a>puntos_sf <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_as_sf</span>(puntos)</span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a><span class="do">######### precipitacion</span></span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>precip_Anton <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"D:/AudubonPanama/data/Precip_Anton.csv"</span>)</span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>precip <span class="ot">&lt;-</span>  <span class="fu">data.frame</span>(<span class="fu">f.shrink.matrix.h.to9</span>(precip_Anton))</span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>precip[,<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="dv">0</span> <span class="co">#fix start</span></span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a><span class="co"># extract elev from raster</span></span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a><span class="co"># cam_covs &lt;- raster::extract(srtm_crop, puntos_sf)</span></span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a><span class="co"># BGB_Spawn &lt;- rast("C:/CodigoR/AudubonPanama/raster/BGB Spawn.tif")</span></span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a><span class="co"># AGB_Spawn &lt;- rast("C:/CodigoR/AudubonPanama/raster/AGB Spawn.tif")</span></span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a><span class="co"># NDVI &lt;- rast("C:/CodigoR/AudubonPanama/raster/S2_NDVI_median_v2.tif")</span></span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a><span class="co"># roads &lt;- rast("C:/CodigoR/AudubonPanama/raster/roads_final_v2.tif")</span></span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a><span class="co"># carbon_stock &lt;- rast("C:/CodigoR/AudubonPanama/raster/soil_organic_carbon_stock_0-30m.tif")</span></span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a><span class="co"># canopy &lt;- rast("C:/CodigoR/AudubonPanama/raster/canopy_height_jetz2.tif")</span></span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a><span class="co"># human_foot &lt;- rast("C:/CodigoR/AudubonPanama/raster/human_footprint.tif")</span></span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a><span class="co"># river &lt;- rast("C:/CodigoR/AudubonPanama/raster/rivers_final_v2.tif")</span></span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a><span class="co"># make elevation equal</span></span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a><span class="co"># srtm_projected &lt;- projectRaster(srtm_crop, crs=projection(NDVI), method="ngb") </span></span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a><span class="co"># elev &lt;- mask(resample(rast(srtm_projected), NDVI), NDVI)</span></span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a><span class="co"># # list of terras SpatRasters  </span></span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a><span class="co"># many_rasters &lt;- list(BGB_Spawn, human_foot, NDVI, river, carbon_stock, canopy)</span></span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a><span class="co"># # terra stack</span></span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a><span class="co"># covs_raster &lt;- rast(many_rasters)</span></span>
+<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a><span class="co"># names(covs_raster) &lt;- c("BGB_Spawn", "human_foot",  "NDVI", "river", "carbon_stock",  "canopy")</span></span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a><span class="co"># # change NA to 0 </span></span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a><span class="co"># covs_raster0 &lt;- subst(covs_raster, NA, 0)</span></span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a><span class="co"># # extract covariates</span></span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a><span class="co"># covs_raster_val &lt;- extract(covs_raster0, puntos_sf)</span></span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a><span class="co"># plot(covs_raster)</span></span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a><span class="co"># chk names of species</span></span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a><span class="co"># dete es hora, occur es presencia en el dia</span></span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a><span class="co"># names(parita$dete[]) </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+</section>
+<section id="function-to-get-abundance" class="level1">
+<h1>function to get abundance</h1>
+<p>These methods return an object storing the posterior distributions of the latent variables at each site.</p>
+<section id="one-species-single-season" class="level3">
+<h3 class="anchored" data-anchor-id="one-species-single-season">One species, single season</h3>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ranef_by_sp <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">spx=</span><span class="dv">1</span>){ <span class="fu">suppressWarnings</span>({ <span class="co">#species name</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Make UMF object</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>umf_y_full_spx<span class="ot">&lt;-</span> <span class="fu">unmarkedFrameOccu</span>(<span class="at">y=</span><span class="fu">f.shrink.matrix.to9</span>( </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                                   <span class="fu">as.data.frame</span>(parita<span class="sc">$</span>occur[[spx]])),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">siteCovs=</span><span class="cn">NULL</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">obsCovs=</span><span class="fu">list</span>(<span class="at">prec=</span>precip,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                            <span class="at">hour=</span> <span class="fu">data.frame</span>(<span class="at">hour =</span> <span class="fu">f.shrink.matrix.h.to9</span>(parita<span class="sc">$</span>dete[[spx]]))</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                                                )</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                                   ) </span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># fit unmarked</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>fit_unm_spx_0 <span class="ot">&lt;-</span> unmarked<span class="sc">::</span><span class="fu">occuRN</span>(<span class="sc">~</span><span class="dv">1</span><span class="sc">~</span><span class="dv">1</span>, <span class="at">data=</span>umf_y_full_spx) <span class="co"># ok!</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>fit_unm_spx_p <span class="ot">&lt;-</span> unmarked<span class="sc">::</span><span class="fu">occuRN</span>(<span class="sc">~</span> prec <span class="sc">~</span><span class="dv">1</span>, <span class="at">data=</span>umf_y_full_spx) <span class="co"># ok!</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>fit_unm_spx_h <span class="ot">&lt;-</span> unmarked<span class="sc">::</span><span class="fu">occuRN</span>(<span class="sc">~</span> hour <span class="sc">~</span><span class="dv">1</span>, <span class="at">data=</span>umf_y_full_spx) <span class="co"># ok!</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co"># fit list for occupancy</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>fms2<span class="ot">&lt;-</span><span class="fu">fitList</span>(<span class="st">"p(.) lambda(.)"</span><span class="ot">=</span>fit_unm_spx_0,</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>              <span class="st">"p(prec) lambda(.)"</span><span class="ot">=</span>fit_unm_spx_p,</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>              <span class="st">"p(hour) lambda(.)"</span><span class="ot">=</span>fit_unm_spx_h)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>              <span class="co"># #"p(h) Ocu(.)"=fit_unm_sp2_0h, #,</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>              <span class="co"># #"p(c) Ocu(.)"=fit_unm_sp2_0c,</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>              <span class="co"># "p(.) lambda(BGB_Spawn)"=fit_unm_sp2_1,</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>              <span class="co"># "p(.) lambda(human_foot)"=fit_unm_sp2_2,</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>              <span class="co"># "p(.) lambda(NDVI)"=fit_unm_sp2_3,</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>              <span class="co"># "p(.) lambda(river)"=fit_unm_sp2_4,</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>              <span class="co"># #"p(.) Ocu(river^2)"=fit_unm_sp2_4s,</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>              <span class="co"># "p() lambda(carbon)"=fit_unm_sp2_5,</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>              <span class="co"># "p() lambda(canopy)"=fit_unm_sp2_6,</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>              <span class="co"># "p() lambda(canopy+BGB_Spawn)"=fit_unm_sp2_7,</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>              <span class="co"># "p() lambda(BGB_Spawn+human_foot)"=fit_unm_sp2_8,</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>              <span class="co"># "p() lambda(ALL)"=fit_unm_sp2_9</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>              <span class="co"># )</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co"># model selection detection unmarked</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a> models <span class="ot">&lt;-</span> <span class="fu">modSel</span>(fms2)</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a> models</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="co"># summary(fit_unm_sp2_1) #### Null MODEL !!!!!!!!!!</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="co"># Empirical Bayes estimates of abundance at each site by species</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>re_0 <span class="ot">&lt;-</span> <span class="fu">ranef</span>(fit_unm_spx_0)</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>re_h <span class="ot">&lt;-</span> <span class="fu">ranef</span>(fit_unm_spx_h)</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co"># plot(re)</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>post.df <span class="ot">&lt;-</span> <span class="fu">as</span>(re_0, <span class="st">"data.frame"</span>)</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>}) <span class="co"># warning</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="fu">return</span>(<span class="fu">list</span>(<span class="fu">paste</span>(<span class="st">"###"</span>, <span class="at">sp=</span><span class="fu">names</span>(parita<span class="sc">$</span>dete[spx]) ), <span class="co"># sp name</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>            models, <span class="co"># model AICs</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>            <span class="at">Null=</span>re_0, <span class="co"># mull model estimates</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>            <span class="at">hour=</span>re_h)) <span class="co"># hour in detection estimates</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>} <span class="co"># end of function</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="use-the-function" class="level2">
+<h2 class="anchored" data-anchor-id="use-the-function">use the function</h2>
+<p>Runs a loop on a list containing the of species.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(<span class="fu">names</span>(parita<span class="sc">$</span>dete[]))){</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">print</span>( <span class="fu">ranef_by_sp</span>(i) )</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1] "### Actitis macularius"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 63.01 57.00 4.2e-13     1.00
+p(prec) lambda(.)     3 64.52 58.51 2.0e-13     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.02878674    0    0     1
+ [2,] 2.63777101    2    1     4
+ [3,] 0.02878674    0    0     1
+ [4,] 0.02878674    0    0     1
+ [5,] 1.03364678    1    1     2
+ [6,] 0.16451347    0    0     1
+ [7,] 1.07719339    1    1     2
+ [8,] 1.03364678    1    1     2
+ [9,] 0.03849113    0    0     1
+[10,] 0.03849113    0    0     1
+[11,] 0.03849113    0    0     1
+[12,] 0.02878674    0    0     1
+[13,] 0.02878674    0    0     1
+[14,] 0.02878674    0    0     1
+[15,] 0.02878674    0    0     1
+[16,] 0.02878674    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.36512   10    5    17
+ [2,] 10.36997   10    5    17
+ [3,] 10.36512   10    5    17
+ [4,] 10.36512   10    5    17
+ [5,] 10.36768   10    5    17
+ [6,] 10.36536   10    5    17
+ [7,] 10.36772   10    5    17
+ [8,] 10.36768   10    5    17
+ [9,] 10.36516   10    5    17
+[10,] 10.36516   10    5    17
+[11,] 10.36516   10    5    17
+[12,] 10.36512   10    5    17
+[13,] 10.36512   10    5    17
+[14,] 10.36512   10    5    17
+[15,] 10.36512   10    5    17
+[16,] 10.36512   10    5    17
+
+[[1]]
+[1] "### Amazilia tzacatl"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 55.25 49.23 2.0e-11     1.00
+p(prec) lambda(.)     3 57.20 51.19 7.7e-12     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.1092366    0    0     1
+ [2,] 0.1092366    0    0     1
+ [3,] 1.2394063    1    1     2
+ [4,] 1.2394063    1    1     2
+ [5,] 0.1092366    0    0     1
+ [6,] 0.2585939    0    0     2
+ [7,] 0.1092366    0    0     1
+ [8,] 0.1092366    0    0     1
+ [9,] 0.1261081    0    0     1
+[10,] 1.1358784    1    1     2
+[11,] 1.2741877    1    1     3
+[12,] 0.1092366    0    0     1
+[13,] 0.1092366    0    0     1
+[14,] 0.1092366    0    0     1
+[15,] 0.1092366    0    0     1
+[16,] 0.1092366    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.68160   10    5    18
+ [2,] 10.68160   10    5    18
+ [3,] 10.68756   10    5    18
+ [4,] 10.68756   10    5    18
+ [5,] 10.68160   10    5    18
+ [6,] 10.68177   10    5    18
+ [7,] 10.68160   10    5    18
+ [8,] 10.68160   10    5    18
+ [9,] 10.68163   10    5    18
+[10,] 10.68485   10    5    18
+[11,] 10.68488   10    5    18
+[12,] 10.68160   10    5    18
+[13,] 10.68160   10    5    18
+[14,] 10.68160   10    5    18
+[15,] 10.68160   10    5    18
+[16,] 10.68160   10    5    18
+
+[[1]]
+[1] "### Amazona autumnalis"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 66.15 60.14 8.7e-14     1.00
+p(prec) lambda(.)     3 67.15 61.14 5.3e-14     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.1694910    0    0     1
+ [2,] 0.1694910    0    0     1
+ [3,] 0.1694910    0    0     1
+ [4,] 0.1694910    0    0     1
+ [5,] 1.3573046    1    1     3
+ [6,] 0.3749605    0    0     2
+ [7,] 0.1694910    0    0     1
+ [8,] 1.1815298    1    1     2
+ [9,] 0.1934727    0    0     1
+[10,] 1.7053581    1    1     3
+[11,] 1.4037191    1    1     3
+[12,] 0.1694910    0    0     1
+[13,] 0.1694910    0    0     1
+[14,] 1.1815298    1    1     2
+[15,] 0.1694910    0    0     1
+[16,] 0.1694910    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.27415   10    5    17
+ [2,] 10.27415   10    5    17
+ [3,] 10.27415   10    5    17
+ [4,] 10.27415   10    5    17
+ [5,] 10.27617   10    5    17
+ [6,] 10.27426   10    5    17
+ [7,] 10.27415   10    5    17
+ [8,] 10.27615   10    5    17
+ [9,] 10.27417   10    5    17
+[10,] 10.27769   10    5    17
+[11,] 10.27767   10    5    17
+[12,] 10.27415   10    5    17
+[13,] 10.27415   10    5    17
+[14,] 10.27615   10    5    17
+[15,] 10.27415   10    5    17
+[16,] 10.27415   10    5    17
+
+[[1]]
+[1] "### Amazona farinosa"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 104.28  98.27 4.6e-22     1.00
+p(.) lambda(.)        2 107.72 101.71 8.2e-23     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.00789351    0    0     0
+ [2,] 0.00789351    0    0     0
+ [3,] 0.00789351    0    0     0
+ [4,] 0.00789351    0    0     0
+ [5,] 2.47503759    2    1     4
+ [6,] 0.14229373    0    0     1
+ [7,] 1.06896971    1    1     2
+ [8,] 1.16916602    1    1     2
+ [9,] 0.01278172    0    0     0
+[10,] 1.10985487    1    1     2
+[11,] 1.53845313    1    1     3
+[12,] 1.06896971    1    1     2
+[13,] 0.00789351    0    0     0
+[14,] 0.00789351    0    0     0
+[15,] 1.02691658    1    1     2
+[16,] 0.00789351    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.42063   10    5    17
+ [2,] 10.42063   10    5    17
+ [3,] 10.42063   10    5    17
+ [4,] 10.42063   10    5    17
+ [5,] 10.42242   10    5    17
+ [6,] 10.42079   10    5    17
+ [7,] 10.42189   10    5    17
+ [8,] 10.42231   10    5    17
+ [9,] 10.42065   10    5    17
+[10,] 10.42231   10    5    17
+[11,] 10.42308   10    5    17
+[12,] 10.42228   10    5    17
+[13,] 10.42063   10    5    17
+[14,] 10.42063   10    5    17
+[15,] 10.42144   10    5    17
+[16,] 10.42063   10    5    17
+
+[[1]]
+[1] "### Aramides cajanea"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 73.06 67.06 2.7e-15     1.00
+p(prec) lambda(.)     3 74.23 68.22 1.5e-15     1.00
+
+$Null
+             Mean Mode 2.5% 97.5%
+ [1,] 0.006018857    0    0     0
+ [2,] 0.006018857    0    0     0
+ [3,] 0.006018857    0    0     0
+ [4,] 0.006018857    0    0     0
+ [5,] 1.124516839    1    1     2
+ [6,] 1.121246932    1    1     2
+ [7,] 0.006018857    0    0     0
+ [8,] 0.006018857    0    0     0
+ [9,] 1.012275268    1    1     1
+[10,] 1.408603239    1    1     3
+[11,] 1.189701001    1    1     2
+[12,] 0.006018857    0    0     0
+[13,] 0.006018857    0    0     0
+[14,] 0.006018857    0    0     0
+[15,] 0.006018857    0    0     0
+[16,] 0.006018857    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.26556   10    5    17
+ [2,] 10.26556   10    5    17
+ [3,] 10.26556   10    5    17
+ [4,] 10.26556   10    5    17
+ [5,] 10.26836   10    5    17
+ [6,] 10.26666   10    5    17
+ [7,] 10.26556   10    5    17
+ [8,] 10.26556   10    5    17
+ [9,] 10.26660   10    5    17
+[10,] 10.26838   10    5    17
+[11,] 10.26837   10    5    17
+[12,] 10.26556   10    5    17
+[13,] 10.26556   10    5    17
+[14,] 10.26556   10    5    17
+[15,] 10.26556   10    5    17
+[16,] 10.26556   10    5    17
+
+[[1]]
+[1] "### Aramus guarauna"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 74.62 68.61 1.3e-15     1.00
+p(.) lambda(.)        2 75.29 69.28 9.0e-16     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,]  9.516969    9    4    16
+ [2,]  9.516969    9    4    16
+ [3,] 10.553949   10    5    17
+ [4,]  9.516969    9    4    16
+ [5,]  9.516969    9    4    16
+ [6,] 11.951051   11    6    19
+ [7,]  9.516969    9    4    16
+ [8,]  9.516969    9    4    16
+ [9,] 11.571042   11    6    18
+[10,] 10.627308   10    5    17
+[11,] 10.627308   10    5    17
+[12,] 10.553949   10    5    17
+[13,] 10.553949   10    5    17
+[14,]  9.516969    9    4    16
+[15,] 10.553949   10    5    17
+[16,]  9.516969    9    4    16
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.36568   10    5    17
+ [2,] 10.36568   10    5    17
+ [3,] 10.36757   10    5    17
+ [4,] 10.36568   10    5    17
+ [5,] 10.36568   10    5    17
+ [6,] 10.36618   10    5    17
+ [7,] 10.36568   10    5    17
+ [8,] 10.36568   10    5    17
+ [9,] 10.36903   10    5    17
+[10,] 10.36759   10    5    17
+[11,] 10.36759   10    5    17
+[12,] 10.36757   10    5    17
+[13,] 10.36757   10    5    17
+[14,] 10.36568   10    5    17
+[15,] 10.36757   10    5    17
+[16,] 10.36568   10    5    17
+
+[[1]]
+[1] "### Ardea alba"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 70.13 64.12 1.2e-14     1.00
+p(prec) lambda(.)     3 72.13 66.12 4.4e-15     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,]  9.306953    9    4    16
+ [2,] 10.340052   10    5    17
+ [3,]  9.306953    9    4    16
+ [4,]  9.306953    9    4    16
+ [5,]  9.306953    9    4    16
+ [6,] 10.741364   10    5    17
+ [7,] 11.276939   11    6    18
+ [8,]  9.306953    9    4    16
+ [9,]  9.372436    9    4    16
+[10,] 10.405770   10    5    17
+[11,] 10.405770   10    5    17
+[12,]  9.306953    9    4    16
+[13,]  9.306953    9    4    16
+[14,]  9.306953    9    4    16
+[15,] 11.276939   11    6    18
+[16,] 10.340052   10    5    17
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.25616   10    5    17
+ [2,] 10.25781   10    5    17
+ [3,] 10.25616   10    5    17
+ [4,] 10.25616   10    5    17
+ [5,] 10.25616   10    5    17
+ [6,] 10.25790   10    5    17
+ [7,] 10.25899   10    5    17
+ [8,] 10.25616   10    5    17
+ [9,] 10.25618   10    5    17
+[10,] 10.25782   10    5    17
+[11,] 10.25782   10    5    17
+[12,] 10.25616   10    5    17
+[13,] 10.25616   10    5    17
+[14,] 10.25616   10    5    17
+[15,] 10.25782   10    5    17
+[16,] 10.25654   10    5    17
+
+[[1]]
+[1] "### Ardea herodias"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 41.98 35.96 1.6e-08     1.00
+p(.) lambda(.)        2 43.36 37.34 7.8e-09     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 1.1204855    1    1     2
+ [2,] 1.4491532    1    1     3
+ [3,] 0.1132619    0    0     1
+ [4,] 0.1132619    0    0     1
+ [5,] 0.1132619    0    0     1
+ [6,] 0.2323833    0    0     1
+ [7,] 0.1132619    0    0     1
+ [8,] 0.1132619    0    0     1
+ [9,] 0.1276744    0    0     1
+[10,] 0.1276744    0    0     1
+[11,] 1.1358197    1    1     2
+[12,] 0.1132619    0    0     1
+[13,] 0.1132619    0    0     1
+[14,] 0.1132619    0    0     1
+[15,] 0.1132619    0    0     1
+[16,] 0.1132619    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.64210   10    5    17
+ [2,] 10.64696   10    5    17
+ [3,] 10.63659   10    5    17
+ [4,] 10.63659   10    5    17
+ [5,] 10.63659   10    5    17
+ [6,] 10.63684   10    5    17
+ [7,] 10.63659   10    5    17
+ [8,] 10.63659   10    5    17
+ [9,] 10.63663   10    5    17
+[10,] 10.63663   10    5    17
+[11,] 10.64214   10    5    17
+[12,] 10.63659   10    5    17
+[13,] 10.63659   10    5    17
+[14,] 10.63659   10    5    17
+[15,] 10.63659   10    5    17
+[16,] 10.63659   10    5    17
+
+[[1]]
+[1] "### Basileuterus delattrii"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 75.57 69.55 7.9e-16     1.00
+p(prec) lambda(.)     3 77.48 71.46 3.0e-16     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.2782242    0    0     2
+ [2,] 1.9121640    2    1     4
+ [3,] 1.2953415    1    1     3
+ [4,] 2.3178742    2    1     4
+ [5,] 0.2782242    0    0     2
+ [6,] 0.5561233    0    0     2
+ [7,] 0.2782242    0    0     2
+ [8,] 0.2782242    0    0     2
+ [9,] 1.3314906    1    1     3
+[10,] 1.3314906    1    1     3
+[11,] 1.3314906    1    1     3
+[12,] 0.2782242    0    0     2
+[13,] 0.2782242    0    0     2
+[14,] 0.2782242    0    0     2
+[15,] 0.2782242    0    0     2
+[16,] 0.2782242    0    0     2
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.73071   10    5    18
+ [2,] 10.73604   10    5    18
+ [3,] 10.73278   10    5    18
+ [4,] 10.73751   10    5    18
+ [5,] 10.73071   10    5    18
+ [6,] 10.73103   10    5    18
+ [7,] 10.73071   10    5    18
+ [8,] 10.73071   10    5    18
+ [9,] 10.73283   10    5    18
+[10,] 10.73283   10    5    18
+[11,] 10.73283   10    5    18
+[12,] 10.73071   10    5    18
+[13,] 10.73071   10    5    18
+[14,] 10.73071   10    5    18
+[15,] 10.73071   10    5    18
+[16,] 10.73071   10    5    18
+
+[[1]]
+[1] "### Brotogeris jugularis"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.02   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 128.06 122.05 3.1e-27     1.00
+p(prec) lambda(.)     3 130.06 124.04 1.2e-27     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.02512125    0    0     0
+ [2,] 1.03239065    1    1     2
+ [3,] 1.03239065    1    1     2
+ [4,] 1.03239065    1    1     2
+ [5,] 1.43391727    1    1     3
+ [6,] 2.85669563    2    1     5
+ [7,] 3.25539003    3    2     5
+ [8,] 3.92661752    4    2     6
+ [9,] 3.10913511    3    2     5
+[10,] 1.61718485    1    1     3
+[11,] 3.79105902    3    2     6
+[12,] 0.02512125    0    0     0
+[13,] 1.08193554    1    1     2
+[14,] 0.02512125    0    0     0
+[15,] 0.02512125    0    0     0
+[16,] 0.02512125    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.83860   10    5    18
+ [2,] 10.84043   10    5    18
+ [3,] 10.84043   10    5    18
+ [4,] 10.83887   10    5    18
+ [5,] 10.84201   10    5    18
+ [6,] 10.83926   10    5    18
+ [7,] 10.84077   10    5    18
+ [8,] 10.83926   10    5    18
+ [9,] 10.84596   10    5    18
+[10,] 10.84206   10    5    18
+[11,] 10.83926   10    5    18
+[12,] 10.83860   10    5    18
+[13,] 10.84192   10    5    18
+[14,] 10.83860   10    5    18
+[15,] 10.83860   10    5    18
+[16,] 10.83860   10    5    18
+
+[[1]]
+[1] "### Buteo brachyurus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 46.88 40.86 1.3e-09     1.00
+p(prec) lambda(.)     3 48.59 42.58 5.7e-10     1.00
+
+$Null
+          Mean Mode 2.5% 97.5%
+ [1,] 11.37291   11    5    18
+ [2,] 12.39146   12    6    19
+ [3,] 11.37291   11    5    18
+ [4,] 11.37291   11    5    18
+ [5,] 11.37291   11    5    18
+ [6,] 12.61482   12    6    20
+ [7,] 12.39146   12    6    19
+ [8,] 11.37291   11    5    18
+ [9,] 11.40978   11    5    18
+[10,] 11.40978   11    5    18
+[11,] 11.40978   11    5    18
+[12,] 11.37291   11    5    18
+[13,] 11.37291   11    5    18
+[14,] 12.39146   12    6    19
+[15,] 11.37291   11    5    18
+[16,] 12.39146   12    6    19
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.80975   10    5    18
+ [2,] 10.81398   10    5    18
+ [3,] 10.80975   10    5    18
+ [4,] 10.80975   10    5    18
+ [5,] 10.80975   10    5    18
+ [6,] 10.81424   10    5    18
+ [7,] 10.81398   10    5    18
+ [8,] 10.80975   10    5    18
+ [9,] 10.80979   10    5    18
+[10,] 10.80979   10    5    18
+[11,] 10.80979   10    5    18
+[12,] 10.80975   10    5    18
+[13,] 10.80975   10    5    18
+[14,] 10.81398   10    5    18
+[15,] 10.80975   10    5    18
+[16,] 10.81398   10    5    18
+
+[[1]]
+[1] "### Buteo platypterus"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 166.21 160.20 1.6e-35     1.00
+p(prec) lambda(.)     3 167.82 161.81 7.3e-36     1.00
+
+$Null
+          Mean Mode 2.5% 97.5%
+ [1,] 2.799236    2    1     6
+ [2,] 4.075796    4    2     7
+ [3,] 1.094128    1    0     4
+ [4,] 3.444538    3    1     6
+ [5,] 3.444538    3    1     6
+ [6,] 2.263211    2    0     6
+ [7,] 2.166234    2    1     5
+ [8,] 3.444538    3    1     6
+ [9,] 3.665333    3    1     7
+[10,] 2.316662    2    1     5
+[11,] 2.990008    3    1     6
+[12,] 2.166234    2    1     5
+[13,] 5.334104    5    3     9
+[14,] 2.166234    2    1     5
+[15,] 4.075796    4    2     7
+[16,] 6.633707    6    4    10
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.79048   10    5    18
+ [2,] 10.79112   10    5    18
+ [3,] 10.78893   10    5    18
+ [4,] 10.78992   10    5    18
+ [5,] 10.79052   10    5    18
+ [6,] 10.78918   10    5    18
+ [7,] 10.78984   10    5    18
+ [8,] 10.79052   10    5    18
+ [9,] 10.79112   10    5    18
+[10,] 10.78988   10    5    18
+[11,] 10.79052   10    5    18
+[12,] 10.78919   10    5    18
+[13,] 10.79065   10    5    18
+[14,] 10.78984   10    5    18
+[15,] 10.79112   10    5    18
+[16,] 10.79230   10    5    18
+
+[[1]]
+[1] "### Buteogallus anthracinus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 83.93 77.91 1.2e-17     1.00
+p(prec) lambda(.)     3 85.74 79.72 4.9e-18     1.00
+
+$Null
+          Mean Mode 2.5% 97.5%
+ [1,] 6.048572    5    3    10
+ [2,] 6.048572    5    3    10
+ [3,] 6.048572    5    3    10
+ [4,] 6.048572    5    3    10
+ [5,] 6.048572    5    3    10
+ [6,] 5.476633    5    2    10
+ [7,] 6.048572    5    3    10
+ [8,] 4.268064    4    2     7
+ [9,] 5.974007    5    3    10
+[10,] 5.974007    5    3    10
+[11,] 5.974007    5    3    10
+[12,] 1.900400    2    1     4
+[13,] 4.268064    4    2     7
+[14,] 6.048572    5    3    10
+[15,] 1.186108    1    1     2
+[16,] 1.024101    1    1     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.74836   10    5    18
+ [2,] 10.74836   10    5    18
+ [3,] 10.74836   10    5    18
+ [4,] 10.74836   10    5    18
+ [5,] 10.74836   10    5    18
+ [6,] 10.74836   10    5    18
+ [7,] 10.74836   10    5    18
+ [8,] 10.75144   10    5    18
+ [9,] 10.74836   10    5    18
+[10,] 10.75324   10    5    18
+[11,] 10.75012   10    5    18
+[12,] 10.75206   10    5    18
+[13,] 10.74983   10    5    18
+[14,] 10.74836   10    5    18
+[15,] 10.75148   10    5    18
+[16,] 10.74777   10    5    18
+
+[[1]]
+[1] "### Camptostoma obsoletum"
+
+[[2]]
+                  nPars   AIC delta  AICwt cumltvWt
+p(hour) lambda(.)     3  6.00  0.00 0.9844     0.98
+p(.) lambda(.)        2 15.24  9.23 0.0097     0.99
+p(prec) lambda(.)     3 16.26 10.26 0.0058     1.00
+
+$Null
+             Mean Mode 2.5% 97.5%
+ [1,] 0.003543124    0    0     0
+ [2,] 0.003543124    0    0     0
+ [3,] 0.003543124    0    0     0
+ [4,] 0.003543124    0    0     0
+ [5,] 0.003543124    0    0     0
+ [6,] 1.030332434    1    1     2
+ [7,] 0.003543124    0    0     0
+ [8,] 0.003543124    0    0     0
+ [9,] 0.004919686    0    0     0
+[10,] 0.004919686    0    0     0
+[11,] 0.004919686    0    0     0
+[12,] 0.003543124    0    0     0
+[13,] 0.003543124    0    0     0
+[14,] 0.003543124    0    0     0
+[15,] 0.003543124    0    0     0
+[16,] 0.003543124    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 9.644658    9    4    16
+ [2,] 9.644658    9    4    16
+ [3,] 9.644658    9    4    16
+ [4,] 9.644658    9    4    16
+ [5,] 9.644658    9    4    16
+ [6,] 9.647751    9    4    16
+ [7,] 9.644658    9    4    16
+ [8,] 9.644658    9    4    16
+ [9,] 9.644663    9    4    16
+[10,] 9.644663    9    4    16
+[11,] 9.644663    9    4    16
+[12,] 9.644658    9    4    16
+[13,] 9.644658    9    4    16
+[14,] 9.644658    9    4    16
+[15,] 9.644658    9    4    16
+[16,] 9.644658    9    4    16
+
+[[1]]
+[1] "### Cardellina canadensis"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.03  0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 80.22 74.19 7.8e-17     1.00
+p(.) lambda(.)        2 81.90 75.87 3.4e-17     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 1.1882678    1    1     2
+ [2,] 1.1882678    1    1     2
+ [3,] 1.6664997    1    1     3
+ [4,] 2.4218676    2    1     4
+ [5,] 0.1737362    0    0     1
+ [6,] 0.4376777    0    0     2
+ [7,] 0.1737362    0    0     1
+ [8,] 0.1737362    0    0     1
+ [9,] 0.2026599    0    0     1
+[10,] 0.2026599    0    0     1
+[11,] 0.2026599    0    0     1
+[12,] 0.1737362    0    0     1
+[13,] 0.1737362    0    0     1
+[14,] 0.1737362    0    0     1
+[15,] 1.1882678    1    1     2
+[16,] 1.3736179    1    1     3
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.65413   10    5    17
+ [2,] 10.65413   10    5    17
+ [3,] 10.65778   10    5    17
+ [4,] 10.65951   10    5    17
+ [5,] 10.65182   10    5    17
+ [6,] 10.65229   10    5    17
+ [7,] 10.65182   10    5    17
+ [8,] 10.65182   10    5    17
+ [9,] 10.65189   10    5    17
+[10,] 10.65189   10    5    17
+[11,] 10.65189   10    5    17
+[12,] 10.65182   10    5    17
+[13,] 10.65182   10    5    17
+[14,] 10.65182   10    5    17
+[15,] 10.65413   10    5    17
+[16,] 10.65602   10    5    17
+
+[[1]]
+[1] "### Ceratopipra mentalis"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 109.53 103.53 3.3e-23     1.00
+p(.) lambda(.)        2 110.43 104.42 2.1e-23     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.2584496    0    0     2
+ [2,] 2.7927846    3    1     5
+ [3,] 1.5446308    1    1     3
+ [4,] 0.2584496    0    0     2
+ [5,] 1.2823567    1    1     3
+ [6,] 0.7103991    0    0     3
+ [7,] 1.5446308    1    1     3
+ [8,] 1.2823567    1    1     3
+ [9,] 1.3342249    1    1     3
+[10,] 0.3058888    0    0     2
+[11,] 0.3058888    0    0     2
+[12,] 0.2584496    0    0     2
+[13,] 1.2823567    1    1     3
+[14,] 1.2823567    1    1     3
+[15,] 4.1428859    4    2     7
+[16,] 0.2584496    0    0     2
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.35357   10    5    17
+ [2,] 10.35620   10    5    17
+ [3,] 10.35512   10    5    17
+ [4,] 10.35357   10    5    17
+ [5,] 10.35453   10    5    17
+ [6,] 10.35365   10    5    17
+ [7,] 10.35455   10    5    17
+ [8,] 10.35453   10    5    17
+ [9,] 10.35455   10    5    17
+[10,] 10.35359   10    5    17
+[11,] 10.35359   10    5    17
+[12,] 10.35357   10    5    17
+[13,] 10.35453   10    5    17
+[14,] 10.35453   10    5    17
+[15,] 10.35573   10    5    17
+[16,] 10.35357   10    5    17
+
+[[1]]
+[1] "### Chloroceryle amazona"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 85.19 79.18 6.4e-18     1.00
+p(.) lambda(.)        2 90.19 84.18 5.2e-19     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.2059841    0    0     1
+ [2,] 0.2059841    0    0     1
+ [3,] 1.2234119    1    1     2
+ [4,] 0.2059841    0    0     1
+ [5,] 1.7629188    2    1     3
+ [6,] 0.5236425    0    0     2
+ [7,] 1.2234119    1    1     2
+ [8,] 1.7629188    2    1     3
+ [9,] 1.2610193    1    1     3
+[10,] 2.6922146    2    1     5
+[11,] 1.2610193    1    1     3
+[12,] 0.2059841    0    0     1
+[13,] 0.2059841    0    0     1
+[14,] 0.2059841    0    0     1
+[15,] 0.2059841    0    0     1
+[16,] 0.2059841    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.22796   10    4    17
+ [2,] 10.22796   10    4    17
+ [3,] 10.22918   10    4    17
+ [4,] 10.22796   10    4    17
+ [5,] 10.22999   10    4    17
+ [6,] 10.22804   10    4    17
+ [7,] 10.22918   10    4    17
+ [8,] 10.23071   10    5    17
+ [9,] 10.22919   10    4    17
+[10,] 10.23206   10    5    17
+[11,] 10.22919   10    4    17
+[12,] 10.22796   10    4    17
+[13,] 10.22796   10    4    17
+[14,] 10.22796   10    4    17
+[15,] 10.22796   10    4    17
+[16,] 10.22796   10    4    17
+
+[[1]]
+[1] "### Chlorophanes spiza"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 97.16 91.14 1.6e-20     1.00
+p(prec) lambda(.)     3 98.38 92.37 8.8e-21     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.2263236    0    0     1
+ [2,] 0.2263236    0    0     1
+ [3,] 0.2263236    0    0     1
+ [4,] 1.4764387    1    1     3
+ [5,] 0.2263236    0    0     1
+ [6,] 1.6214055    1    1     4
+ [7,] 0.2263236    0    0     1
+ [8,] 2.2246829    2    1     4
+ [9,] 0.2641992    0    0     2
+[10,] 1.9211962    2    1     4
+[11,] 1.2864692    1    1     3
+[12,] 0.2263236    0    0     1
+[13,] 1.4764387    1    1     3
+[14,] 0.2263236    0    0     1
+[15,] 1.4764387    1    1     3
+[16,] 1.2453809    1    1     3
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.30517   10    5    17
+ [2,] 10.30517   10    5    17
+ [3,] 10.30517   10    5    17
+ [4,] 10.30792   10    5    17
+ [5,] 10.30517   10    5    17
+ [6,] 10.30702   10    5    17
+ [7,] 10.30517   10    5    17
+ [8,] 10.30999   10    5    17
+ [9,] 10.30522   10    5    17
+[10,] 10.30800   10    5    17
+[11,] 10.30681   10    5    17
+[12,] 10.30517   10    5    17
+[13,] 10.30792   10    5    17
+[14,] 10.30517   10    5    17
+[15,] 10.30792   10    5    17
+[16,] 10.30677   10    5    17
+
+[[1]]
+[1] "### Ciccaba virgata"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 125.99 119.98 8.9e-27     1.00
+p(.) lambda(.)        2 127.82 121.82 3.5e-27     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.01554093    0    0     0
+ [2,] 1.02003319    1    1     1
+ [3,] 1.05102990    1    1     2
+ [4,] 1.58258393    1    1     3
+ [5,] 0.01554093    0    0     0
+ [6,] 0.23927151    0    0     1
+ [7,] 1.29114953    1    1     2
+ [8,] 1.29114953    1    1     2
+ [9,] 2.21987371    2    1     4
+[10,] 1.07997690    1    1     2
+[11,] 1.78799513    2    1     3
+[12,] 3.36513850    3    2     6
+[13,] 0.01554093    0    0     0
+[14,] 0.01554093    0    0     0
+[15,] 0.01554093    0    0     0
+[16,] 0.01554093    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.21686   10    4    17
+ [2,] 10.21793   10    4    17
+ [3,] 10.21794   10    4    17
+ [4,] 10.21863   10    4    17
+ [5,] 10.21686   10    4    17
+ [6,] 10.21695   10    4    17
+ [7,] 10.21976   10    4    17
+ [8,] 10.21798   10    4    17
+ [9,] 10.21925   10    4    17
+[10,] 10.21796   10    4    17
+[11,] 10.21924   10    4    17
+[12,] 10.21806   10    4    17
+[13,] 10.21686   10    4    17
+[14,] 10.21686   10    4    17
+[15,] 10.21686   10    4    17
+[16,] 10.21686   10    4    17
+
+[[1]]
+[1] "### Coereba flaveola"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 53.22 47.20 5.6e-11     1.00
+p(prec) lambda(.)     3 55.14 49.13 2.2e-11     1.00
+
+$Null
+              Mean Mode 2.5% 97.5%
+ [1,] 0.0003818229    0    0     0
+ [2,] 0.0003818229    0    0     0
+ [3,] 2.1306198595    2    1     4
+ [4,] 0.0003818229    0    0     0
+ [5,] 0.0003818229    0    0     0
+ [6,] 0.0302687840    0    0     1
+ [7,] 1.1447409420    1    1     2
+ [8,] 0.0003818229    0    0     0
+ [9,] 0.0007913783    0    0     0
+[10,] 0.0007913783    0    0     0
+[11,] 0.0007913783    0    0     0
+[12,] 1.0005866146    1    1     1
+[13,] 0.0003818229    0    0     0
+[14,] 0.0003818229    0    0     0
+[15,] 0.0003818229    0    0     0
+[16,] 0.0003818229    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.38846   10    5    17
+ [2,] 10.38846   10    5    17
+ [3,] 10.39454   10    5    17
+ [4,] 10.38846   10    5    17
+ [5,] 10.38846   10    5    17
+ [6,] 10.38872   10    5    17
+ [7,] 10.39441   10    5    17
+ [8,] 10.38846   10    5    17
+ [9,] 10.38850   10    5    17
+[10,] 10.38850   10    5    17
+[11,] 10.38850   10    5    17
+[12,] 10.39163   10    5    17
+[13,] 10.38846   10    5    17
+[14,] 10.38846   10    5    17
+[15,] 10.38846   10    5    17
+[16,] 10.38846   10    5    17
+
+[[1]]
+[1] "### Columba livia"
+
+[[2]]
+                  nPars    AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 103.53 97.51 6.7e-22     1.00
+p(prec) lambda(.)     3 105.51 99.49 2.5e-22     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.08278218    0    0     1
+ [2,] 0.08278218    0    0     1
+ [3,] 0.08278218    0    0     1
+ [4,] 0.08278218    0    0     1
+ [5,] 1.09577176    1    1     2
+ [6,] 0.42314543    0    0     2
+ [7,] 3.90101437    4    2     6
+ [8,] 0.08278218    0    0     1
+ [9,] 0.10864981    0    0     1
+[10,] 1.12572122    1    1     2
+[11,] 0.10864981    0    0     1
+[12,] 1.09577176    1    1     2
+[13,] 1.09577176    1    1     2
+[14,] 1.09577176    1    1     2
+[15,] 3.41526064    3    2     6
+[16,] 1.42742076    1    1     3
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.96748   10    5    18
+ [2,] 10.96748   10    5    18
+ [3,] 10.96748   10    5    18
+ [4,] 10.96748   10    5    18
+ [5,] 10.96949   10    5    18
+ [6,] 10.96766   10    5    18
+ [7,] 10.96973   10    5    18
+ [8,] 10.96748   10    5    18
+ [9,] 10.96751   10    5    18
+[10,] 10.96952   10    5    18
+[11,] 10.96751   10    5    18
+[12,] 10.96949   10    5    18
+[13,] 10.96949   10    5    18
+[14,] 10.96949   10    5    18
+[15,] 10.97288   10    5    18
+[16,] 10.97120   10    5    18
+
+[[1]]
+[1] "### Columbina passerina"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 53.63 47.63 4.5e-11     1.00
+p(prec) lambda(.)     3 55.63 49.62 1.7e-11     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 1.15490323    1    1     2
+ [2,] 1.15490323    1    1     2
+ [3,] 0.06614897    0    0     1
+ [4,] 0.06614897    0    0     1
+ [5,] 0.06614897    0    0     1
+ [6,] 1.44408374    1    1     3
+ [7,] 0.06614897    0    0     1
+ [8,] 0.06614897    0    0     1
+ [9,] 0.07969700    0    0     1
+[10,] 0.07969700    0    0     1
+[11,] 0.07969700    0    0     1
+[12,] 0.06614897    0    0     1
+[13,] 0.06614897    0    0     1
+[14,] 1.07293828    1    1     2
+[15,] 0.06614897    0    0     1
+[16,] 0.06614897    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.11012   10    4    17
+ [2,] 10.11012   10    4    17
+ [3,] 10.10687   10    4    17
+ [4,] 10.10687   10    4    17
+ [5,] 10.10687   10    4    17
+ [6,] 10.11021   10    4    17
+ [7,] 10.10687   10    4    17
+ [8,] 10.10687   10    4    17
+ [9,] 10.10688   10    4    17
+[10,] 10.10688   10    4    17
+[11,] 10.10688   10    4    17
+[12,] 10.10687   10    4    17
+[13,] 10.10687   10    4    17
+[14,] 10.10876   10    4    17
+[15,] 10.10687   10    4    17
+[16,] 10.10687   10    4    17
+
+[[1]]
+[1] "### Columbina talpacoti"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.00  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 76.35 70.35 5.3e-16     1.00
+p(prec) lambda(.)     3 77.21 71.21 3.5e-16     1.00
+
+$Null
+             Mean Mode 2.5% 97.5%
+ [1,] 1.148082948    1    1     2
+ [2,] 1.616577291    2    1     3
+ [3,] 0.007624229    0    0     0
+ [4,] 0.007624229    0    0     0
+ [5,] 0.007624229    0    0     0
+ [6,] 1.319089236    1    1     3
+ [7,] 0.007624229    0    0     0
+ [8,] 0.007624229    0    0     0
+ [9,] 0.011807572    0    0     0
+[10,] 0.011807572    0    0     0
+[11,] 0.011807572    0    0     0
+[12,] 1.009717359    1    1     1
+[13,] 0.007624229    0    0     0
+[14,] 1.061538349    1    1     2
+[15,] 0.007624229    0    0     0
+[16,] 0.007624229    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.05619   10    4    17
+ [2,] 10.05552   10    4    17
+ [3,] 10.05435   10    4    17
+ [4,] 10.05435   10    4    17
+ [5,] 10.05435   10    4    17
+ [6,] 10.05480   10    4    17
+ [7,] 10.05435   10    4    17
+ [8,] 10.05435   10    4    17
+ [9,] 10.05435   10    4    17
+[10,] 10.05435   10    4    17
+[11,] 10.05435   10    4    17
+[12,] 10.05551   10    4    17
+[13,] 10.05435   10    4    17
+[14,] 10.05682   10    4    17
+[15,] 10.05435   10    4    17
+[16,] 10.05435   10    4    17
+
+[[1]]
+[1] "### Contopus cinereus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 55.25 49.24 2.0e-11     1.00
+p(prec) lambda(.)     3 56.97 50.96 8.6e-12     1.00
+
+$Null
+             Mean Mode 2.5% 97.5%
+ [1,] 0.001146419    0    0     0
+ [2,] 0.001146419    0    0     0
+ [3,] 0.001146419    0    0     0
+ [4,] 0.001146419    0    0     0
+ [5,] 0.001146419    0    0     0
+ [6,] 0.041699550    0    0     1
+ [7,] 0.001146419    0    0     0
+ [8,] 1.096110824    1    1     2
+ [9,] 0.002086770    0    0     0
+[10,] 0.002086770    0    0     0
+[11,] 0.002086770    0    0     0
+[12,] 1.867878684    2    1     3
+[13,] 0.001146419    0    0     0
+[14,] 1.001616668    1    1     1
+[15,] 0.001146419    0    0     0
+[16,] 0.001146419    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.28148   10    5    17
+ [2,] 10.28148   10    5    17
+ [3,] 10.28148   10    5    17
+ [4,] 10.28148   10    5    17
+ [5,] 10.28148   10    5    17
+ [6,] 10.28164   10    5    17
+ [7,] 10.28148   10    5    17
+ [8,] 10.28945   10    5    17
+ [9,] 10.28151   10    5    17
+[10,] 10.28151   10    5    17
+[11,] 10.28151   10    5    17
+[12,] 10.28608   10    5    17
+[13,] 10.28148   10    5    17
+[14,] 10.28397   10    5    17
+[15,] 10.28148   10    5    17
+[16,] 10.28148   10    5    17
+
+[[1]]
+[1] "### Contopus virens"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 145.58 139.57 4.9e-31     1.00
+p(prec) lambda(.)     3 147.08 141.07 2.3e-31     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 1.8267935    1    1     4
+ [2,] 1.8267935    1    1     4
+ [3,] 1.8267935    1    1     4
+ [4,] 1.8267935    1    1     4
+ [5,] 4.6361518    4    2     8
+ [6,] 4.3741066    4    2     8
+ [7,] 0.7723242    0    0     3
+ [8,] 1.8267935    1    1     4
+ [9,] 5.5138569    5    3     9
+[10,] 2.5117504    2    1     5
+[11,] 2.5117504    2    1     5
+[12,] 0.7723242    0    0     3
+[13,] 2.3559788    2    1     5
+[14,] 3.5013592    3    2     6
+[15,] 1.8267935    1    1     4
+[16,] 1.8267935    1    1     4
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.44457   10    5    17
+ [2,] 10.44457   10    5    17
+ [3,] 10.44457   10    5    17
+ [4,] 10.44412   10    5    17
+ [5,] 10.44547   10    5    17
+ [6,] 10.44424   10    5    17
+ [7,] 10.44380   10    5    17
+ [8,] 10.44457   10    5    17
+ [9,] 10.44688   10    5    17
+[10,] 10.44460   10    5    17
+[11,] 10.44503   10    5    17
+[12,] 10.44380   10    5    17
+[13,] 10.44501   10    5    17
+[14,] 10.44504   10    5    17
+[15,] 10.44457   10    5    17
+[16,] 10.44457   10    5    17
+
+[[1]]
+[1] "### Cyclarhis gujanensis"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.00  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 95.96 89.96 2.9e-20     1.00
+p(prec) lambda(.)     3 96.62 90.62 2.1e-20     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 1.1499090    1    1     2
+ [2,] 1.1499090    1    1     2
+ [3,] 0.1341366    0    0     1
+ [4,] 4.0417157    4    2     6
+ [5,] 1.1499090    1    1     2
+ [6,] 1.5299119    1    1     3
+ [7,] 0.1341366    0    0     1
+ [8,] 1.1499090    1    1     2
+ [9,] 0.1655172    0    0     1
+[10,] 0.1655172    0    0     1
+[11,] 0.1655172    0    0     1
+[12,] 0.1341366    0    0     1
+[13,] 1.5843246    1    1     3
+[14,] 1.3112453    1    1     3
+[15,] 0.1341366    0    0     1
+[16,] 0.1341366    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.05981   10    4    17
+ [2,] 10.05981   10    4    17
+ [3,] 10.05878   10    4    17
+ [4,] 10.05928   10    4    17
+ [5,] 10.05922   10    4    17
+ [6,] 10.05926   10    4    17
+ [7,] 10.05878   10    4    17
+ [8,] 10.05981   10    4    17
+ [9,] 10.05879   10    4    17
+[10,] 10.05879   10    4    17
+[11,] 10.05879   10    4    17
+[12,] 10.05878   10    4    17
+[13,] 10.06037   10    4    17
+[14,] 10.06036   10    4    17
+[15,] 10.05878   10    4    17
+[16,] 10.05878   10    4    17
+
+[[1]]
+[1] "### Dendrocincla fuliginosa"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 46.15 40.14 1.9e-09     1.00
+p(prec) lambda(.)     3 47.90 41.89 8.0e-10     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 1.4450858    1    1     3
+ [2,] 1.7724969    1    1     4
+ [3,] 0.4323526    0    0     2
+ [4,] 0.4323526    0    0     2
+ [5,] 0.4323526    0    0     2
+ [6,] 1.6265983    1    1     4
+ [7,] 0.4323526    0    0     2
+ [8,] 0.4323526    0    0     2
+ [9,] 0.4577118    0    0     2
+[10,] 1.4711952    1    1     3
+[11,] 0.4577118    0    0     2
+[12,] 0.4323526    0    0     2
+[13,] 0.4323526    0    0     2
+[14,] 0.4323526    0    0     2
+[15,] 0.4323526    0    0     2
+[16,] 0.4323526    0    0     2
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.14624   10    4    17
+ [2,] 10.14889   10    4    17
+ [3,] 10.14293   10    4    17
+ [4,] 10.14293   10    4    17
+ [5,] 10.14293   10    4    17
+ [6,] 10.14348   10    4    17
+ [7,] 10.14293   10    4    17
+ [8,] 10.14293   10    4    17
+ [9,] 10.14295   10    4    17
+[10,] 10.14626   10    4    17
+[11,] 10.14295   10    4    17
+[12,] 10.14293   10    4    17
+[13,] 10.14293   10    4    17
+[14,] 10.14293   10    4    17
+[15,] 10.14293   10    4    17
+[16,] 10.14293   10    4    17
+
+[[1]]
+[1] "### Dendrocygna autumnalis"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.00  0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 79.22 73.22 1.3e-16     1.00
+p(.) lambda(.)        2 80.15 74.14 7.9e-17     1.00
+
+$Null
+          Mean Mode 2.5% 97.5%
+ [1,] 6.811416    6    3    12
+ [2,] 5.772663    5    2    11
+ [3,] 6.811416    6    3    12
+ [4,] 5.772663    5    2    11
+ [5,] 7.704603    7    3    13
+ [6,] 6.247328    6    2    12
+ [7,] 6.811416    6    3    12
+ [8,] 6.811416    6    3    12
+ [9,] 6.888465    6    3    12
+[10,] 8.603179    8    4    14
+[11,] 5.849192    5    2    11
+[12,] 6.811416    6    3    12
+[13,] 5.772663    5    2    11
+[14,] 5.772663    5    2    11
+[15,] 5.772663    5    2    11
+[16,] 5.772663    5    2    11
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.10338   10    4    17
+ [2,] 10.10247   10    4    17
+ [3,] 10.10338   10    4    17
+ [4,] 10.10247   10    4    17
+ [5,] 10.10385   10    4    17
+ [6,] 10.10250   10    4    17
+ [7,] 10.10338   10    4    17
+ [8,] 10.10338   10    4    17
+ [9,] 10.10339   10    4    17
+[10,] 10.10386   10    4    17
+[11,] 10.10247   10    4    17
+[12,] 10.10338   10    4    17
+[13,] 10.10247   10    4    17
+[14,] 10.10247   10    4    17
+[15,] 10.10247   10    4    17
+[16,] 10.10247   10    4    17
+
+[[1]]
+[1] "### Dryocopus lineatus"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 103.60  97.59 6.4e-22     1.00
+p(.) lambda(.)        2 106.27 100.26 1.7e-22     1.00
+
+$Null
+          Mean Mode 2.5% 97.5%
+ [1,] 11.37845   11    6    18
+ [2,] 11.37845   11    6    18
+ [3,] 10.31597   10    5    17
+ [4,] 10.31597   10    5    17
+ [5,] 12.35414   12    7    19
+ [6,] 11.07286   11    5    18
+ [7,] 10.31597   10    5    17
+ [8,] 11.37845   11    6    18
+ [9,] 12.47905   12    7    19
+[10,] 12.47905   12    7    19
+[11,] 12.47905   12    7    19
+[12,] 12.35414   12    7    19
+[13,] 10.31597   10    5    17
+[14,] 10.31597   10    5    17
+[15,] 13.27065   13    7    20
+[16,] 11.37845   11    6    18
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.17984   10    4    17
+ [2,] 10.17984   10    4    17
+ [3,] 10.17889   10    4    17
+ [4,] 10.17889   10    4    17
+ [5,] 10.17930   10    4    17
+ [6,] 10.17894   10    4    17
+ [7,] 10.17889   10    4    17
+ [8,] 10.17984   10    4    17
+ [9,] 10.18038   10    4    17
+[10,] 10.18038   10    4    17
+[11,] 10.18038   10    4    17
+[12,] 10.18037   10    4    17
+[13,] 10.17889   10    4    17
+[14,] 10.17889   10    4    17
+[15,] 10.17986   10    4    17
+[16,] 10.17929   10    4    17
+
+[[1]]
+[1] "### Elaenia flavogaster"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.03  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 45.58 39.55 2.6e-09     1.00
+p(prec) lambda(.)     3 46.04 40.00 2.1e-09     1.00
+
+$Null
+             Mean Mode 2.5% 97.5%
+ [1,] 0.009130772    0    0     0
+ [2,] 0.009130772    0    0     0
+ [3,] 1.011098527    1    1     1
+ [4,] 0.009130772    0    0     0
+ [5,] 0.009130772    0    0     0
+ [6,] 1.464526492    1    1     3
+ [7,] 0.009130772    0    0     0
+ [8,] 0.009130772    0    0     0
+ [9,] 0.013063705    0    0     0
+[10,] 0.013063705    0    0     0
+[11,] 0.013063705    0    0     0
+[12,] 0.009130772    0    0     0
+[13,] 0.009130772    0    0     0
+[14,] 1.063835663    1    1     2
+[15,] 0.009130772    0    0     0
+[16,] 0.009130772    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.41657   10    5    17
+ [2,] 10.41657   10    5    17
+ [3,] 10.42534   10    5    17
+ [4,] 10.41657   10    5    17
+ [5,] 10.41657   10    5    17
+ [6,] 10.41777   10    5    17
+ [7,] 10.41657   10    5    17
+ [8,] 10.41657   10    5    17
+ [9,] 10.41667   10    5    17
+[10,] 10.41667   10    5    17
+[11,] 10.41667   10    5    17
+[12,] 10.41657   10    5    17
+[13,] 10.41657   10    5    17
+[14,] 10.43316   10    5    17
+[15,] 10.41657   10    5    17
+[16,] 10.41657   10    5    17
+
+[[1]]
+[1] "### Elanoides forficatus"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 172.41 166.40 7.3e-37     1.00
+p(prec) lambda(.)     3 173.25 167.24 4.8e-37     1.00
+
+$Null
+          Mean Mode 2.5% 97.5%
+ [1,] 1.615534    1    1     3
+ [2,] 4.467895    4    2     7
+ [3,] 6.113465    6    3    10
+ [4,] 3.789166    3    2     6
+ [5,] 3.789166    3    2     6
+ [6,] 4.719427    4    2     8
+ [7,] 3.789166    3    2     6
+ [8,] 2.074694    2    1     4
+ [9,] 5.032483    5    3     8
+[10,] 1.790479    1    1     4
+[11,] 5.930676    6    3    10
+[12,] 1.302949    1    1     3
+[13,] 1.615534    1    1     3
+[14,] 3.789166    3    2     6
+[15,] 1.615534    1    1     3
+[16,] 1.302949    1    1     3
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.54396   10    5    17
+ [2,] 10.54513   10    5    17
+ [3,] 10.54466   10    5    17
+ [4,] 10.54460   10    5    17
+ [5,] 10.54535   10    5    17
+ [6,] 10.54380   10    5    17
+ [7,] 10.54460   10    5    17
+ [8,] 10.54427   10    5    17
+ [9,] 10.54408   10    5    17
+[10,] 10.54427   10    5    17
+[11,] 10.54541   10    5    17
+[12,] 10.54394   10    5    17
+[13,] 10.54396   10    5    17
+[14,] 10.54433   10    5    17
+[15,] 10.54425   10    5    17
+[16,] 10.54394   10    5    17
+
+[[1]]
+[1] "### Empidonax virescens"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 146.51 140.50 3.1e-31     1.00
+p(prec) lambda(.)     3 146.51 140.51 3.1e-31     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 3.5983837    3    2     6
+ [2,] 1.8953510    1    1     4
+ [3,] 2.4424014    2    1     5
+ [4,] 1.8953510    1    1     4
+ [5,] 4.1640660    4    2     7
+ [6,] 3.6206890    3    1     7
+ [7,] 0.8410727    0    0     3
+ [8,] 0.8410727    0    0     3
+ [9,] 2.0090304    2    1     4
+[10,] 2.5937231    2    1     5
+[11,] 0.9477335    0    0     3
+[12,] 2.4424014    2    1     5
+[13,] 1.8953510    1    1     4
+[14,] 4.7315681    4    2     8
+[15,] 1.8953510    1    1     4
+[16,] 3.5983837    3    2     6
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.41214   10    5    17
+ [2,] 10.41151   10    5    17
+ [3,] 10.41152   10    5    17
+ [4,] 10.41151   10    5    17
+ [5,] 10.41269   10    5    17
+ [6,] 10.41190   10    5    17
+ [7,] 10.41086   10    5    17
+ [8,] 10.41086   10    5    17
+ [9,] 10.41152   10    5    17
+[10,] 10.41184   10    5    17
+[11,] 10.41087   10    5    17
+[12,] 10.41183   10    5    17
+[13,] 10.41151   10    5    17
+[14,] 10.41244   10    5    17
+[15,] 10.41151   10    5    17
+[16,] 10.41242   10    5    17
+
+[[1]]
+[1] "### Eucometis penicillata"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 35.81 29.80 3.4e-07     1.00
+p(prec) lambda(.)     3 36.18 30.17 2.8e-07     1.00
+
+$Null
+             Mean Mode 2.5% 97.5%
+ [1,] 0.006835507    0    0     0
+ [2,] 0.006835507    0    0     0
+ [3,] 0.006835507    0    0     0
+ [4,] 0.006835507    0    0     0
+ [5,] 0.006835507    0    0     0
+ [6,] 0.051080032    0    0     1
+ [7,] 0.006835507    0    0     0
+ [8,] 0.006835507    0    0     0
+ [9,] 0.009557643    0    0     0
+[10,] 1.064157575    1    1     2
+[11,] 1.027309555    1    1     2
+[12,] 0.006835507    0    0     0
+[13,] 0.006835507    0    0     0
+[14,] 0.006835507    0    0     0
+[15,] 0.006835507    0    0     0
+[16,] 0.006835507    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.04899   10    4    17
+ [2,] 10.04899   10    4    17
+ [3,] 10.04899   10    4    17
+ [4,] 10.04899   10    4    17
+ [5,] 10.04899   10    4    17
+ [6,] 10.04917   10    4    17
+ [7,] 10.04899   10    4    17
+ [8,] 10.04899   10    4    17
+ [9,] 10.04902   10    4    17
+[10,] 10.05414   10    4    17
+[11,] 10.05411   10    4    17
+[12,] 10.04899   10    4    17
+[13,] 10.04899   10    4    17
+[14,] 10.04899   10    4    17
+[15,] 10.04899   10    4    17
+[16,] 10.04899   10    4    17
+
+[[1]]
+[1] "### Falco rufigularis"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 57.59 51.58 6.3e-12     1.00
+p(prec) lambda(.)     3 59.58 53.56 2.3e-12     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.3082062    0    0     2
+ [2,] 0.3082062    0    0     2
+ [3,] 0.3082062    0    0     2
+ [4,] 0.3082062    0    0     2
+ [5,] 1.3224460    1    1     3
+ [6,] 1.5467434    1    1     3
+ [7,] 1.3224460    1    1     3
+ [8,] 0.3082062    0    0     2
+ [9,] 0.3365519    0    0     2
+[10,] 1.6377335    1    1     3
+[11,] 1.6377335    1    1     3
+[12,] 0.3082062    0    0     2
+[13,] 0.3082062    0    0     2
+[14,] 0.3082062    0    0     2
+[15,] 0.3082062    0    0     2
+[16,] 0.3082062    0    0     2
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.20247   10    4    17
+ [2,] 10.20247   10    4    17
+ [3,] 10.20247   10    4    17
+ [4,] 10.20247   10    4    17
+ [5,] 10.20540   10    4    17
+ [6,] 10.20320   10    4    17
+ [7,] 10.20290   10    4    17
+ [8,] 10.20247   10    4    17
+ [9,] 10.20252   10    4    17
+[10,] 10.20778   10    4    17
+[11,] 10.20778   10    4    17
+[12,] 10.20247   10    4    17
+[13,] 10.20247   10    4    17
+[14,] 10.20247   10    4    17
+[15,] 10.20247   10    4    17
+[16,] 10.20247   10    4    17
+
+[[1]]
+[1] "### Florisuga mellivora"
+
+[[2]]
+                  nPars    AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01  0.00 1.0e+00     1.00
+p(prec) lambda(.)     3  95.75 89.74 3.3e-20     1.00
+p(.) lambda(.)        2 102.24 96.24 1.3e-21     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.1740072    0    0     1
+ [2,] 1.1918103    1    1     2
+ [3,] 3.3119904    3    2     5
+ [4,] 0.1740072    0    0     1
+ [5,] 0.1740072    0    0     1
+ [6,] 0.5285414    0    0     2
+ [7,] 1.3862174    1    1     3
+ [8,] 0.1740072    0    0     1
+ [9,] 1.4577233    1    1     3
+[10,] 1.4577233    1    1     3
+[11,] 1.8028790    2    1     4
+[12,] 0.1740072    0    0     1
+[13,] 0.1740072    0    0     1
+[14,] 1.1918103    1    1     2
+[15,] 1.1918103    1    1     2
+[16,] 0.1740072    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.17304   10    4    17
+ [2,] 10.17406   10    4    17
+ [3,] 10.17716   10    4    17
+ [4,] 10.17304   10    4    17
+ [5,] 10.17304   10    4    17
+ [6,] 10.17310   10    4    17
+ [7,] 10.17466   10    4    17
+ [8,] 10.17304   10    4    17
+ [9,] 10.17408   10    4    17
+[10,] 10.17408   10    4    17
+[11,] 10.17409   10    4    17
+[12,] 10.17304   10    4    17
+[13,] 10.17304   10    4    17
+[14,] 10.17406   10    4    17
+[15,] 10.17344   10    4    17
+[16,] 10.17304   10    4    17
+
+[[1]]
+[1] "### Formicarius analis"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.00  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 32.82 26.82 1.5e-06     1.00
+p(prec) lambda(.)     3 34.06 28.05 8.1e-07     1.00
+
+$Null
+          Mean Mode 2.5% 97.5%
+ [1,] 10.92183   10    5    18
+ [2,] 11.93292   11    6    19
+ [3,] 10.92183   10    5    18
+ [4,] 10.92183   10    5    18
+ [5,] 10.92183   10    5    18
+ [6,] 11.05515   11    5    18
+ [7,] 10.92183   10    5    18
+ [8,] 10.92183   10    5    18
+ [9,] 11.95505   11    6    19
+[10,] 10.94394   10    5    18
+[11,] 10.94394   10    5    18
+[12,] 10.92183   10    5    18
+[13,] 10.92183   10    5    18
+[14,] 10.92183   10    5    18
+[15,] 11.93292   11    6    19
+[16,] 10.92183   10    5    18
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 9.971185    9    4    17
+ [2,] 9.973629    9    4    17
+ [3,] 9.971185    9    4    17
+ [4,] 9.971185    9    4    17
+ [5,] 9.971185    9    4    17
+ [6,] 9.971246    9    4    17
+ [7,] 9.971185    9    4    17
+ [8,] 9.971185    9    4    17
+ [9,] 9.973639    9    4    17
+[10,] 9.971195    9    4    17
+[11,] 9.971195    9    4    17
+[12,] 9.971185    9    4    17
+[13,] 9.971185    9    4    17
+[14,] 9.971185    9    4    17
+[15,] 9.973629    9    4    17
+[16,] 9.971185    9    4    17
+
+[[1]]
+[1] "### Glaucidium brasilianum"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.00  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 30.07 24.07 5.9e-06     1.00
+p(prec) lambda(.)     3 31.89 25.89 2.4e-06     1.00
+
+$Null
+             Mean Mode 2.5% 97.5%
+ [1,] 0.003680597    0    0     0
+ [2,] 0.003680597    0    0     0
+ [3,] 0.003680597    0    0     0
+ [4,] 0.003680597    0    0     0
+ [5,] 0.003680597    0    0     0
+ [6,] 1.300488734    1    1     3
+ [7,] 0.003680597    0    0     0
+ [8,] 0.003680597    0    0     0
+ [9,] 0.005547118    0    0     0
+[10,] 1.006954318    1    1     1
+[11,] 0.005547118    0    0     0
+[12,] 0.003680597    0    0     0
+[13,] 0.003680597    0    0     0
+[14,] 0.003680597    0    0     0
+[15,] 0.003680597    0    0     0
+[16,] 0.003680597    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 9.854301    9    4    16
+ [2,] 9.854301    9    4    16
+ [3,] 9.854301    9    4    16
+ [4,] 9.854301    9    4    16
+ [5,] 9.854301    9    4    16
+ [6,] 9.857991    9    4    16
+ [7,] 9.854301    9    4    16
+ [8,] 9.854301    9    4    16
+ [9,] 9.854309    9    4    16
+[10,] 9.856453    9    4    16
+[11,] 9.854309    9    4    16
+[12,] 9.854301    9    4    16
+[13,] 9.854301    9    4    16
+[14,] 9.854301    9    4    16
+[15,] 9.854301    9    4    16
+[16,] 9.854301    9    4    16
+
+[[1]]
+[1] "### Herpetotheres cachinnans"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.00  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 66.00 60.00 9.4e-14     1.00
+p(prec) lambda(.)     3 67.35 61.34 4.8e-14     1.00
+
+$Null
+              Mean Mode 2.5% 97.5%
+ [1,] 0.0005387969    0    0     0
+ [2,] 0.0005387969    0    0     0
+ [3,] 0.0005387969    0    0     0
+ [4,] 0.0005387969    0    0     0
+ [5,] 0.0005387969    0    0     0
+ [6,] 0.0384791255    0    0     1
+ [7,] 0.0005387969    0    0     0
+ [8,] 1.0008181584    1    1     1
+ [9,] 1.3346382801    1    1     2
+[10,] 1.6924600198    2    1     3
+[11,] 1.1305748971    1    1     2
+[12,] 0.0005387969    0    0     0
+[13,] 0.0005387969    0    0     0
+[14,] 0.0005387969    0    0     0
+[15,] 0.0005387969    0    0     0
+[16,] 0.0005387969    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.07135   10    4    17
+ [2,] 10.07135   10    4    17
+ [3,] 10.07135   10    4    17
+ [4,] 10.07135   10    4    17
+ [5,] 10.07135   10    4    17
+ [6,] 10.07140   10    4    17
+ [7,] 10.07135   10    4    17
+ [8,] 10.07234   10    4    17
+ [9,] 10.07428   10    4    17
+[10,] 10.07385   10    4    17
+[11,] 10.07289   10    4    17
+[12,] 10.07135   10    4    17
+[13,] 10.07135   10    4    17
+[14,] 10.07135   10    4    17
+[15,] 10.07135   10    4    17
+[16,] 10.07135   10    4    17
+
+[[1]]
+[1] "### Klais guimeti"
+
+[[2]]
+                  nPars    AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 103.45 97.44 6.9e-22     1.00
+p(prec) lambda(.)     3 105.42 99.42 2.6e-22     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.2050033    0    0     1
+ [2,] 1.2244125    1    1     2
+ [3,] 3.0081621    3    1     5
+ [4,] 2.1805383    2    1     4
+ [5,] 0.2050033    0    0     1
+ [6,] 0.5767388    0    0     2
+ [7,] 1.7768604    2    1     3
+ [8,] 1.2244125    1    1     2
+ [9,] 1.2666624    1    1     3
+[10,] 1.2666624    1    1     3
+[11,] 1.5182941    1    1     3
+[12,] 0.2050033    0    0     1
+[13,] 0.2050033    0    0     1
+[14,] 0.2050033    0    0     1
+[15,] 0.2050033    0    0     1
+[16,] 0.2050033    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.28227   10    5    17
+ [2,] 10.28321   10    5    17
+ [3,] 10.28326   10    5    17
+ [4,] 10.28478   10    5    17
+ [5,] 10.28227   10    5    17
+ [6,] 10.28233   10    5    17
+ [7,] 10.28378   10    5    17
+ [8,] 10.28321   10    5    17
+ [9,] 10.28322   10    5    17
+[10,] 10.28322   10    5    17
+[11,] 10.28378   10    5    17
+[12,] 10.28227   10    5    17
+[13,] 10.28227   10    5    17
+[14,] 10.28227   10    5    17
+[15,] 10.28227   10    5    17
+[16,] 10.28227   10    5    17
+
+[[1]]
+[1] "### Leiothlypis peregrina"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 86.18 80.17 3.9e-18     1.00
+p(.) lambda(.)        2 89.54 83.53 7.3e-19     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.06663209    0    0     1
+ [2,] 0.06663209    0    0     1
+ [3,] 1.07661032    1    1     2
+ [4,] 0.06663209    0    0     1
+ [5,] 0.06663209    0    0     1
+ [6,] 2.21548793    2    1     4
+ [7,] 1.07661032    1    1     2
+ [8,] 1.34887309    1    1     3
+ [9,] 1.09949224    1    1     2
+[10,] 1.21723472    1    1     2
+[11,] 2.55571301    2    1     4
+[12,] 0.06663209    0    0     1
+[13,] 0.06663209    0    0     1
+[14,] 0.06663209    0    0     1
+[15,] 0.06663209    0    0     1
+[16,] 0.06663209    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.46550   10    5    17
+ [2,] 10.46550   10    5    17
+ [3,] 10.46582   10    5    17
+ [4,] 10.46550   10    5    17
+ [5,] 10.46550   10    5    17
+ [6,] 10.46732   10    5    17
+ [7,] 10.46715   10    5    17
+ [8,] 10.46953   10    5    17
+ [9,] 10.46717   10    5    17
+[10,] 10.46841   10    5    17
+[11,] 10.46962   10    5    17
+[12,] 10.46550   10    5    17
+[13,] 10.46550   10    5    17
+[14,] 10.46550   10    5    17
+[15,] 10.46550   10    5    17
+[16,] 10.46550   10    5    17
+
+[[1]]
+[1] "### Leptotila verreauxi"
+
+[[2]]
+                  nPars    AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 101.33 95.32 2.0e-21     1.00
+p(prec) lambda(.)     3 102.30 96.29 1.2e-21     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 1.05923300    1    1     2
+ [2,] 1.95035448    2    1     3
+ [3,] 1.05923300    1    1     2
+ [4,] 1.02429341    1    1     1
+ [5,] 0.01964639    0    0     0
+ [6,] 2.02425280    2    1     4
+ [7,] 0.01964639    0    0     0
+ [8,] 0.01964639    0    0     0
+ [9,] 0.02892608    0    0     1
+[10,] 0.02892608    0    0     1
+[11,] 0.02892608    0    0     1
+[12,] 0.01964639    0    0     0
+[13,] 1.30781899    1    1     2
+[14,] 1.59045224    1    1     3
+[15,] 0.01964639    0    0     0
+[16,] 0.01964639    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.35458   10    5    17
+ [2,] 10.35712   10    5    17
+ [3,] 10.35629   10    5    17
+ [4,] 10.35545   10    5    17
+ [5,] 10.35421   10    5    17
+ [6,] 10.35471   10    5    17
+ [7,] 10.35421   10    5    17
+ [8,] 10.35421   10    5    17
+ [9,] 10.35423   10    5    17
+[10,] 10.35423   10    5    17
+[11,] 10.35423   10    5    17
+[12,] 10.35421   10    5    17
+[13,] 10.35779   10    5    17
+[14,] 10.35781   10    5    17
+[15,] 10.35421   10    5    17
+[16,] 10.35421   10    5    17
+
+[[1]]
+[1] "### Lophotriccus pileatus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 49.64 43.62 3.4e-10     1.00
+p(prec) lambda(.)     3 51.56 45.53 1.3e-10     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.03117653    0    0     1
+ [2,] 0.03117653    0    0     1
+ [3,] 1.03522213    1    1     2
+ [4,] 1.07807908    1    1     2
+ [5,] 0.03117653    0    0     1
+ [6,] 0.12426641    0    0     1
+ [7,] 0.03117653    0    0     1
+ [8,] 0.03117653    0    0     1
+ [9,] 0.03925685    0    0     1
+[10,] 0.03925685    0    0     1
+[11,] 0.03925685    0    0     1
+[12,] 1.33363671    1    1     3
+[13,] 0.03117653    0    0     1
+[14,] 0.03117653    0    0     1
+[15,] 0.03117653    0    0     1
+[16,] 0.03117653    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.43632   10    5    17
+ [2,] 10.43632   10    5    17
+ [3,] 10.44125   10    5    17
+ [4,] 10.44132   10    5    17
+ [5,] 10.43632   10    5    17
+ [6,] 10.43675   10    5    17
+ [7,] 10.43632   10    5    17
+ [8,] 10.43632   10    5    17
+ [9,] 10.43640   10    5    17
+[10,] 10.43640   10    5    17
+[11,] 10.43640   10    5    17
+[12,] 10.44147   10    5    17
+[13,] 10.43632   10    5    17
+[14,] 10.43632   10    5    17
+[15,] 10.43632   10    5    17
+[16,] 10.43632   10    5    17
+
+[[1]]
+[1] "### Megaceryle torquata"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 59.07 53.06 3.0e-12     1.00
+p(prec) lambda(.)     3 59.55 53.54 2.4e-12     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,]  9.661518    9    4    16
+ [2,] 10.687405   10    5    17
+ [3,]  9.661518    9    4    16
+ [4,]  9.661518    9    4    16
+ [5,]  9.661518    9    4    16
+ [6,] 11.000384   11    5    18
+ [7,]  9.661518    9    4    16
+ [8,] 10.687405   10    5    17
+ [9,] 10.738880   10    5    17
+[10,] 10.738880   10    5    17
+[11,] 11.672125   11    6    18
+[12,]  9.661518    9    4    16
+[13,]  9.661518    9    4    16
+[14,]  9.661518    9    4    16
+[15,]  9.661518    9    4    16
+[16,]  9.661518    9    4    16
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.05751   10    4    17
+ [2,] 10.05905   10    4    17
+ [3,] 10.05751   10    4    17
+ [4,] 10.05751   10    4    17
+ [5,] 10.05751   10    4    17
+ [6,] 10.05911   10    4    17
+ [7,] 10.05751   10    4    17
+ [8,] 10.05905   10    4    17
+ [9,] 10.05906   10    4    17
+[10,] 10.05906   10    4    17
+[11,] 10.06009   10    4    17
+[12,] 10.05751   10    4    17
+[13,] 10.05751   10    4    17
+[14,] 10.05751   10    4    17
+[15,] 10.05751   10    4    17
+[16,] 10.05751   10    4    17
+
+[[1]]
+[1] "### Megarynchus pitangua"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.02   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 107.54 101.53 9.0e-23     1.00
+p(prec) lambda(.)     3 107.64 101.62 8.6e-23     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 2.1691256    2    1     4
+ [2,] 1.7402649    1    1     4
+ [3,] 0.3816397    0    0     2
+ [4,] 1.4079881    1    1     3
+ [5,] 0.3816397    0    0     2
+ [6,] 2.4297758    2    1     5
+ [7,] 0.3816397    0    0     2
+ [8,] 0.3816397    0    0     2
+ [9,] 0.4338816    0    0     2
+[10,] 0.4338816    0    0     2
+[11,] 0.4338816    0    0     2
+[12,] 1.7402649    1    1     4
+[13,] 1.4079881    1    1     3
+[14,] 1.7402649    1    1     4
+[15,] 1.7402649    1    1     4
+[16,] 2.1691256    2    1     4
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.54360   10    5    17
+ [2,] 10.54356   10    5    17
+ [3,] 10.54024   10    5    17
+ [4,] 10.54210   10    5    17
+ [5,] 10.54024   10    5    17
+ [6,] 10.54238   10    5    17
+ [7,] 10.54024   10    5    17
+ [8,] 10.54024   10    5    17
+ [9,] 10.54028   10    5    17
+[10,] 10.54028   10    5    17
+[11,] 10.54028   10    5    17
+[12,] 10.54214   10    5    17
+[13,] 10.54056   10    5    17
+[14,] 10.54356   10    5    17
+[15,] 10.54356   10    5    17
+[16,] 10.54360   10    5    17
+
+[[1]]
+[1] "### Melanerpes rubricapillus"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.02   0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 178.18 172.16 4.1e-38     1.00
+p(.) lambda(.)        2 179.52 173.50 2.1e-38     1.00
+
+$Null
+          Mean Mode 2.5% 97.5%
+ [1,] 4.560369    4    2     8
+ [2,] 3.166056    3    1     6
+ [3,] 4.560369    4    2     8
+ [4,] 7.391066    7    4    11
+ [5,] 4.560369    4    2     8
+ [6,] 5.040710    5    2     9
+ [7,] 2.456433    2    1     5
+ [8,] 3.166056    3    1     6
+ [9,] 1.543142    1    0     4
+[10,] 4.863326    4    2     8
+[11,] 3.400131    3    1     7
+[12,] 5.945950    6    3    10
+[13,] 3.166056    3    1     6
+[14,] 5.248970    5    3     9
+[15,] 3.166056    3    1     6
+[16,] 3.870470    3    2     7
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.94066   10    5    18
+ [2,] 10.93983   10    5    18
+ [3,] 10.93927   10    5    18
+ [4,] 10.94161   10    5    18
+ [5,] 10.93927   10    5    18
+ [6,] 10.93881   10    5    18
+ [7,] 10.93902   10    5    18
+ [8,] 10.93983   10    5    18
+ [9,] 10.93805   10    5    18
+[10,] 10.94074   10    5    18
+[11,] 10.93919   10    5    18
+[12,] 10.93943   10    5    18
+[13,] 10.93911   10    5    18
+[14,] 10.94137   10    5    18
+[15,] 10.93983   10    5    18
+[16,] 10.93919   10    5    18
+
+[[1]]
+[1] "### Micrastur semitorquatus"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 110.95 104.94 1.6e-23     1.00
+p(prec) lambda(.)     3 112.15 106.14 9.0e-24     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.06895449    0    0     1
+ [2,] 1.08028989    1    1     2
+ [3,] 1.08028989    1    1     2
+ [4,] 0.06895449    0    0     1
+ [5,] 1.67830145    2    1     3
+ [6,] 0.37745045    0    0     2
+ [7,] 1.08028989    1    1     2
+ [8,] 1.17912094    1    1     2
+ [9,] 1.82671366    2    1     3
+[10,] 3.10651493    3    2     5
+[11,] 2.23790862    2    1     4
+[12,] 0.06895449    0    0     1
+[13,] 0.06895449    0    0     1
+[14,] 0.06895449    0    0     1
+[15,] 0.06895449    0    0     1
+[16,] 0.06895449    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.32905   10    5    17
+ [2,] 10.33009   10    5    17
+ [3,] 10.33009   10    5    17
+ [4,] 10.32905   10    5    17
+ [5,] 10.33138   10    5    17
+ [6,] 10.32919   10    5    17
+ [7,] 10.33009   10    5    17
+ [8,] 10.33075   10    5    17
+ [9,] 10.33196   10    5    17
+[10,] 10.33202   10    5    17
+[11,] 10.33198   10    5    17
+[12,] 10.32905   10    5    17
+[13,] 10.32905   10    5    17
+[14,] 10.32905   10    5    17
+[15,] 10.32905   10    5    17
+[16,] 10.32905   10    5    17
+
+[[1]]
+[1] "### Milvago chimachima"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 128.91 122.89 2.1e-27     1.00
+p(prec) lambda(.)     3 130.53 124.52 9.2e-28     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 1.24682450    1    1     2
+ [2,] 2.28179297    2    1     4
+ [3,] 1.04172818    1    1     2
+ [4,] 1.24682450    1    1     2
+ [5,] 1.24682450    1    1     2
+ [6,] 1.26714755    1    1     3
+ [7,] 0.01252266    0    0     0
+ [8,] 2.28179297    2    1     4
+ [9,] 0.01995537    0    0     0
+[10,] 0.01995537    0    0     0
+[11,] 0.01995537    0    0     0
+[12,] 1.04172818    1    1     2
+[13,] 0.01252266    0    0     0
+[14,] 1.51149768    1    1     3
+[15,] 0.01252266    0    0     0
+[16,] 0.01252266    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.73616   10    5    18
+ [2,] 10.73493   10    5    18
+ [3,] 10.73477   10    5    18
+ [4,] 10.73552   10    5    18
+ [5,] 10.73616   10    5    18
+ [6,] 10.73419   10    5    18
+ [7,] 10.73293   10    5    18
+ [8,] 10.73626   10    5    18
+ [9,] 10.73297   10    5    18
+[10,] 10.73297   10    5    18
+[11,] 10.73297   10    5    18
+[12,] 10.73477   10    5    18
+[13,] 10.73293   10    5    18
+[14,] 10.73619   10    5    18
+[15,] 10.73293   10    5    18
+[16,] 10.73293   10    5    18
+
+[[1]]
+[1] "### Mniotilta varia"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 58.14 52.12 4.8e-12     1.00
+p(prec) lambda(.)     3 60.13 54.12 1.8e-12     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.09039355    0    0     1
+ [2,] 1.20434064    1    1     2
+ [3,] 1.67794986    2    1     3
+ [4,] 0.09039355    0    0     1
+ [5,] 0.09039355    0    0     1
+ [6,] 0.24278917    0    0     2
+ [7,] 0.09039355    0    0     1
+ [8,] 0.09039355    0    0     1
+ [9,] 0.10657436    0    0     1
+[10,] 0.10657436    0    0     1
+[11,] 1.11614331    1    1     2
+[12,] 1.09850577    1    1     2
+[13,] 0.09039355    0    0     1
+[14,] 0.09039355    0    0     1
+[15,] 0.09039355    0    0     1
+[16,] 0.09039355    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.48981   10    5    17
+ [2,] 10.49303   10    5    17
+ [3,] 10.49555   10    5    17
+ [4,] 10.48981   10    5    17
+ [5,] 10.48981   10    5    17
+ [6,] 10.49010   10    5    17
+ [7,] 10.48981   10    5    17
+ [8,] 10.48981   10    5    17
+ [9,] 10.48986   10    5    17
+[10,] 10.48986   10    5    17
+[11,] 10.49167   10    5    17
+[12,] 10.49163   10    5    17
+[13,] 10.48981   10    5    17
+[14,] 10.48981   10    5    17
+[15,] 10.48981   10    5    17
+[16,] 10.48981   10    5    17
+
+[[1]]
+[1] "### Myiarchus crinitus"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 139.03 133.02 1.3e-29     1.00
+p(prec) lambda(.)     3 140.74 134.73 5.5e-30     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 3.38833209    3    2     6
+ [2,] 2.86009776    3    1     5
+ [3,] 2.86009776    3    1     5
+ [4,] 3.38833209    3    2     6
+ [5,] 1.05185850    1    1     2
+ [6,] 2.83034332    2    1     5
+ [7,] 1.12483609    1    1     2
+ [8,] 1.05185850    1    1     2
+ [9,] 0.06182102    0    0     1
+[10,] 0.06182102    0    0     1
+[11,] 0.06182102    0    0     1
+[12,] 1.28312627    1    1     2
+[13,] 0.04182937    0    0     1
+[14,] 1.12483609    1    1     2
+[15,] 0.04182937    0    0     1
+[16,] 1.28312627    1    1     2
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 9.950538    9    4    17
+ [2,] 9.952250    9    4    17
+ [3,] 9.951142    9    4    17
+ [4,] 9.951172    9    4    17
+ [5,] 9.950650    9    4    17
+ [6,] 9.950568    9    4    17
+ [7,] 9.950990    9    4    17
+ [8,] 9.950650    9    4    17
+ [9,] 9.949850    9    4    17
+[10,] 9.949850    9    4    17
+[11,] 9.949850    9    4    17
+[12,] 9.950710    9    4    17
+[13,] 9.949820    9    4    17
+[14,] 9.950680    9    4    17
+[15,] 9.949820    9    4    17
+[16,] 9.951316    9    4    17
+
+[[1]]
+[1] "### Myiodynastes maculatus"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.02   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 165.05 159.03 2.9e-35     1.00
+p(prec) lambda(.)     3 166.45 160.43 1.5e-35     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 1.9747686    2    1     4
+ [2,] 1.1308845    1    1     2
+ [3,] 4.6233060    4    3     7
+ [4,] 2.4271342    2    1     4
+ [5,] 1.5733096    1    1     3
+ [6,] 3.2640471    3    1     6
+ [7,] 0.1109208    0    0     1
+ [8,] 1.5733096    1    1     3
+ [9,] 0.1505860    0    0     1
+[10,] 2.1874968    2    1     4
+[11,] 1.1777523    1    1     2
+[12,] 1.9747686    2    1     4
+[13,] 1.9747686    2    1     4
+[14,] 1.5733096    1    1     3
+[15,] 1.9747686    2    1     4
+[16,] 0.1109208    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 11.02848   11    5    18
+ [2,] 11.02755   11    5    18
+ [3,] 11.02945   11    5    18
+ [4,] 11.02853   11    5    18
+ [5,] 11.02842   11    5    18
+ [6,] 11.02796   11    5    18
+ [7,] 11.02648   11    5    18
+ [8,] 11.02842   11    5    18
+ [9,] 11.02654   11    5    18
+[10,] 11.02924   11    5    18
+[11,] 11.02760   11    5    18
+[12,] 11.02986   11    5    18
+[13,] 11.02848   11    5    18
+[14,] 11.02842   11    5    18
+[15,] 11.02986   11    5    18
+[16,] 11.02648   11    5    18
+
+[[1]]
+[1] "### Myiothlypis fulvicauda"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 92.18 86.16 2.0e-19     1.00
+p(prec) lambda(.)     3 94.10 88.08 7.5e-20     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.8074938    0    0     3
+ [2,] 0.8074938    0    0     3
+ [3,] 1.8382260    1    1     4
+ [4,] 0.8074938    0    0     3
+ [5,] 3.3746770    3    1     6
+ [6,] 1.2486661    1    0     4
+ [7,] 0.8074938    0    0     3
+ [8,] 2.3357922    2    1     5
+ [9,] 0.8683411    0    0     3
+[10,] 1.9014141    1    1     4
+[11,] 2.4195836    2    1     5
+[12,] 1.8382260    1    1     4
+[13,] 1.8382260    1    1     4
+[14,] 0.8074938    0    0     3
+[15,] 2.3357922    2    1     5
+[16,] 0.8074938    0    0     3
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 11.05010   11    5    18
+ [2,] 11.05010   11    5    18
+ [3,] 11.05253   11    5    18
+ [4,] 11.05010   11    5    18
+ [5,] 11.05659   11    5    18
+ [6,] 11.05029   11    5    18
+ [7,] 11.05010   11    5    18
+ [8,] 11.05256   11    5    18
+ [9,] 11.05013   11    5    18
+[10,] 11.05256   11    5    18
+[11,] 11.05465   11    5    18
+[12,] 11.05253   11    5    18
+[13,] 11.05253   11    5    18
+[14,] 11.05010   11    5    18
+[15,] 11.05256   11    5    18
+[16,] 11.05010   11    5    18
+
+[[1]]
+[1] "### Myiozetetes similis"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 71.60 65.59 5.7e-15     1.00
+p(prec) lambda(.)     3 73.13 67.12 2.7e-15     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 1.02943250    1    1     2
+ [2,] 0.02483942    0    0     0
+ [3,] 0.02483942    0    0     0
+ [4,] 1.06859971    1    1     2
+ [5,] 0.02483942    0    0     0
+ [6,] 1.19422946    1    1     2
+ [7,] 0.02483942    0    0     0
+ [8,] 0.02483942    0    0     0
+ [9,] 0.03401156    0    0     1
+[10,] 1.20722024    1    1     2
+[11,] 0.03401156    0    0     1
+[12,] 0.02483942    0    0     0
+[13,] 0.02483942    0    0     0
+[14,] 1.93292220    2    1     3
+[15,] 0.02483942    0    0     0
+[16,] 0.02483942    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.72700   10    5    18
+ [2,] 10.72498   10    5    18
+ [3,] 10.72498   10    5    18
+ [4,] 10.72863   10    5    18
+ [5,] 10.72498   10    5    18
+ [6,] 10.72541   10    5    18
+ [7,] 10.72498   10    5    18
+ [8,] 10.72498   10    5    18
+ [9,] 10.72501   10    5    18
+[10,] 10.72868   10    5    18
+[11,] 10.72501   10    5    18
+[12,] 10.72498   10    5    18
+[13,] 10.72498   10    5    18
+[14,] 10.73293   10    5    18
+[15,] 10.72498   10    5    18
+[16,] 10.72498   10    5    18
+
+[[1]]
+[1] "### Nyctibius griseus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 60.35 54.35 1.6e-12     1.00
+p(prec) lambda(.)     3 61.78 55.78 7.7e-13     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.01227879    0    0     0
+ [2,] 0.01227879    0    0     0
+ [3,] 0.01227879    0    0     0
+ [4,] 1.08392868    1    1     2
+ [5,] 0.01227879    0    0     0
+ [6,] 1.12158636    1    1     2
+ [7,] 0.01227879    0    0     0
+ [8,] 1.03563741    1    1     2
+ [9,] 0.01742788    0    0     0
+[10,] 0.01742788    0    0     0
+[11,] 0.01742788    0    0     0
+[12,] 1.18883478    1    1     2
+[13,] 0.01227879    0    0     0
+[14,] 0.01227879    0    0     0
+[15,] 0.01227879    0    0     0
+[16,] 0.01227879    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.06791   10    4    17
+ [2,] 10.06791   10    4    17
+ [3,] 10.06791   10    4    17
+ [4,] 10.07073   10    4    17
+ [5,] 10.06791   10    4    17
+ [6,] 10.07079   10    4    17
+ [7,] 10.06791   10    4    17
+ [8,] 10.07284   10    4    17
+ [9,] 10.06793   10    4    17
+[10,] 10.06793   10    4    17
+[11,] 10.06793   10    4    17
+[12,] 10.06841   10    4    17
+[13,] 10.06791   10    4    17
+[14,] 10.06791   10    4    17
+[15,] 10.06791   10    4    17
+[16,] 10.06791   10    4    17
+
+[[1]]
+[1] "### Nycticorax nycticorax"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.00   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 120.75 114.74 1.2e-25     1.00
+p(prec) lambda(.)     3 122.43 116.43 5.2e-26     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.3715165    0    0     2
+ [2,] 1.7337162    1    1     4
+ [3,] 1.7337162    1    1     4
+ [4,] 2.6323860    2    1     5
+ [5,] 1.7337162    1    1     4
+ [6,] 2.5314321    2    1     5
+ [7,] 2.1679442    2    1     4
+ [8,] 0.3715165    0    0     2
+ [9,] 1.4623491    1    1     3
+[10,] 0.4288760    0    0     2
+[11,] 0.4288760    0    0     2
+[12,] 2.1679442    2    1     4
+[13,] 0.3715165    0    0     2
+[14,] 1.7337162    1    1     4
+[15,] 1.4004704    1    1     3
+[16,] 0.3715165    0    0     2
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.09930   10    4    17
+ [2,] 10.10003   10    4    17
+ [3,] 10.10003   10    4    17
+ [4,] 10.10019   10    4    17
+ [5,] 10.10003   10    4    17
+ [6,] 10.10006   10    4    17
+ [7,] 10.10019   10    4    17
+ [8,] 10.09930   10    4    17
+ [9,] 10.09988   10    4    17
+[10,] 10.09930   10    4    17
+[11,] 10.09930   10    4    17
+[12,] 10.10004   10    4    17
+[13,] 10.09930   10    4    17
+[14,] 10.10003   10    4    17
+[15,] 10.09988   10    4    17
+[16,] 10.09930   10    4    17
+
+[[1]]
+[1] "### Nyctidromus albicollis"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.02   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 114.02 108.00 3.5e-24     1.00
+p(prec) lambda(.)     3 114.67 108.64 2.6e-24     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 1.06401605    1    1     2
+ [2,] 1.60428866    1    1     3
+ [3,] 0.05380589    0    0     1
+ [4,] 1.06401605    1    1     2
+ [5,] 0.05380589    0    0     1
+ [6,] 2.46332991    2    1     5
+ [7,] 0.05380589    0    0     1
+ [8,] 1.06401605    1    1     2
+ [9,] 1.41880448    1    1     3
+[10,] 3.58299210    3    2     6
+[11,] 1.20027300    1    1     2
+[12,] 0.05380589    0    0     1
+[13,] 0.05380589    0    0     1
+[14,] 1.60428866    1    1     3
+[15,] 0.05380589    0    0     1
+[16,] 0.05380589    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.20160   10    4    17
+ [2,] 10.20434   10    4    17
+ [3,] 10.19972   10    4    17
+ [4,] 10.20017   10    4    17
+ [5,] 10.19972   10    4    17
+ [6,] 10.20080   10    4    17
+ [7,] 10.19972   10    4    17
+ [8,] 10.20160   10    4    17
+ [9,] 10.20314   10    4    17
+[10,] 10.20222   10    4    17
+[11,] 10.20306   10    4    17
+[12,] 10.19972   10    4    17
+[13,] 10.19972   10    4    17
+[14,] 10.20434   10    4    17
+[15,] 10.19972   10    4    17
+[16,] 10.19972   10    4    17
+
+[[1]]
+[1] "### Pachyramphus cinnamomeus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 55.11 49.10 2.2e-11     1.00
+p(prec) lambda(.)     3 57.08 51.07 8.1e-12     1.00
+
+$Null
+             Mean Mode 2.5% 97.5%
+ [1,] 0.004613031    0    0     0
+ [2,] 0.004613031    0    0     0
+ [3,] 0.004613031    0    0     0
+ [4,] 0.004613031    0    0     0
+ [5,] 1.089355270    1    1     2
+ [6,] 0.058278602    0    0     1
+ [7,] 0.004613031    0    0     0
+ [8,] 0.004613031    0    0     0
+ [9,] 0.007040013    0    0     0
+[10,] 0.007040013    0    0     0
+[11,] 0.007040013    0    0     0
+[12,] 1.014669399    1    1     1
+[13,] 1.089355270    1    1     2
+[14,] 0.004613031    0    0     0
+[15,] 0.004613031    0    0     0
+[16,] 0.004613031    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.58746   10    5    17
+ [2,] 10.58746   10    5    17
+ [3,] 10.58746   10    5    17
+ [4,] 10.58746   10    5    17
+ [5,] 10.59495   10    5    17
+ [6,] 10.58762   10    5    17
+ [7,] 10.58746   10    5    17
+ [8,] 10.58746   10    5    17
+ [9,] 10.58749   10    5    17
+[10,] 10.58749   10    5    17
+[11,] 10.58749   10    5    17
+[12,] 10.59162   10    5    17
+[13,] 10.59336   10    5    17
+[14,] 10.58746   10    5    17
+[15,] 10.58746   10    5    17
+[16,] 10.58746   10    5    17
+
+[[1]]
+[1] "### Pachysylvia decurtata"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 43.59 37.58 6.9e-09     1.00
+p(prec) lambda(.)     3 45.22 39.21 3.1e-09     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 1.5011608    1    1     3
+ [2,] 1.1388343    1    1     2
+ [3,] 0.1311822    0    0     1
+ [4,] 0.1311822    0    0     1
+ [5,] 0.1311822    0    0     1
+ [6,] 0.2539324    0    0     2
+ [7,] 0.1311822    0    0     1
+ [8,] 0.1311822    0    0     1
+ [9,] 0.1464476    0    0     1
+[10,] 0.1464476    0    0     1
+[11,] 0.1464476    0    0     1
+[12,] 0.1311822    0    0     1
+[13,] 0.1311822    0    0     1
+[14,] 1.1388343    1    1     2
+[15,] 0.1311822    0    0     1
+[16,] 0.1311822    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.15553   10    4    17
+ [2,] 10.15251   10    4    17
+ [3,] 10.14882   10    4    17
+ [4,] 10.14882   10    4    17
+ [5,] 10.14882   10    4    17
+ [6,] 10.14896   10    4    17
+ [7,] 10.14882   10    4    17
+ [8,] 10.14882   10    4    17
+ [9,] 10.14884   10    4    17
+[10,] 10.14884   10    4    17
+[11,] 10.14884   10    4    17
+[12,] 10.14882   10    4    17
+[13,] 10.14882   10    4    17
+[14,] 10.15251   10    4    17
+[15,] 10.14882   10    4    17
+[16,] 10.14882   10    4    17
+
+[[1]]
+[1] "### Pandion haliaetus"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 153.87 147.87 7.8e-33     1.00
+p(prec) lambda(.)     3 155.87 149.87 2.9e-33     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 1.23533030    1    1     2
+ [2,] 4.32094462    4    2     7
+ [3,] 3.57367590    3    2     6
+ [4,] 3.57367590    3    2     6
+ [5,] 1.23533030    1    1     2
+ [6,] 3.01066474    3    1     6
+ [7,] 5.24936983    5    3     9
+ [8,] 4.32094462    4    2     7
+ [9,] 1.34290674    1    1     3
+[10,] 1.14864575    1    1     2
+[11,] 1.14864575    1    1     2
+[12,] 4.32094462    4    2     7
+[13,] 0.07997139    0    0     1
+[14,] 5.24936983    5    3     9
+[15,] 2.95056780    3    1     5
+[16,] 3.57367590    3    2     6
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.53563   10    5    17
+ [2,] 10.53552   10    5    17
+ [3,] 10.53597   10    5    17
+ [4,] 10.53550   10    5    17
+ [5,] 10.53540   10    5    17
+ [6,] 10.53552   10    5    17
+ [7,] 10.53554   10    5    17
+ [8,] 10.53576   10    5    17
+ [9,] 10.53566   10    5    17
+[10,] 10.53540   10    5    17
+[11,] 10.53540   10    5    17
+[12,] 10.53599   10    5    17
+[13,] 10.53482   10    5    17
+[14,] 10.53529   10    5    17
+[15,] 10.53637   10    5    17
+[16,] 10.53618   10    5    17
+
+[[1]]
+[1] "### Parkesia noveboracensis"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.00  0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 95.44 89.44 3.8e-20     1.00
+p(.) lambda(.)        2 98.66 92.66 7.6e-21     1.00
+
+$Null
+          Mean Mode 2.5% 97.5%
+ [1,] 3.330992    3    2     6
+ [2,] 3.330992    3    2     6
+ [3,] 4.887621    4    2     9
+ [4,] 4.887621    4    2     9
+ [5,] 4.887621    4    2     9
+ [6,] 4.351597    4    2     8
+ [7,] 1.151722    1    1     2
+ [8,] 3.330992    3    2     6
+ [9,] 4.819730    4    2     9
+[10,] 4.819730    4    2     9
+[11,] 4.819730    4    2     9
+[12,] 4.887621    4    2     9
+[13,] 1.405377    1    1     3
+[14,] 1.405377    1    1     3
+[15,] 4.887621    4    2     9
+[16,] 2.466191    2    1     4
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.37931   10    5    17
+ [2,] 10.37838   10    5    17
+ [3,] 10.37842   10    5    17
+ [4,] 10.37842   10    5    17
+ [5,] 10.37891   10    5    17
+ [6,] 10.37842   10    5    17
+ [7,] 10.37894   10    5    17
+ [8,] 10.37910   10    5    17
+ [9,] 10.37867   10    5    17
+[10,] 10.37842   10    5    17
+[11,] 10.37842   10    5    17
+[12,] 10.37842   10    5    17
+[13,] 10.37875   10    5    17
+[14,] 10.37898   10    5    17
+[15,] 10.37842   10    5    17
+[16,] 10.37927   10    5    17
+
+[[1]]
+[1] "### Patagioenas cayennensis"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 141.66 135.65 3.5e-30     1.00
+p(.) lambda(.)        2 141.66 135.65 3.5e-30     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 1.7690752    2    1     3
+ [2,] 2.6430348    2    1     5
+ [3,] 1.2081724    1    1     2
+ [4,] 0.1845527    0    0     1
+ [5,] 1.4254447    1    1     3
+ [6,] 2.4009453    2    1     5
+ [7,] 1.7690752    2    1     3
+ [8,] 1.2081724    1    1     2
+ [9,] 1.2611027    1    1     3
+[10,] 0.2314258    0    0     1
+[11,] 0.2314258    0    0     1
+[12,] 3.0991870    3    2     5
+[13,] 2.1955293    2    1     4
+[14,] 2.6430348    2    1     5
+[15,] 0.1845527    0    0     1
+[16,] 0.1845527    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.26322   10    5    17
+ [2,] 10.26417   10    5    17
+ [3,] 10.26319   10    5    17
+ [4,] 10.26231   10    5    17
+ [5,] 10.26368   10    5    17
+ [6,] 10.26278   10    5    17
+ [7,] 10.26414   10    5    17
+ [8,] 10.26319   10    5    17
+ [9,] 10.26320   10    5    17
+[10,] 10.26232   10    5    17
+[11,] 10.26232   10    5    17
+[12,] 10.26460   10    5    17
+[13,] 10.26323   10    5    17
+[14,] 10.26417   10    5    17
+[15,] 10.26231   10    5    17
+[16,] 10.26231   10    5    17
+
+[[1]]
+[1] "### Phaeochroa cuvierii"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 150.08 144.07 5.2e-32     1.00
+p(prec) lambda(.)     3 151.67 145.66 2.3e-32     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 1.07153281    1    1     2
+ [2,] 2.64625475    2    1     5
+ [3,] 4.55324133    4    2     7
+ [4,] 1.37827384    1    1     3
+ [5,] 1.07153281    1    1     2
+ [6,] 0.61894822    0    0     3
+ [7,] 1.07153281    1    1     2
+ [8,] 1.37827384    1    1     3
+ [9,] 1.95259805    2    1     4
+[10,] 4.40477157    4    2     7
+[11,] 1.95259805    2    1     4
+[12,] 4.55324133    4    2     7
+[13,] 1.17097696    1    1     2
+[14,] 0.05749761    0    0     1
+[15,] 4.55324133    4    2     7
+[16,] 0.05749761    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.45482   10    5    17
+ [2,] 10.45661   10    5    17
+ [3,] 10.45494   10    5    17
+ [4,] 10.45560   10    5    17
+ [5,] 10.45482   10    5    17
+ [6,] 10.45418   10    5    17
+ [7,] 10.45482   10    5    17
+ [8,] 10.45524   10    5    17
+ [9,] 10.45526   10    5    17
+[10,] 10.45532   10    5    17
+[11,] 10.45597   10    5    17
+[12,] 10.45568   10    5    17
+[13,] 10.45522   10    5    17
+[14,] 10.45410   10    5    17
+[15,] 10.45453   10    5    17
+[16,] 10.45410   10    5    17
+
+[[1]]
+[1] "### Pionus menstruus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 46.61 40.59 1.5e-09     1.00
+p(prec) lambda(.)     3 48.31 42.29 6.5e-10     1.00
+
+$Null
+          Mean Mode 2.5% 97.5%
+ [1,] 1.329484    1    0     4
+ [2,] 1.329484    1    0     4
+ [3,] 1.329484    1    0     4
+ [4,] 1.329484    1    0     4
+ [5,] 2.345194    2    1     5
+ [6,] 1.528400    1    0     4
+ [7,] 2.345194    2    1     5
+ [8,] 2.937629    3    1     6
+ [9,] 2.376822    2    1     5
+[10,] 1.360741    1    0     4
+[11,] 1.360741    1    0     4
+[12,] 1.329484    1    0     4
+[13,] 1.329484    1    0     4
+[14,] 1.329484    1    0     4
+[15,] 1.329484    1    0     4
+[16,] 1.329484    1    0     4
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.55756   10    5    17
+ [2,] 10.55756   10    5    17
+ [3,] 10.55756   10    5    17
+ [4,] 10.55756   10    5    17
+ [5,] 10.55974   10    5    17
+ [6,] 10.55794   10    5    17
+ [7,] 10.55974   10    5    17
+ [8,] 10.56149   10    5    17
+ [9,] 10.55981   10    5    17
+[10,] 10.55763   10    5    17
+[11,] 10.55763   10    5    17
+[12,] 10.55756   10    5    17
+[13,] 10.55756   10    5    17
+[14,] 10.55756   10    5    17
+[15,] 10.55756   10    5    17
+[16,] 10.55756   10    5    17
+
+[[1]]
+[1] "### Piranga olivacea"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.02   0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 163.18 157.16 7.5e-35     1.00
+p(.) lambda(.)        2 168.12 162.10 6.3e-36     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 1.2937356    1    1     3
+ [2,] 3.5199015    3    2     6
+ [3,] 0.1103388    0    0     1
+ [4,] 1.1317474    1    1     2
+ [5,] 1.5880342    1    1     3
+ [6,] 3.5426353    3    1     7
+ [7,] 1.2937356    1    1     3
+ [8,] 2.0036996    2    1     4
+ [9,] 3.9557610    4    2     7
+[10,] 2.2379937    2    1     4
+[11,] 1.7626829    2    1     3
+[12,] 2.0036996    2    1     4
+[13,] 0.1103388    0    0     1
+[14,] 4.8527433    5    3     8
+[15,] 1.2937356    1    1     3
+[16,] 2.4737033    2    1     4
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 11.08799   11    5    18
+ [2,] 11.08896   11    5    18
+ [3,] 11.08707   11    5    18
+ [4,] 11.08791   11    5    18
+ [5,] 11.08862   11    5    18
+ [6,] 11.08802   11    5    18
+ [7,] 11.08853   11    5    18
+ [8,] 11.08817   11    5    18
+ [9,] 11.08905   11    5    18
+[10,] 11.08879   11    5    18
+[11,] 11.08920   11    5    18
+[12,] 11.08967   11    5    18
+[13,] 11.08707   11    5    18
+[14,] 11.09010   11    5    18
+[15,] 11.08853   11    5    18
+[16,] 11.08929   11    5    18
+
+[[1]]
+[1] "### Piranga rubra"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 130.51 124.50 9.2e-28     1.00
+p(prec) lambda(.)     3 132.33 126.32 3.7e-28     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 3.19181920    3    2     5
+ [2,] 1.49876061    1    1     3
+ [3,] 1.10663221    1    1     2
+ [4,] 1.04431744    1    1     2
+ [5,] 0.03591438    0    0     1
+ [6,] 2.56463460    2    1     5
+ [7,] 0.03591438    0    0     1
+ [8,] 1.04431744    1    1     2
+ [9,] 1.15472880    1    1     2
+[10,] 0.05267370    0    0     1
+[11,] 0.05267370    0    0     1
+[12,] 1.49876061    1    1     3
+[13,] 1.49876061    1    1     3
+[14,] 3.19181920    3    2     5
+[15,] 0.03591438    0    0     1
+[16,] 0.03591438    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.97083   10    5    18
+ [2,] 10.97553   10    5    18
+ [3,] 10.97324   10    5    18
+ [4,] 10.97198   10    5    18
+ [5,] 10.97041   10    5    18
+ [6,] 10.97086   10    5    18
+ [7,] 10.97041   10    5    18
+ [8,] 10.97063   10    5    18
+ [9,] 10.97327   10    5    18
+[10,] 10.97044   10    5    18
+[11,] 10.97044   10    5    18
+[12,] 10.97553   10    5    18
+[13,] 10.97206   10    5    18
+[14,] 10.97083   10    5    18
+[15,] 10.97041   10    5    18
+[16,] 10.97041   10    5    18
+
+[[1]]
+[1] "### Pitangus sulphuratus"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 139.29 133.28 1.1e-29     1.00
+p(prec) lambda(.)     3 140.67 134.66 5.7e-30     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 1.61195148    1    1     3
+ [2,] 2.90648348    3    1     5
+ [3,] 1.05925709    1    1     2
+ [4,] 1.05925709    1    1     2
+ [5,] 0.04832655    0    0     1
+ [6,] 2.82286575    2    1     5
+ [7,] 0.04832655    0    0     1
+ [8,] 1.31248529    1    1     3
+ [9,] 1.79880791    2    1     3
+[10,] 3.87809693    4    2     6
+[11,] 2.24706595    2    1     4
+[12,] 0.04832655    0    0     1
+[13,] 1.05925709    1    1     2
+[14,] 2.01021100    2    1     4
+[15,] 0.04832655    0    0     1
+[16,] 0.04832655    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.38928   10    5    17
+ [2,] 10.38933   10    5    17
+ [3,] 10.38861   10    5    17
+ [4,] 10.38861   10    5    17
+ [5,] 10.38761   10    5    17
+ [6,] 10.38810   10    5    17
+ [7,] 10.38761   10    5    17
+ [8,] 10.38864   10    5    17
+ [9,] 10.39041   10    5    17
+[10,] 10.38810   10    5    17
+[11,] 10.38932   10    5    17
+[12,] 10.38761   10    5    17
+[13,] 10.38861   10    5    17
+[14,] 10.38987   10    5    17
+[15,] 10.38761   10    5    17
+[16,] 10.38761   10    5    17
+
+[[1]]
+[1] "### Progne chalybea"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 43.71 37.71 6.5e-09     1.00
+p(prec) lambda(.)     3 45.68 39.68 2.4e-09     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.01976780    0    0     0
+ [2,] 0.01976780    0    0     0
+ [3,] 1.02294557    1    1     1
+ [4,] 1.05258872    1    1     2
+ [5,] 0.01976780    0    0     0
+ [6,] 1.52729905    1    1     3
+ [7,] 0.01976780    0    0     0
+ [8,] 0.01976780    0    0     0
+ [9,] 0.02611662    0    0     1
+[10,] 0.02611662    0    0     1
+[11,] 0.02611662    0    0     1
+[12,] 0.01976780    0    0     0
+[13,] 0.01976780    0    0     0
+[14,] 0.01976780    0    0     0
+[15,] 0.01976780    0    0     0
+[16,] 0.01976780    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.11133   10    4    17
+ [2,] 10.11133   10    4    17
+ [3,] 10.11437   10    4    17
+ [4,] 10.11676   10    4    17
+ [5,] 10.11133   10    4    17
+ [6,] 10.11452   10    4    17
+ [7,] 10.11133   10    4    17
+ [8,] 10.11133   10    4    17
+ [9,] 10.11135   10    4    17
+[10,] 10.11135   10    4    17
+[11,] 10.11135   10    4    17
+[12,] 10.11133   10    4    17
+[13,] 10.11133   10    4    17
+[14,] 10.11133   10    4    17
+[15,] 10.11133   10    4    17
+[16,] 10.11133   10    4    17
+
+[[1]]
+[1] "### Protonotaria citrea"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 141.43 135.42 3.9e-30     1.00
+p(prec) lambda(.)     3 142.61 136.59 2.2e-30     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.01139967    0    0     0
+ [2,] 1.12037644    1    1     2
+ [3,] 4.25952732    4    2     7
+ [4,] 2.63727785    2    1     5
+ [5,] 1.30112298    1    1     2
+ [6,] 3.41358972    3    1     7
+ [7,] 1.01600900    1    1     1
+ [8,] 1.12037644    1    1     2
+ [9,] 4.15370337    4    2     7
+[10,] 2.49921073    2    1     4
+[11,] 4.15370337    4    2     7
+[12,] 3.31309244    3    2     6
+[13,] 2.63727785    2    1     5
+[14,] 1.64016002    1    1     3
+[15,] 4.25952732    4    2     7
+[16,] 0.01139967    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.75763   10    5    18
+ [2,] 10.75969   10    5    18
+ [3,] 10.75859   10    5    18
+ [4,] 10.76002   10    5    18
+ [5,] 10.75977   10    5    18
+ [6,] 10.75859   10    5    18
+ [7,] 10.75851   10    5    18
+ [8,] 10.75969   10    5    18
+ [9,] 10.75968   10    5    18
+[10,] 10.76048   10    5    18
+[11,] 10.76064   10    5    18
+[12,] 10.75851   10    5    18
+[13,] 10.75843   10    5    18
+[14,] 10.75826   10    5    18
+[15,] 10.75859   10    5    18
+[16,] 10.75763   10    5    18
+
+[[1]]
+[1] "### Quiscalus mexicanus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 62.84 56.83 4.6e-13     1.00
+p(prec) lambda(.)     3 63.52 57.51 3.3e-13     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 1.4211457    1    1     3
+ [2,] 2.1485838    2    1     4
+ [3,] 0.4048758    0    0     2
+ [4,] 1.7428351    1    1     4
+ [5,] 0.4048758    0    0     2
+ [6,] 0.6422687    0    0     3
+ [7,] 0.4048758    0    0     2
+ [8,] 0.4048758    0    0     2
+ [9,] 0.4372411    0    0     2
+[10,] 0.4372411    0    0     2
+[11,] 0.4372411    0    0     2
+[12,] 1.4211457    1    1     3
+[13,] 0.4048758    0    0     2
+[14,] 0.4048758    0    0     2
+[15,] 0.4048758    0    0     2
+[16,] 1.4211457    1    1     3
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.67422   10    5    18
+ [2,] 10.68281   10    5    18
+ [3,] 10.67395   10    5    18
+ [4,] 10.68017   10    5    18
+ [5,] 10.67395   10    5    18
+ [6,] 10.67409   10    5    18
+ [7,] 10.67395   10    5    18
+ [8,] 10.67395   10    5    18
+ [9,] 10.67398   10    5    18
+[10,] 10.67398   10    5    18
+[11,] 10.67398   10    5    18
+[12,] 10.67422   10    5    18
+[13,] 10.67395   10    5    18
+[14,] 10.67395   10    5    18
+[15,] 10.67395   10    5    18
+[16,] 10.67422   10    5    18
+
+[[1]]
+[1] "### Rupornis magnirostris"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 121.53 115.52 8.2e-26     1.00
+p(prec) lambda(.)     3 123.21 117.20 3.6e-26     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 1.6011978    1    1     3
+ [2,] 1.6011978    1    1     3
+ [3,] 1.1502225    1    1     2
+ [4,] 0.1322683    0    0     1
+ [5,] 1.1502225    1    1     2
+ [6,] 2.7543651    2    1     5
+ [7,] 0.1322683    0    0     1
+ [8,] 0.1322683    0    0     1
+ [9,] 1.3953285    1    1     3
+[10,] 3.5330803    3    2     6
+[11,] 1.7269658    1    1     3
+[12,] 1.3166538    1    1     3
+[13,] 0.1322683    0    0     1
+[14,] 1.1502225    1    1     2
+[15,] 0.1322683    0    0     1
+[16,] 0.1322683    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.40788   10    5    17
+ [2,] 10.40847   10    5    17
+ [3,] 10.40721   10    5    17
+ [4,] 10.40619   10    5    17
+ [5,] 10.40721   10    5    17
+ [6,] 10.40666   10    5    17
+ [7,] 10.40619   10    5    17
+ [8,] 10.40619   10    5    17
+ [9,] 10.40724   10    5    17
+[10,] 10.40796   10    5    17
+[11,] 10.40849   10    5    17
+[12,] 10.40786   10    5    17
+[13,] 10.40619   10    5    17
+[14,] 10.40721   10    5    17
+[15,] 10.40619   10    5    17
+[16,] 10.40619   10    5    17
+
+[[1]]
+[1] "### Saltator maximus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 52.71 46.70 7.2e-11     1.00
+p(prec) lambda(.)     3 54.70 48.69 2.7e-11     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.00835714    0    0     0
+ [2,] 1.05918141    1    1     2
+ [3,] 0.00835714    0    0     0
+ [4,] 0.00835714    0    0     0
+ [5,] 0.00835714    0    0     0
+ [6,] 0.07436877    0    0     1
+ [7,] 0.00835714    0    0     0
+ [8,] 0.00835714    0    0     0
+ [9,] 0.01203039    0    0     0
+[10,] 1.01467661    1    1     1
+[11,] 0.01203039    0    0     0
+[12,] 0.00835714    0    0     0
+[13,] 1.29372299    1    1     2
+[14,] 0.00835714    0    0     0
+[15,] 0.00835714    0    0     0
+[16,] 0.00835714    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.20274   10    4    17
+ [2,] 10.20733   10    4    17
+ [3,] 10.20274   10    4    17
+ [4,] 10.20274   10    4    17
+ [5,] 10.20274   10    4    17
+ [6,] 10.20287   10    4    17
+ [7,] 10.20274   10    4    17
+ [8,] 10.20274   10    4    17
+ [9,] 10.20276   10    4    17
+[10,] 10.20533   10    4    17
+[11,] 10.20276   10    4    17
+[12,] 10.20274   10    4    17
+[13,] 10.20920   10    5    17
+[14,] 10.20274   10    4    17
+[15,] 10.20274   10    4    17
+[16,] 10.20274   10    4    17
+
+[[1]]
+[1] "### Setophaga castanea"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.00  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 78.33 72.32 2.0e-16     1.00
+p(prec) lambda(.)     3 80.17 74.17 7.9e-17     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.3767897    0    0     2
+ [2,] 1.7138886    1    1     4
+ [3,] 1.7138886    1    1     4
+ [4,] 1.3971362    1    1     3
+ [5,] 0.3767897    0    0     2
+ [6,] 2.2081998    2    1     4
+ [7,] 0.3767897    0    0     2
+ [8,] 0.3767897    0    0     2
+ [9,] 1.4397558    1    1     3
+[10,] 1.4397558    1    1     3
+[11,] 1.7805168    1    1     4
+[12,] 0.3767897    0    0     2
+[13,] 0.3767897    0    0     2
+[14,] 0.3767897    0    0     2
+[15,] 0.3767897    0    0     2
+[16,] 0.3767897    0    0     2
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.06320   10    4    17
+ [2,] 10.06447   10    4    17
+ [3,] 10.06524   10    4    17
+ [4,] 10.06446   10    4    17
+ [5,] 10.06320   10    4    17
+ [6,] 10.06370   10    4    17
+ [7,] 10.06320   10    4    17
+ [8,] 10.06320   10    4    17
+ [9,] 10.06447   10    4    17
+[10,] 10.06447   10    4    17
+[11,] 10.06524   10    4    17
+[12,] 10.06320   10    4    17
+[13,] 10.06320   10    4    17
+[14,] 10.06320   10    4    17
+[15,] 10.06320   10    4    17
+[16,] 10.06320   10    4    17
+
+[[1]]
+[1] "### Setophaga pensylvanica"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.02   0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 164.93 158.91 3.1e-35     1.00
+p(.) lambda(.)        2 166.95 160.93 1.1e-35     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 1.7076383    1    1     4
+ [2,] 2.7703789    2    1     5
+ [3,] 1.7076383    1    1     4
+ [4,] 2.7703789    2    1     5
+ [5,] 2.7703789    2    1     5
+ [6,] 2.8185861    2    1     6
+ [7,] 0.6512835    0    0     3
+ [8,] 3.9149003    4    2     7
+ [9,] 4.8140788    4    2     8
+[10,] 2.9776583    3    1     6
+[11,] 2.3757138    2    1     5
+[12,] 5.1054531    5    3     8
+[13,] 2.2051583    2    1     4
+[14,] 0.6512835    0    0     3
+[15,] 3.3416406    3    1     6
+[16,] 2.2051583    2    1     4
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.67340   10    5    18
+ [2,] 10.67394   10    5    18
+ [3,] 10.67293   10    5    18
+ [4,] 10.67394   10    5    18
+ [5,] 10.67435   10    5    18
+ [6,] 10.67324   10    5    18
+ [7,] 10.67263   10    5    18
+ [8,] 10.67520   10    5    18
+ [9,] 10.67564   10    5    18
+[10,] 10.67399   10    5    18
+[11,] 10.67394   10    5    18
+[12,] 10.67494   10    5    18
+[13,] 10.67389   10    5    18
+[14,] 10.67263   10    5    18
+[15,] 10.67440   10    5    18
+[16,] 10.67389   10    5    18
+
+[[1]]
+[1] "### Setophaga petechia"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 116.06 110.05 1.3e-24     1.00
+p(prec) lambda(.)     3 116.68 110.67 9.3e-25     1.00
+
+$Null
+          Mean Mode 2.5% 97.5%
+ [1,] 1.243221    1    0     4
+ [2,] 2.289291    2    1     5
+ [3,] 2.289291    2    1     5
+ [4,] 3.519347    3    1     6
+ [5,] 1.243221    1    0     4
+ [6,] 1.897445    1    0     5
+ [7,] 1.243221    1    0     4
+ [8,] 3.519347    3    1     6
+ [9,] 3.024856    3    1     6
+[10,] 3.648845    3    1     7
+[11,] 2.383475    2    1     5
+[12,] 2.289291    2    1     5
+[13,] 1.243221    1    0     4
+[14,] 1.243221    1    0     4
+[15,] 3.519347    3    1     6
+[16,] 2.909876    3    1     6
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.23496   10    4    17
+ [2,] 10.23608   10    5    17
+ [3,] 10.23535   10    4    17
+ [4,] 10.23742   10    5    17
+ [5,] 10.23496   10    4    17
+ [6,] 10.23506   10    4    17
+ [7,] 10.23496   10    4    17
+ [8,] 10.23742   10    5    17
+ [9,] 10.23679   10    5    17
+[10,] 10.23681   10    5    17
+[11,] 10.23536   10    4    17
+[12,] 10.23608   10    5    17
+[13,] 10.23496   10    4    17
+[14,] 10.23496   10    4    17
+[15,] 10.23742   10    5    17
+[16,] 10.23677   10    5    17
+
+[[1]]
+[1] "### Setophaga ruticilla"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 163.15 157.14 7.5e-35     1.00
+p(.) lambda(.)        2 163.37 157.36 6.8e-35     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 2.1716385    2    1     4
+ [2,] 5.6184108    5    3     9
+ [3,] 0.3290894    0    0     2
+ [4,] 2.1716385    2    1     4
+ [5,] 1.3693958    1    1     3
+ [6,] 2.3593993    2    1     5
+ [7,] 1.3693958    1    1     3
+ [8,] 3.7521054    3    2     6
+ [9,] 4.0823598    4    2     7
+[10,] 2.9211560    3    1     5
+[11,] 2.3700765    2    1     5
+[12,] 2.1716385    2    1     4
+[13,] 1.3693958    1    1     3
+[14,] 3.2070191    3    1     6
+[15,] 1.3693958    1    1     3
+[16,] 0.3290894    0    0     2
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.68157   10    5    18
+ [2,] 10.68120   10    5    18
+ [3,] 10.68002   10    5    18
+ [4,] 10.68157   10    5    18
+ [5,] 10.68092   10    5    18
+ [6,] 10.68051   10    5    18
+ [7,] 10.68092   10    5    18
+ [8,] 10.68221   10    5    18
+ [9,] 10.68275   10    5    18
+[10,] 10.68268   10    5    18
+[11,] 10.68214   10    5    18
+[12,] 10.68211   10    5    18
+[13,] 10.68092   10    5    18
+[14,] 10.68217   10    5    18
+[15,] 10.68092   10    5    18
+[16,] 10.68002   10    5    18
+
+[[1]]
+[1] "### Sittasomus griseicapillus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 65.57 59.56 1.2e-13     1.00
+p(prec) lambda(.)     3 67.55 61.53 4.3e-14     1.00
+
+$Null
+             Mean Mode 2.5% 97.5%
+ [1,] 0.004338596    0    0     0
+ [2,] 0.004338596    0    0     0
+ [3,] 0.004338596    0    0     0
+ [4,] 1.039056516    1    1     2
+ [5,] 0.004338596    0    0     0
+ [6,] 0.082808463    0    0     1
+ [7,] 0.004338596    0    0     0
+ [8,] 0.004338596    0    0     0
+ [9,] 0.007092567    0    0     0
+[10,] 1.009345299    1    1     1
+[11,] 0.007092567    0    0     0
+[12,] 2.564886113    2    1     4
+[13,] 0.004338596    0    0     0
+[14,] 0.004338596    0    0     0
+[15,] 1.039056516    1    1     2
+[16,] 0.004338596    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.08568   10    4    17
+ [2,] 10.08568   10    4    17
+ [3,] 10.08568   10    4    17
+ [4,] 10.09018   10    4    17
+ [5,] 10.08568   10    4    17
+ [6,] 10.08594   10    4    17
+ [7,] 10.08568   10    4    17
+ [8,] 10.08568   10    4    17
+ [9,] 10.08573   10    4    17
+[10,] 10.08825   10    4    17
+[11,] 10.08573   10    4    17
+[12,] 10.08648   10    4    17
+[13,] 10.08568   10    4    17
+[14,] 10.08568   10    4    17
+[15,] 10.09018   10    4    17
+[16,] 10.08568   10    4    17
+
+[[1]]
+[1] "### Spizaetus tyrannus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 87.78 81.78 1.7e-18     1.00
+p(prec) lambda(.)     3 89.67 83.66 6.8e-19     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.2738545    0    0     2
+ [2,] 1.5531459    1    1     3
+ [3,] 0.2738545    0    0     2
+ [4,] 0.2738545    0    0     2
+ [5,] 2.7473071    2    1     5
+ [6,] 0.6028197    0    0     2
+ [7,] 1.9193633    2    1     4
+ [8,] 0.2738545    0    0     2
+ [9,] 1.3344517    1    1     3
+[10,] 1.3344517    1    1     3
+[11,] 1.3344517    1    1     3
+[12,] 0.2738545    0    0     2
+[13,] 0.2738545    0    0     2
+[14,] 1.2932219    1    1     3
+[15,] 0.2738545    0    0     2
+[16,] 0.2738545    0    0     2
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.12755   10    4    17
+ [2,] 10.12918   10    4    17
+ [3,] 10.12755   10    4    17
+ [4,] 10.12755   10    4    17
+ [5,] 10.13027   10    4    17
+ [6,] 10.12760   10    4    17
+ [7,] 10.12973   10    4    17
+ [8,] 10.12755   10    4    17
+ [9,] 10.12859   10    4    17
+[10,] 10.12859   10    4    17
+[11,] 10.12859   10    4    17
+[12,] 10.12755   10    4    17
+[13,] 10.12755   10    4    17
+[14,] 10.12858   10    4    17
+[15,] 10.12755   10    4    17
+[16,] 10.12755   10    4    17
+
+[[1]]
+[1] "### Sporophila nigricollis"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.02   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 119.09 113.07 2.8e-25     1.00
+p(prec) lambda(.)     3 120.57 114.55 1.3e-25     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.02369202    0    0     0
+ [2,] 1.69859981    2    1     3
+ [3,] 1.17295400    1    1     2
+ [4,] 3.46677148    3    2     6
+ [5,] 0.02369202    0    0     0
+ [6,] 1.34331510    1    1     3
+ [7,] 0.02369202    0    0     0
+ [8,] 0.02369202    0    0     0
+ [9,] 1.04458937    1    1     2
+[10,] 1.04458937    1    1     2
+[11,] 1.10883246    1    1     2
+[12,] 0.02369202    0    0     0
+[13,] 0.02369202    0    0     0
+[14,] 1.69859981    2    1     3
+[15,] 2.08946347    2    1     4
+[16,] 0.02369202    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 11.05691   11    5    18
+ [2,] 11.06354   11    5    18
+ [3,] 11.06056   11    5    18
+ [4,] 11.05737   11    5    18
+ [5,] 11.05691   11    5    18
+ [6,] 11.05907   11    5    18
+ [7,] 11.05691   11    5    18
+ [8,] 11.05691   11    5    18
+ [9,] 11.05890   11    5    18
+[10,] 11.05890   11    5    18
+[11,] 11.06056   11    5    18
+[12,] 11.05691   11    5    18
+[13,] 11.05691   11    5    18
+[14,] 11.06062   11    5    18
+[15,] 11.05903   11    5    18
+[16,] 11.05691   11    5    18
+
+[[1]]
+[1] "### Streptoprocne zonaris"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 98.01 91.98 1.1e-20     1.00
+p(prec) lambda(.)     3 99.08 93.06 6.2e-21     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.3830558    0    0     2
+ [2,] 1.4074152    1    1     3
+ [3,] 0.3830558    0    0     2
+ [4,] 1.7359915    1    1     4
+ [5,] 1.7359915    1    1     4
+ [6,] 0.7814145    0    0     3
+ [7,] 1.7359915    1    1     4
+ [8,] 0.3830558    0    0     2
+ [9,] 1.4588457    1    1     3
+[10,] 0.4313853    0    0     2
+[11,] 1.8164602    1    1     4
+[12,] 0.3830558    0    0     2
+[13,] 1.4074152    1    1     3
+[14,] 3.0478623    3    1     5
+[15,] 0.3830558    0    0     2
+[16,] 0.3830558    0    0     2
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.41796   10    5    17
+ [2,] 10.41833   10    5    17
+ [3,] 10.41796   10    5    17
+ [4,] 10.42121   10    5    17
+ [5,] 10.42379   10    5    17
+ [6,] 10.41831   10    5    17
+ [7,] 10.42379   10    5    17
+ [8,] 10.41796   10    5    17
+ [9,] 10.42121   10    5    17
+[10,] 10.41802   10    5    17
+[11,] 10.42384   10    5    17
+[12,] 10.41796   10    5    17
+[13,] 10.41833   10    5    17
+[14,] 10.42634   10    5    17
+[15,] 10.41796   10    5    17
+[16,] 10.41796   10    5    17
+
+[[1]]
+[1] "### Thamnophilus doliatus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 40.61 34.60 3.1e-08     1.00
+p(prec) lambda(.)     3 42.61 36.60 1.1e-08     1.00
+
+$Null
+              Mean Mode 2.5% 97.5%
+ [1,] 0.0006036762    0    0     0
+ [2,] 0.0006036762    0    0     0
+ [3,] 1.0024390973    1    1     1
+ [4,] 1.3384643476    1    1     2
+ [5,] 0.0006036762    0    0     0
+ [6,] 0.0236867652    0    0     0
+ [7,] 0.0006036762    0    0     0
+ [8,] 0.0006036762    0    0     0
+ [9,] 0.0011128099    0    0     0
+[10,] 0.0011128099    0    0     0
+[11,] 0.0011128099    0    0     0
+[12,] 0.0006036762    0    0     0
+[13,] 0.0006036762    0    0     0
+[14,] 0.0006036762    0    0     0
+[15,] 0.0006036762    0    0     0
+[16,] 0.0006036762    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.03330   10    4    17
+ [2,] 10.03330   10    4    17
+ [3,] 10.03754   10    4    17
+ [4,] 10.03766   10    4    17
+ [5,] 10.03330   10    4    17
+ [6,] 10.03345   10    4    17
+ [7,] 10.03330   10    4    17
+ [8,] 10.03330   10    4    17
+ [9,] 10.03332   10    4    17
+[10,] 10.03332   10    4    17
+[11,] 10.03332   10    4    17
+[12,] 10.03330   10    4    17
+[13,] 10.03330   10    4    17
+[14,] 10.03330   10    4    17
+[15,] 10.03330   10    4    17
+[16,] 10.03330   10    4    17
+
+[[1]]
+[1] "### Thraupis episcopus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 41.72 35.71 1.8e-08     1.00
+p(prec) lambda(.)     3 43.57 37.55 7.0e-09     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 1.04781650    1    1     2
+ [2,] 0.04311619    0    0     1
+ [3,] 0.04311619    0    0     1
+ [4,] 0.04311619    0    0     1
+ [5,] 0.04311619    0    0     1
+ [6,] 1.32067523    1    1     3
+ [7,] 0.04311619    0    0     1
+ [8,] 0.04311619    0    0     1
+ [9,] 0.05250213    0    0     1
+[10,] 0.05250213    0    0     1
+[11,] 0.05250213    0    0     1
+[12,] 0.04311619    0    0     1
+[13,] 0.04311619    0    0     1
+[14,] 1.10340855    1    1     2
+[15,] 0.04311619    0    0     1
+[16,] 0.04311619    0    0     1
+
+$hour
+           Mean Mode 2.5% 97.5%
+ [1,] 10.002569    9    4    17
+ [2,]  9.998536    9    4    17
+ [3,]  9.998536    9    4    17
+ [4,]  9.998536    9    4    17
+ [5,]  9.998536    9    4    17
+ [6,]  9.999345    9    4    17
+ [7,]  9.998536    9    4    17
+ [8,]  9.998536    9    4    17
+ [9,]  9.998581    9    4    17
+[10,]  9.998581    9    4    17
+[11,]  9.998581    9    4    17
+[12,]  9.998536    9    4    17
+[13,]  9.998536    9    4    17
+[14,] 10.005825    9    4    17
+[15,]  9.998536    9    4    17
+[16,]  9.998536    9    4    17
+
+[[1]]
+[1] "### Thraupis palmarum"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 103.85  97.83 5.7e-22     1.00
+p(prec) lambda(.)     3 105.78  99.76 2.2e-22     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 1.22586173    1    1     2
+ [2,] 0.09186875    0    0     1
+ [3,] 0.09186875    0    0     1
+ [4,] 2.95352459    3    2     5
+ [5,] 1.10464590    1    1     2
+ [6,] 1.45455460    1    1     3
+ [7,] 0.09186875    0    0     1
+ [8,] 0.09186875    0    0     1
+ [9,] 0.11731514    0    0     1
+[10,] 0.11731514    0    0     1
+[11,] 1.13365047    1    1     2
+[12,] 1.22586173    1    1     2
+[13,] 0.09186875    0    0     1
+[14,] 2.16304490    2    1     4
+[15,] 1.22586173    1    1     2
+[16,] 0.09186875    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.98740   10    5    18
+ [2,] 10.98580   10    5    18
+ [3,] 10.98580   10    5    18
+ [4,] 10.99203   10    5    18
+ [5,] 10.98737   10    5    18
+ [6,] 10.98621   10    5    18
+ [7,] 10.98580   10    5    18
+ [8,] 10.98580   10    5    18
+ [9,] 10.98584   10    5    18
+[10,] 10.98584   10    5    18
+[11,] 10.98740   10    5    18
+[12,] 10.98863   10    5    18
+[13,] 10.98580   10    5    18
+[14,] 10.99197   10    5    18
+[15,] 10.98863   10    5    18
+[16,] 10.98580   10    5    18
+
+[[1]]
+[1] "### Tigrisoma mexicanum"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(.) lambda(.)        2 46.66 40.64 1.5e-09     1.00
+p(prec) lambda(.)     3 48.37 42.35 6.4e-10     1.00
+
+$Null
+          Mean Mode 2.5% 97.5%
+ [1,] 1.651550    1    0     5
+ [2,] 1.651550    1    0     5
+ [3,] 1.651550    1    0     5
+ [4,] 1.651550    1    0     5
+ [5,] 2.667713    2    1     6
+ [6,] 1.854106    1    0     5
+ [7,] 1.651550    1    0     5
+ [8,] 3.311528    3    1     6
+ [9,] 1.683704    1    0     5
+[10,] 1.683704    1    0     5
+[11,] 1.683704    1    0     5
+[12,] 1.651550    1    0     5
+[13,] 2.667713    2    1     6
+[14,] 1.651550    1    0     5
+[15,] 2.667713    2    1     6
+[16,] 1.651550    1    0     5
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.64656   10    5    17
+ [2,] 10.64656   10    5    17
+ [3,] 10.64656   10    5    17
+ [4,] 10.64656   10    5    17
+ [5,] 10.65161   10    5    17
+ [6,] 10.64674   10    5    17
+ [7,] 10.64656   10    5    17
+ [8,] 10.65601   10    5    17
+ [9,] 10.64659   10    5    17
+[10,] 10.64659   10    5    17
+[11,] 10.64659   10    5    17
+[12,] 10.64656   10    5    17
+[13,] 10.64685   10    5    17
+[14,] 10.64656   10    5    17
+[15,] 10.64685   10    5    17
+[16,] 10.64656   10    5    17
+
+[[1]]
+[1] "### Tinamus major"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.02  0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 67.55 61.53 4.4e-14     1.00
+p(.) lambda(.)        2 68.88 62.86 2.2e-14     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.1197780    0    0     1
+ [2,] 1.1303480    1    1     2
+ [3,] 1.8206644    2    1     3
+ [4,] 0.1197780    0    0     1
+ [5,] 0.1197780    0    0     1
+ [6,] 0.3166253    0    0     2
+ [7,] 0.1197780    0    0     1
+ [8,] 0.1197780    0    0     1
+ [9,] 1.3099032    1    1     3
+[10,] 0.1408440    0    0     1
+[11,] 1.3099032    1    1     3
+[12,] 0.1197780    0    0     1
+[13,] 0.1197780    0    0     1
+[14,] 0.1197780    0    0     1
+[15,] 1.1303480    1    1     2
+[16,] 0.1197780    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.75321   10    5    18
+ [2,] 10.75587   10    5    18
+ [3,] 10.76212   10    5    18
+ [4,] 10.75321   10    5    18
+ [5,] 10.75321   10    5    18
+ [6,] 10.75359   10    5    18
+ [7,] 10.75321   10    5    18
+ [8,] 10.75321   10    5    18
+ [9,] 10.75816   10    5    18
+[10,] 10.75327   10    5    18
+[11,] 10.75599   10    5    18
+[12,] 10.75321   10    5    18
+[13,] 10.75321   10    5    18
+[14,] 10.75321   10    5    18
+[15,] 10.75587   10    5    18
+[16,] 10.75321   10    5    18
+
+[[1]]
+[1] "### Todirostrum cinereum"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 133.52 127.51 2.1e-28     1.00
+p(prec) lambda(.)     3 134.39 128.38 1.3e-28     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.02264295    0    0     0
+ [2,] 1.02910349    1    1     2
+ [3,] 2.61131809    2    1     4
+ [4,] 0.02264295    0    0     0
+ [5,] 1.02910349    1    1     2
+ [6,] 0.33835335    0    0     2
+ [7,] 2.61131809    2    1     4
+ [8,] 1.39488131    1    1     3
+ [9,] 0.03553633    0    0     1
+[10,] 3.60965168    3    2     6
+[11,] 1.04568802    1    1     2
+[12,] 2.61131809    2    1     4
+[13,] 1.39488131    1    1     3
+[14,] 0.02264295    0    0     0
+[15,] 3.12534160    3    2     5
+[16,] 0.02264295    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.54479   10    5    17
+ [2,] 10.54577   10    5    17
+ [3,] 10.54602   10    5    17
+ [4,] 10.54479   10    5    17
+ [5,] 10.54577   10    5    17
+ [6,] 10.54504   10    5    17
+ [7,] 10.54721   10    5    17
+ [8,] 10.54762   10    5    17
+ [9,] 10.54483   10    5    17
+[10,] 10.54545   10    5    17
+[11,] 10.54581   10    5    17
+[12,] 10.54721   10    5    17
+[13,] 10.54762   10    5    17
+[14,] 10.54479   10    5    17
+[15,] 10.54607   10    5    17
+[16,] 10.54479   10    5    17
+
+[[1]]
+[1] "### Tringa solitaria"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 45.86 39.84 2.2e-09     1.00
+p(.) lambda(.)        2 46.70 40.68 1.5e-09     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.06964640    0    0     1
+ [2,] 1.55778467    1    1     3
+ [3,] 0.06964640    0    0     1
+ [4,] 0.06964640    0    0     1
+ [5,] 0.06964640    0    0     1
+ [6,] 0.18348664    0    0     1
+ [7,] 0.06964640    0    0     1
+ [8,] 1.07576039    1    1     2
+ [9,] 0.08184955    0    0     1
+[10,] 0.08184955    0    0     1
+[11,] 0.08184955    0    0     1
+[12,] 1.07576039    1    1     2
+[13,] 0.06964640    0    0     1
+[14,] 0.06964640    0    0     1
+[15,] 0.06964640    0    0     1
+[16,] 0.06964640    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.35968   10    5    17
+ [2,] 10.36439   10    5    17
+ [3,] 10.35968   10    5    17
+ [4,] 10.35968   10    5    17
+ [5,] 10.35968   10    5    17
+ [6,] 10.35991   10    5    17
+ [7,] 10.35968   10    5    17
+ [8,] 10.36428   10    5    17
+ [9,] 10.35972   10    5    17
+[10,] 10.35972   10    5    17
+[11,] 10.35972   10    5    17
+[12,] 10.36428   10    5    17
+[13,] 10.35968   10    5    17
+[14,] 10.35968   10    5    17
+[15,] 10.35968   10    5    17
+[16,] 10.35968   10    5    17
+
+[[1]]
+[1] "### Troglodytes aedon"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 123.83 117.82 2.6e-26     1.00
+p(prec) lambda(.)     3 125.68 119.68 1.0e-26     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.02409186    0    0     0
+ [2,] 0.02409186    0    0     0
+ [3,] 3.03611825    3    2     5
+ [4,] 0.02409186    0    0     0
+ [5,] 1.72899020    2    1     3
+ [6,] 0.30480792    0    0     2
+ [7,] 1.07559210    1    1     2
+ [8,] 2.13280489    2    1     4
+ [9,] 1.04648809    1    1     2
+[10,] 2.88528631    3    1     5
+[11,] 2.88528631    3    1     5
+[12,] 1.03044727    1    1     2
+[13,] 1.07559210    1    1     2
+[14,] 0.02409186    0    0     0
+[15,] 0.02409186    0    0     0
+[16,] 0.02409186    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.43753   10    5    17
+ [2,] 10.43753   10    5    17
+ [3,] 10.43880   10    5    17
+ [4,] 10.43753   10    5    17
+ [5,] 10.43946   10    5    17
+ [6,] 10.43765   10    5    17
+ [7,] 10.43869   10    5    17
+ [8,] 10.43948   10    5    17
+ [9,] 10.43829   10    5    17
+[10,] 10.44015   10    5    17
+[11,] 10.43880   10    5    17
+[12,] 10.43828   10    5    17
+[13,] 10.43869   10    5    17
+[14,] 10.43753   10    5    17
+[15,] 10.43753   10    5    17
+[16,] 10.43753   10    5    17
+
+[[1]]
+[1] "### Turdus grayi"
+
+[[2]]
+                  nPars   AIC delta  AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 0.9896     0.99
+p(.) lambda(.)        2 15.81  9.80 0.0074     1.00
+p(prec) lambda(.)     3 17.56 11.55 0.0031     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,]  9.532731    9    4    16
+ [2,]  9.532731    9    4    16
+ [3,]  9.532731    9    4    16
+ [4,]  9.532731    9    4    16
+ [5,]  9.532731    9    4    16
+ [6,]  9.577175    9    4    16
+ [7,]  9.532731    9    4    16
+ [8,]  9.532731    9    4    16
+ [9,]  9.540124    9    4    16
+[10,] 10.543828   10    5    17
+[11,]  9.540124    9    4    16
+[12,]  9.532731    9    4    16
+[13,]  9.532731    9    4    16
+[14,]  9.532731    9    4    16
+[15,]  9.532731    9    4    16
+[16,]  9.532731    9    4    16
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.30430   10    5    17
+ [2,] 10.30430   10    5    17
+ [3,] 10.30430   10    5    17
+ [4,] 10.30430   10    5    17
+ [5,] 10.30430   10    5    17
+ [6,] 10.30442   10    5    17
+ [7,] 10.30430   10    5    17
+ [8,] 10.30430   10    5    17
+ [9,] 10.30432   10    5    17
+[10,] 10.31334   10    5    17
+[11,] 10.30432   10    5    17
+[12,] 10.30430   10    5    17
+[13,] 10.30430   10    5    17
+[14,] 10.30430   10    5    17
+[15,] 10.30430   10    5    17
+[16,] 10.30430   10    5    17
+
+[[1]]
+[1] "### Tyrannus melancholicus"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.01   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 126.14 120.13 8.2e-27     1.00
+p(prec) lambda(.)     3 128.06 122.05 3.1e-27     1.00
+
+$Null
+             Mean Mode 2.5% 97.5%
+ [1,] 1.023360773    1    1     1
+ [2,] 1.159635021    1    1     2
+ [3,] 2.117761988    2    1     4
+ [4,] 0.006332039    0    0     0
+ [5,] 1.062372738    1    1     2
+ [6,] 2.131396732    2    1     4
+ [7,] 1.062372738    1    1     2
+ [8,] 0.006332039    0    0     0
+ [9,] 0.010910966    0    0     0
+[10,] 2.431072412    2    1     4
+[11,] 0.010910966    0    0     0
+[12,] 1.368696854    1    1     3
+[13,] 0.006332039    0    0     0
+[14,] 1.159635021    1    1     2
+[15,] 0.006332039    0    0     0
+[16,] 0.006332039    0    0     0
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.18372   10    4    17
+ [2,] 10.18431   10    4    17
+ [3,] 10.18436   10    4    17
+ [4,] 10.18269   10    4    17
+ [5,] 10.18344   10    4    17
+ [6,] 10.18320   10    4    17
+ [7,] 10.18403   10    4    17
+ [8,] 10.18269   10    4    17
+ [9,] 10.18270   10    4    17
+[10,] 10.18437   10    4    17
+[11,] 10.18270   10    4    17
+[12,] 10.18459   10    4    17
+[13,] 10.18269   10    4    17
+[14,] 10.18431   10    4    17
+[15,] 10.18269   10    4    17
+[16,] 10.18269   10    4    17
+
+[[1]]
+[1] "### Tyrannus tyrannus"
+
+[[2]]
+                  nPars    AIC  delta   AICwt cumltvWt
+p(hour) lambda(.)     3   6.02   0.00 1.0e+00     1.00
+p(.) lambda(.)        2 130.24 124.22 1.1e-27     1.00
+p(prec) lambda(.)     3 131.35 125.34 6.1e-28     1.00
+
+$Null
+           Mean Mode 2.5% 97.5%
+ [1,] 0.2607770    0    0     2
+ [2,] 1.5565880    1    1     3
+ [3,] 0.2607770    0    0     2
+ [4,] 1.2870546    1    1     3
+ [5,] 1.2870546    1    1     3
+ [6,] 0.7778889    0    0     3
+ [7,] 1.2870546    1    1     3
+ [8,] 2.3891510    2    1     4
+ [9,] 2.5525405    2    1     5
+[10,] 3.0284114    3    1     5
+[11,] 2.0808414    2    1     4
+[12,] 2.3891510    2    1     4
+[13,] 0.2607770    0    0     2
+[14,] 1.5565880    1    1     3
+[15,] 0.2607770    0    0     2
+[16,] 0.2607770    0    0     2
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.75954   10    5    18
+ [2,] 10.76070   10    5    18
+ [3,] 10.75954   10    5    18
+ [4,] 10.76065   10    5    18
+ [5,] 10.76065   10    5    18
+ [6,] 10.75982   10    5    18
+ [7,] 10.76065   10    5    18
+ [8,] 10.76229   10    5    18
+ [9,] 10.76300   10    5    18
+[10,] 10.76166   10    5    18
+[11,] 10.76157   10    5    18
+[12,] 10.76296   10    5    18
+[13,] 10.75954   10    5    18
+[14,] 10.76070   10    5    18
+[15,] 10.75954   10    5    18
+[16,] 10.75954   10    5    18
+
+[[1]]
+[1] "### Vireo olivaceus"
+
+[[2]]
+                  nPars   AIC delta   AICwt cumltvWt
+p(hour) lambda(.)     3  6.01  0.00 1.0e+00     1.00
+p(prec) lambda(.)     3 79.94 73.93 8.9e-17     1.00
+p(.) lambda(.)        2 81.95 75.94 3.2e-17     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.05174524    0    0     1
+ [2,] 1.13219054    1    1     2
+ [3,] 1.05942500    1    1     2
+ [4,] 0.05174524    0    0     1
+ [5,] 1.13219054    1    1     2
+ [6,] 1.99792233    2    1     4
+ [7,] 0.05174524    0    0     1
+ [8,] 1.13219054    1    1     2
+ [9,] 0.06706564    0    0     1
+[10,] 0.06706564    0    0     1
+[11,] 0.06706564    0    0     1
+[12,] 0.05174524    0    0     1
+[13,] 0.05174524    0    0     1
+[14,] 1.52659653    1    1     3
+[15,] 0.05174524    0    0     1
+[16,] 0.05174524    0    0     1
+
+$hour
+          Mean Mode 2.5% 97.5%
+ [1,] 10.34327   10    5    17
+ [2,] 10.34611   10    5    17
+ [3,] 10.34491   10    5    17
+ [4,] 10.34327   10    5    17
+ [5,] 10.34493   10    5    17
+ [6,] 10.34510   10    5    17
+ [7,] 10.34327   10    5    17
+ [8,] 10.34611   10    5    17
+ [9,] 10.34329   10    5    17
+[10,] 10.34329   10    5    17
+[11,] 10.34329   10    5    17
+[12,] 10.34327   10    5    17
+[13,] 10.34327   10    5    17
+[14,] 10.34725   10    5    17
+[15,] 10.34327   10    5    17
+[16,] 10.34327   10    5    17
+
+[[1]]
+[1] "### Zenaida asiatica"
+
+[[2]]
+                  nPars    AIC delta AICwt cumltvWt
+p(hour) lambda(.)     3 126.15  0.00  0.69     0.69
+p(.) lambda(.)        2 128.72  2.57  0.19     0.88
+p(prec) lambda(.)     3 129.57  3.42  0.12     1.00
+
+$Null
+            Mean Mode 2.5% 97.5%
+ [1,] 0.01678179    0    0     0
+ [2,] 2.57295398    2    1     4
+ [3,] 2.57295398    2    1     4
+ [4,] 3.80905109    3    2     6
+ [5,] 1.02223763    1    1     1
+ [6,] 1.99298209    2    1     4
+ [7,] 1.05814224    1    1     2
+ [8,] 1.02223763    1    1     1
+ [9,] 1.09512359    1    1     2
+[10,] 0.02767370    0    0     1
+[11,] 0.02767370    0    0     1
+[12,] 3.80905109    3    2     6
+[13,] 0.01678179    0    0     0
+[14,] 1.34177379    1    1     3
+[15,] 3.80905109    3    2     6
+[16,] 0.01678179    0    0     0
+
+$hour
+            Mean Mode 2.5% 97.5%
+ [1,] 0.01601264    0    0     0
+ [2,] 2.59790116    2    1     4
+ [3,] 2.37944496    2    1     4
+ [4,] 3.68199480    3    2     6
+ [5,] 1.01964605    1    1     1
+ [6,] 1.66125598    1    1     3
+ [7,] 1.07050738    1    1     2
+ [8,] 1.05842851    1    1     2
+ [9,] 1.08551023    1    1     2
+[10,] 0.01905486    0    0     0
+[11,] 0.05163431    0    0     1
+[12,] 3.70421204    3    2     6
+[13,] 0.01967133    0    0     0
+[14,] 1.37461583    1    1     3
+[15,] 3.69938331    3    2     6
+[16,] 0.02555900    0    0     1</code></pre>
+</div>
+</div>
+</section>
+<section id="information-of-r-session." class="level2">
+<h2 class="anchored" data-anchor-id="information-of-r-session.">Information of R session.</h2>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">sessionInfo</span>(), <span class="at">locale =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.3.3 (2024-02-29 ucrt)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 10 x64 (build 19045)
+
+Matrix products: default
+
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] rasterVis_0.51.6   lattice_0.22-5     RColorBrewer_1.1-3 raster_3.6-26     
+ [5] sp_2.1-3           terra_1.7-71       stocc_1.31         ubms_1.2.6        
+ [9] mapview_2.11.2     sf_1.0-16          unmarked_1.4.1     lubridate_1.9.3   
+[13] forcats_1.0.0      stringr_1.5.1      dplyr_1.1.4        purrr_1.0.2       
+[17] tidyr_1.3.1        tibble_3.2.1       ggplot2_3.5.0      tidyverse_2.0.0   
+[21] readxl_1.4.3       readr_2.1.5       
+
+loaded via a namespace (and not attached):
+ [1] DBI_1.2.2           deldir_2.0-4        pbapply_1.7-2      
+ [4] gridExtra_2.3       inline_0.3.19       rlang_1.1.3        
+ [7] magrittr_2.0.3      matrixStats_1.2.0   e1071_1.7-14       
+[10] compiler_4.3.3      loo_2.7.0           png_0.1-8          
+[13] vctrs_0.6.5         maps_3.4.2          crayon_1.5.2       
+[16] pkgconfig_2.0.3     fastmap_1.1.1       leafem_0.2.3       
+[19] utf8_1.2.4          rmarkdown_2.26      tzdb_0.4.0         
+[22] nloptr_2.0.3        bit_4.0.5           xfun_0.43          
+[25] satellite_1.0.5     jsonlite_1.8.8      jpeg_0.1-10        
+[28] parallel_4.3.3      R6_2.5.1            stringi_1.8.3      
+[31] StanHeaders_2.32.6  boot_1.3-29         cellranger_1.1.0   
+[34] Rcpp_1.0.12         rstan_2.32.6        knitr_1.46         
+[37] fields_15.2         zoo_1.8-12          base64enc_0.1-3    
+[40] splines_4.3.3       Matrix_1.6-5        timechange_0.3.0   
+[43] tidyselect_1.2.1    rstudioapi_0.16.0   yaml_2.3.8         
+[46] codetools_0.2-19    pkgbuild_1.4.4      withr_3.0.0        
+[49] rARPACK_0.11-0      coda_0.19-4.1       evaluate_0.23      
+[52] units_0.8-5         proxy_0.4-27        RcppParallel_5.1.7 
+[55] pillar_1.9.0        KernSmooth_2.23-22  stats4_4.3.3       
+[58] generics_0.1.3      vroom_1.6.5         truncnorm_1.0-9    
+[61] hms_1.1.3           rstantools_2.4.0    munsell_0.5.1      
+[64] scales_1.3.0        minqa_1.2.6         class_7.3-22       
+[67] glue_1.7.0          tools_4.3.3         interp_1.1-6       
+[70] hexbin_1.28.3       lme4_1.1-35.2       RSpectra_0.16-1    
+[73] dotCall64_1.1-1     grid_4.3.3          QuickJSR_1.1.3     
+[76] crosstalk_1.2.1     latticeExtra_0.6-30 colorspace_2.1-0   
+[79] nlme_3.1-164        cli_3.6.2           spam_2.10-0        
+[82] fansi_1.0.6         viridisLite_0.4.2   gtable_0.3.4       
+[85] digest_0.6.35       classInt_0.4-10     htmlwidgets_1.6.4  
+[88] htmltools_0.5.8.1   lifecycle_1.0.4     leaflet_2.2.2      
+[91] bit64_4.0.5         MASS_7.3-60.0.1    </code></pre>
+</div>
+</div>
+</section>
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents"><h2 class="anchored quarto-appendix-heading">Reuse</h2><div id="quarto-reuse" class="quarto-appendix-contents"><div><a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">https://creativecommons.org/licenses/by-sa/4.0/</a></div></div></section></div></main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

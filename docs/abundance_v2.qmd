@@ -1,0 +1,253 @@
+---
+title: "Abundance all species as a function. Parita Bay, Panama"
+subtitle: "site abundance prediction"
+date: "`r Sys.Date()`"
+author: 
+  - name: Diego J. Lizcano
+    orcid: https://orcid.org/0000-0002-9648-0576
+  - name: Jorge Velásquez-Tibata
+    orcid: https://orcid.org/0000-0002-7773-7348
+license: CC BY-SA
+toc: true
+format: 
+  html:
+    theme: cosmo
+    code-fold: true
+    code-block-bg: "gray70"
+---
+
+Fit the occupancy model of Royle and Nichols (2003), which relates probability of detection of the species to the number of individuals available for detection at each site.
+
+Royle, J. A. and Nichols, J. D. (2003) Estimating Abundance from Repeated Presence-Absence Data or Point Counts. Ecology, 84(3) pp. 777–790.
+
+# Read data
+
+## grouping by 3 days
+
+```{r}
+#| warning: false
+#| message: false
+
+# load function
+source("D:/AudubonPanama/R/matrix_creator.R")
+############### load Packages
+library(readr) # readr 
+library(readxl) # read excel
+library(tidyverse) # 
+library(unmarked) # occupancy by maximun likelihood
+library(sf) # simple feature
+library(mapview) # view map
+library(ubms) # occupancy by Bayesian made easy
+library(stocc) # spatial data for example
+library(terra) 
+library(raster)
+library(RColorBrewer)
+library(rasterVis)
+
+
+
+############### load data
+# old 
+# parita_data_full <- read_delim("C:/CodigoR/AudubonPanama/data/all_records_audubon_panama_to_occu.csv", 
+#                               delim = "\t", escape_double = FALSE, 
+#                               col_types = cols(eventDate = col_date(format = "%Y-%m-%d")), 
+#                               trim_ws = TRUE)
+
+# new
+parita_data_full <- read_excel("D:/AudubonPanama/data/all_records_audubon_panama_Darwin_Core_revision.xlsx", 
+    col_types = c("text", "text", "text", 
+        "date", "text", "text", "numeric", 
+        "numeric", "text", "text", "numeric", 
+        "text", "numeric", "numeric", "text", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "text", "text", 
+        "numeric", "text", "numeric", "text", 
+        "text", "text", "text", "text", "numeric", 
+        "text", "numeric", "text", "numeric", 
+        "text", "text"))
+
+covs <- read_csv("D:/AudubonPanama/shp/sites_covs_parita_nona.csv")
+
+## Nyctidromus albicollis
+## Aramus guarauna
+## Buteogallus anthracinus
+## Dryocopus lineatus
+## Piranga rubra
+
+# filter by threshold and species
+parita_data_allsp <-  parita_data_full %>% 
+                      filter(confidence >= threshold)# %>%
+                    # filter(scientificName == c("Nyctidromus albicollis", 
+                    #                             "Aramus guarauna",
+                    #                             "Buteogallus anthracinus",
+                    #                             "Dryocopus lineatus",
+                    #                             "Piranga rubra"
+                    #                             ))  
+
+# insert Max and min to get matrix limits
+# start_date
+parita_data2 <- parita_data_allsp %>% 
+  group_by(locationID) %>% 
+  mutate(start_date = min(eventDate),
+         end_date= max(eventDate))
+
+# apply function to get matrix per species
+parita <- f.matrix.creator2(data = parita_data2, year = 2023)
+
+
+# centroide for terra
+# centoide <- centroids(puntos, TRUE)
+centroide <- c(mean(as.numeric(parita_data_allsp$decimalLongitude)), mean(as.numeric(parita_data_allsp$decimalLatitude)))
+clip_window <- extent(-80.67105, -80.05822, 7.713744, 8.489888) # 7.932311, -80.612233  8.360073, -80.180109
+bb <- c(-80.612233, -80.180109, 7.932311, 8.360073)
+srtm <- raster::getData('SRTM', lon=centroide[1], lat=centroide[2])
+
+# crop the  raster using the vector extent
+# srtm_crop <- raster::crop(srtm, clip_window)
+ #rast(srtm_crop) # convert to terra
+
+
+# altitud <- elevation_3s(-72.893262, 7.664081007, path="data")
+# altitud <- as.numeric(Camptostoma_obsoletum_occu_dia$Altitude)
+
+# convierte covs a puntos terra
+puntos <- vect(covs, geom=c("Longitude", "Latitude"), crs="EPSG:4326")
+# convierte a sf
+puntos_sf <- sf::st_as_sf(puntos)
+
+######### precipitacion
+precip_Anton <- read_csv("D:/AudubonPanama/data/Precip_Anton.csv")
+precip <-  data.frame(f.shrink.matrix.h.to9(precip_Anton))
+precip[,1] <- 0 #fix start
+
+# extract elev from raster
+# cam_covs <- raster::extract(srtm_crop, puntos_sf)
+# 
+# BGB_Spawn <- rast("C:/CodigoR/AudubonPanama/raster/BGB Spawn.tif")
+# AGB_Spawn <- rast("C:/CodigoR/AudubonPanama/raster/AGB Spawn.tif")
+# NDVI <- rast("C:/CodigoR/AudubonPanama/raster/S2_NDVI_median_v2.tif")
+# roads <- rast("C:/CodigoR/AudubonPanama/raster/roads_final_v2.tif")
+# carbon_stock <- rast("C:/CodigoR/AudubonPanama/raster/soil_organic_carbon_stock_0-30m.tif")
+# canopy <- rast("C:/CodigoR/AudubonPanama/raster/canopy_height_jetz2.tif")
+# human_foot <- rast("C:/CodigoR/AudubonPanama/raster/human_footprint.tif")
+# river <- rast("C:/CodigoR/AudubonPanama/raster/rivers_final_v2.tif")
+
+# make elevation equal
+# srtm_projected <- projectRaster(srtm_crop, crs=projection(NDVI), method="ngb") 
+# elev <- mask(resample(rast(srtm_projected), NDVI), NDVI)
+
+
+
+# # list of terras SpatRasters  
+# many_rasters <- list(BGB_Spawn, human_foot, NDVI, river, carbon_stock, canopy)
+# # terra stack
+# covs_raster <- rast(many_rasters)
+# names(covs_raster) <- c("BGB_Spawn", "human_foot",  "NDVI", "river", "carbon_stock",  "canopy")
+# 
+# # change NA to 0 
+# covs_raster0 <- subst(covs_raster, NA, 0)
+# # extract covariates
+# covs_raster_val <- extract(covs_raster0, puntos_sf)
+# 
+# plot(covs_raster)
+
+##########
+# chk names of species
+# dete es hora, occur es presencia en el dia
+# names(parita$dete[]) 
+
+
+```
+
+
+# function to get abundance 
+
+These methods return an object storing the posterior distributions of the latent variables at each site. 
+
+### One species, single season
+
+```{r}
+#| warning: false
+#| message: false
+
+ranef_by_sp <- function(spx=1){ suppressWarnings({ #species name
+# Make UMF object
+umf_y_full_spx<- unmarkedFrameOccu(y=f.shrink.matrix.to9( 
+                                   as.data.frame(parita$occur[[spx]])),
+                                   siteCovs=NULL,
+                                   obsCovs=list(prec=precip,
+                            hour= data.frame(hour = f.shrink.matrix.h.to9(parita$dete[[spx]]))
+                                                )
+                                   ) 
+
+
+# fit unmarked
+fit_unm_spx_0 <- unmarked::occuRN(~1~1, data=umf_y_full_spx) # ok!
+fit_unm_spx_p <- unmarked::occuRN(~ prec ~1, data=umf_y_full_spx) # ok!
+fit_unm_spx_h <- unmarked::occuRN(~ hour ~1, data=umf_y_full_spx) # ok!
+
+
+# fit list for occupancy
+fms2<-fitList("p(.) lambda(.)"=fit_unm_spx_0,
+              "p(prec) lambda(.)"=fit_unm_spx_p,
+              "p(hour) lambda(.)"=fit_unm_spx_h)
+              # #"p(h) Ocu(.)"=fit_unm_sp2_0h, #,
+              # #"p(c) Ocu(.)"=fit_unm_sp2_0c,
+              # "p(.) lambda(BGB_Spawn)"=fit_unm_sp2_1,
+              # "p(.) lambda(human_foot)"=fit_unm_sp2_2,
+              # "p(.) lambda(NDVI)"=fit_unm_sp2_3,
+              # "p(.) lambda(river)"=fit_unm_sp2_4,
+              # #"p(.) Ocu(river^2)"=fit_unm_sp2_4s,
+              # "p() lambda(carbon)"=fit_unm_sp2_5,
+              # "p() lambda(canopy)"=fit_unm_sp2_6,
+              # "p() lambda(canopy+BGB_Spawn)"=fit_unm_sp2_7,
+              # "p() lambda(BGB_Spawn+human_foot)"=fit_unm_sp2_8,
+              # "p() lambda(ALL)"=fit_unm_sp2_9
+              # )
+
+# model selection detection unmarked
+ models <- modSel(fms2)
+ models
+ 
+# summary(fit_unm_sp2_1) #### Null MODEL !!!!!!!!!!
+
+# Empirical Bayes estimates of abundance at each site by species
+re_0 <- ranef(fit_unm_spx_0)
+re_h <- ranef(fit_unm_spx_h)
+# plot(re)
+post.df <- as(re_0, "data.frame")
+}) # warning
+  
+return(list(paste("###", sp=names(parita$dete[spx]) ), # sp name
+            models, # model AICs
+            Null=re_0, # mull model estimates
+            hour=re_h)) # hour in detection estimates
+} # end of function
+
+
+```
+
+
+
+## use the function
+
+Runs a loop on a list containing the of species.  
+
+```{r }
+
+for(i in 1:length(names(parita$dete[]))){
+ print( ranef_by_sp(i) )
+}
+
+
+```
+
+
+
+## Information of R session.
+
+```{r sesion, results='markup'}
+print(sessionInfo(), locale = FALSE)
+```
+
+
