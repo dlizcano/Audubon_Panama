@@ -20,6 +20,21 @@ Fit the occupancy model of Royle and Nichols (2003), which relates probability o
 
 Royle, J. A. and Nichols, J. D. (2003) Estimating Abundance from Repeated Presence-Absence Data or Point Counts. Ecology, 84(3) pp. 777–790.
 
+The number of animals available for detection at site _i_ is modelled as Poisson:
+$$
+N_1 \sim Poisson(\lambda_i)
+$$
+
+We assume that all individuals (of same species) at site _i_ during sample _j_ have identical detection probabilities, $ r_{i,j} $ and and that detections are independent. The species will be recorded if at least one individual is detected. Thus, the detection probability for the species is linked to the detection probability for an individual by:
+
+$$
+p_{i,j} = 1-(1-r_{i,j})^{N_i}
+$$
+The equation for the detection history is then:
+$$
+y_{i,j} \sim Bernoulli(p_{i,j})
+$$
+
 # Read data
 
 ## grouping by 3 days
@@ -29,7 +44,7 @@ Royle, J. A. and Nichols, J. D. (2003) Estimating Abundance from Repeated Presen
 #| message: false
 
 # load function
-source("D:/AudubonPanama/R/matrix_creator.R")
+source("C:/CodigoR/AudubonPanama/R/matrix_creator.R")
 ############### load Packages
 library(readr) # readr 
 library(readxl) # read excel
@@ -54,7 +69,7 @@ library(rasterVis)
 #                               trim_ws = TRUE)
 
 # new
-parita_data_full <- read_excel("D:/AudubonPanama/data/all_records_audubon_panama_Darwin_Core_revision.xlsx", 
+parita_data_full <- read_excel("C:/CodigoR/AudubonPanama/data/all_records_audubon_panama_Darwin_Core_revision.xlsx", 
     col_types = c("text", "text", "text", 
         "date", "text", "text", "numeric", 
         "numeric", "text", "text", "numeric", 
@@ -66,7 +81,7 @@ parita_data_full <- read_excel("D:/AudubonPanama/data/all_records_audubon_panama
         "text", "numeric", "text", "numeric", 
         "text", "text"))
 
-covs <- read_csv("D:/AudubonPanama/shp/sites_covs_parita_nona.csv")
+covs <- read_csv("C:/CodigoR/AudubonPanama/shp/sites_covs_parita_nona.csv")
 
 ## Nyctidromus albicollis
 ## Aramus guarauna
@@ -95,12 +110,12 @@ parita_data2 <- parita_data_allsp %>%
 parita <- f.matrix.creator2(data = parita_data2, year = 2023)
 
 
-# centroide for terra
-# centoide <- centroids(puntos, TRUE)
-centroide <- c(mean(as.numeric(parita_data_allsp$decimalLongitude)), mean(as.numeric(parita_data_allsp$decimalLatitude)))
-clip_window <- extent(-80.67105, -80.05822, 7.713744, 8.489888) # 7.932311, -80.612233  8.360073, -80.180109
-bb <- c(-80.612233, -80.180109, 7.932311, 8.360073)
-srtm <- raster::getData('SRTM', lon=centroide[1], lat=centroide[2])
+# # centroide for terra
+# # centoide <- centroids(puntos, TRUE)
+# centroide <- c(mean(as.numeric(parita_data_allsp$decimalLongitude)), mean(as.numeric(parita_data_allsp$decimalLatitude)))
+# clip_window <- extent(-80.67105, -80.05822, 7.713744, 8.489888) # 7.932311, -80.612233  8.360073, -80.180109
+# bb <- c(-80.612233, -80.180109, 7.932311, 8.360073)
+# srtm <- raster::getData('SRTM', lon=centroide[1], lat=centroide[2])
 
 # crop the  raster using the vector extent
 # srtm_crop <- raster::crop(srtm, clip_window)
@@ -116,7 +131,7 @@ puntos <- vect(covs, geom=c("Longitude", "Latitude"), crs="EPSG:4326")
 puntos_sf <- sf::st_as_sf(puntos)
 
 ######### precipitacion
-precip_Anton <- read_csv("D:/AudubonPanama/data/Precip_Anton.csv")
+precip_Anton <- read_csv("C:/CodigoR/AudubonPanama/data/Precip_Anton.csv")
 precip <-  data.frame(f.shrink.matrix.h.to9(precip_Anton))
 precip[,1] <- 0 #fix start
 
@@ -162,7 +177,8 @@ precip[,1] <- 0 #fix start
 
 # function to get abundance 
 
-These methods return an object storing the posterior distributions of the latent variables at each site. 
+These methods return an object storing the posterior distributions of the latent variables at each site. Empirical Bayes methods used by `unmarked::ranef` underestimate the variance of the posterior distribution because they do not account for uncertainty in the hyperparameters (lambda). Note also that the posterior mode appears to exhibit some bias as an estimator or abundance. Consider using the posterior mean instead, even though it will not be an integer in general. 
+
 
 ### One species, single season
 
@@ -183,8 +199,8 @@ umf_y_full_spx<- unmarkedFrameOccu(y=f.shrink.matrix.to9(
 
 # fit unmarked
 fit_unm_spx_0 <- unmarked::occuRN(~1~1, data=umf_y_full_spx) # ok!
-fit_unm_spx_p <- unmarked::occuRN(~ prec ~1, data=umf_y_full_spx) # ok!
-fit_unm_spx_h <- unmarked::occuRN(~ hour ~1, data=umf_y_full_spx) # ok!
+fit_unm_spx_p <- unmarked::occuRN(~ scale(prec) ~1, data=umf_y_full_spx) # ok!
+fit_unm_spx_h <- unmarked::occuRN(~ scale(hour) ~1, data=umf_y_full_spx) # ok!
 
 
 # fit list for occupancy
@@ -209,19 +225,34 @@ fms2<-fitList("p(.) lambda(.)"=fit_unm_spx_0,
  models <- modSel(fms2)
  models
  
-# summary(fit_unm_sp2_1) #### Null MODEL !!!!!!!!!!
 
 # Empirical Bayes estimates of abundance at each site by species
 re_0 <- ranef(fit_unm_spx_0)
 re_h <- ranef(fit_unm_spx_h)
 # plot(re)
-post.df <- as(re_0, "data.frame")
-}) # warning
+# post.df <- as(re_0, "data.frame")
+
+#####################################################
+# to save the ranef result (S3 Object) as dataframe #
+#####################################################
+
+abund_per_site <- data.frame(sp=names(parita$dete[spx]), 
+                             site=names( parita$occu[[1]][,1]),
+                             mode=(bup(re_0, stat="mode") ),
+                             mean=(bup(re_0, stat="mean") ), 
+                             confint(re_0, level=0.9))
+
+}) # no warning part
   
-return(list(paste("###", sp=names(parita$dete[spx]) ), # sp name
-            models, # model AICs
-            Null=re_0, # mull model estimates
-            hour=re_h)) # hour in detection estimates
+  
+# return(list(paste("###", sp=names(parita$dete[spx]) ), # sp name
+#             models, # model AICs
+#             Null=re_0, # mull model estimates
+#             hour=re_h)) # hour in detection estimates
+
+  # return to export table
+  return(abund_per_site)
+  
 } # end of function
 
 
@@ -231,13 +262,25 @@ return(list(paste("###", sp=names(parita$dete[spx]) ), # sp name
 
 ## use the function
 
-Runs a loop on a list containing the of species.  
+Runs a loop on a list containing the number of the species.  
 
 ```{r }
 
+# list
+abun_site <- list()
+
 for(i in 1:length(names(parita$dete[]))){
- print( ranef_by_sp(i) )
+  # print( ranef_by_sp(i) )
+  print(paste(i, names(parita$dete[i])))
+   abun_site[[i]] <-  ranef_by_sp(i) 
+  
 }
+
+library (plyr)
+# Convert the list to a dataframe
+df <- ldply(abun_site, data.frame)
+#save to table
+write.csv(df, "C:/CodigoR/AudubonPanama/data/abundance_result.csv")
 
 
 ```

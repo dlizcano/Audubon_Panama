@@ -1,0 +1,158 @@
+---
+title: "BFI per site, Parita Bay, Panama"
+date: "`r Sys.Date()`"
+author: 
+  - name: Diego J. Lizcano
+    orcid: https://orcid.org/0000-0002-9648-0576
+  - name: Jorge Velásquez-Tibata
+    orcid: https://orcid.org/0000-0002-7773-7348
+license: CC BY-SA
+toc: true
+format: 
+  html:
+    theme: cosmo
+    code-fold: true
+    code-block-bg: "gray70"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  dev = "png",
+  dev.args = list(type = "cairo-png"),
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center",
+  eval = TRUE,
+  echo = TRUE,
+  warning = FALSE,
+  error = FALSE,
+  message = FALSE,
+  cache=TRUE)
+```
+
+## Question
+
+Can we use abundance to calculate BFI?
+
+## Set up analysis
+
+Load libraries and set some options.
+
+```{r set_up}
+# set up
+library(cluster)
+library(NbClust)
+library(vegan)
+library(unmarked)
+library(mgcv)
+library(mgcViz)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(readxl)
+
+library(DT)
+library(kableExtra)
+
+setwd("C:/CodigoR/AudubonPanama/R/BFI")
+
+options(scipen=99999)
+options(max.print=99999)
+options(stringsAsFactors=F)
+```
+
+```{r}
+
+attributes <- read_excel("species_data_4_bfi.xlsx", sheet = "attributes")
+abundance <- read_excel("species_data_4_bfi.xlsx", sheet = "abundance_result")
+
+
+```
+
+## Calculate BFI
+
+Now we join the different data tables and calculate BFI components per count site. One component is the product of the species max count and conservation score. A second component is the Shannon diversity of functional groups. This is done twice, once for all species and once for just waterbirds. Once the components are done, all species BFI and waterbird BFI are calculated.
+
+```{r}
+
+# diss matirx
+names(attributes)
+d_gower <- daisy(attributes[,-c(1,2,3,4,5)], metric="gower", stand=TRUE,
+                 weights=c(rep(3/9/10, 10), 
+                           rep(3/9/8, 8),
+                           rep(3/9/1, 1)))
+# clusters
+clust <- NbClust(diss=d_gower, distance=NULL, method="ward.D", 
+                index="silhouette")
+# best clusters
+inddf <- attributes %>% select(sp) %>% 
+  mutate(func_spec=clust$Best.partition) %>% 
+  arrange(func_spec)
+
+# write.csv (inddf %>% left_join(d4 %>% distinct(species, eng_name)),
+#           "func_species_groupings.csv", row.names=F)
+
+
+# join functional species and conservation scores to max counts (mean)
+score_wt_counts <- abundance   %>% left_join(attributes) %>% left_join(inddf) %>% 
+  mutate(count_score=mean*CCS_max) %>% 
+  select(site, count_score) %>% 
+  group_by(site) %>% 
+  summarise(tot_wt_count=sum(count_score)) %>% 
+  ungroup()
+
+# waterbird
+# join functional species and conservation scores to max counts
+score_wt_counts_wb <-  abundance   %>% left_join(attributes) %>% left_join(inddf) %>% 
+  filter(Group=="waterbird") %>% 
+  mutate(count_score=mean*CCS_max) %>% 
+  # select(farm, pc_station_id, month_id, count_score) %>% 
+  group_by(site) %>% 
+  summarise(tot_wt_count_wb=sum(count_score)) %>% 
+  ungroup()
+
+  
+# calc shannon, exchange max_count by mean
+shan_div <- abundance   %>% left_join(attributes) %>% left_join(inddf) %>% 
+  select(site, func_spec, mean) %>% 
+  group_by(site, func_spec) %>% 
+  summarise(tot_count=sum(mean)) %>% 
+  ungroup() %>% 
+  group_by(site) %>% 
+  summarise(shan=diversity(tot_count)) %>% 
+  ungroup() %>% 
+  mutate(shan=ifelse(shan==0, min(shan[shan!=0]), shan))
+
+# calc shannon waterbirds
+shan_div_wb <- abundance   %>% left_join(attributes) %>% left_join(inddf) %>% 
+  filter(Group=="waterbird") %>% 
+  # select(farm, pc_station_id, month_id, func_spec, max_count) %>% 
+  group_by(site, func_spec) %>% 
+  summarise(tot_count=sum(mean)) %>% 
+  ungroup() %>% 
+  group_by(site) %>% 
+  summarise(shan_wb=diversity(tot_count)) %>% 
+  ungroup() %>% 
+  mutate(shan_wb=ifelse(shan_wb==0, min(shan_wb[shan_wb!=0]), shan_wb))
+
+# merge to bfi table
+bfi_site <- score_wt_counts %>% left_join(shan_div) %>% 
+  mutate(bfi_unscaled=tot_wt_count*shan,  bfi_scaled=plogis(as.numeric(scale(bfi_unscaled)))) %>% 
+  left_join(score_wt_counts_wb) %>% 
+  left_join(shan_div_wb) %>% 
+  # rename(month=month_id, station=pc_station_id) %>% 
+  mutate(bfi_wb_unscaled=tot_wt_count_wb*shan_wb, 
+         bfi_wb_scaled=plogis(as.numeric(scale(bfi_wb_unscaled))))
+
+
+
+# see table
+# kbl(bfi_site)
+DT::datatable(bfi_site)
+
+
+```
+
+Notice: estimates for waterbirds produce data with large variation (too few?). Colums: tot_wt_count_wb", "shan_wb", "bfi_wb"
