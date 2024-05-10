@@ -9,12 +9,14 @@ navbar:
       href: index.html
     - text: "About"
       href: about.html
-    - text: "Spatial prediction"
+    - text: "Spat prediction"
       href: five_species.html
-    - text: "Spatial prediction2"
+    - text: "Spat prediction2"
       href: five_species_v2.html
-    - icon: github
+    - text: "Abundance"
+      href: abundance.html
+    - text: "BFI"
+      href: BFI_ParitaBay_v1.html
+    - icon: fab fa-github
       href: https://github.com/dlizcano/Audubon_Panama
-      aria-label: GitHub
-
 output: distill::distill_article
