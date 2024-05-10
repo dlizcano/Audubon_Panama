@@ -8,7 +8,7 @@
 
 <meta name="author" content="Diego J. Lizcano">
 <meta name="author" content="Jorge Velásquez-Tibata">
-<meta name="dcterms.date" content="2024-05-09">
+<meta name="dcterms.date" content="2024-05-10">
 
 <title>BFI per site, Parita Bay, Panama</title>
 <style>
@@ -98,6 +98,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#question" id="toc-question" class="nav-link active" data-scroll-target="#question">Question</a></li>
   <li><a href="#set-up-analysis" id="toc-set-up-analysis" class="nav-link" data-scroll-target="#set-up-analysis">Set up analysis</a></li>
+  <li><a href="#load-data" id="toc-load-data" class="nav-link" data-scroll-target="#load-data">Load Data</a></li>
   <li><a href="#steps-to-calculate-bfi" id="toc-steps-to-calculate-bfi" class="nav-link" data-scroll-target="#steps-to-calculate-bfi">Steps to calculate BFI</a>
   <ul class="collapse">
   <li><a href="#the-first-component-is-the-product-of-the-species-abundance-and-conservation-score." id="toc-the-first-component-is-the-product-of-the-species-abundance-and-conservation-score." class="nav-link" data-scroll-target="#the-first-component-is-the-product-of-the-species-abundance-and-conservation-score.">The first component is the product of the species abundance and conservation score.</a></li>
@@ -129,7 +130,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">May 9, 2024</p>
+      <p class="date">May 10, 2024</p>
     </div>
   </div>
   
@@ -164,16 +165,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DT)</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># setwd("C:/CodigoR/AudubonPanama/R/BFI")</span></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># setwd("C:/CodigoR/AudubonPanama/R/BFI")</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen=</span><span class="dv">99999</span>)</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">max.print=</span><span class="dv">99999</span>)</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">stringsAsFactors=</span>F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen=</span><span class="dv">99999</span>)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">max.print=</span><span class="dv">99999</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">stringsAsFactors=</span>F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
+</section>
+<section id="load-data" class="level2">
+<h2 class="anchored" data-anchor-id="load-data">Load Data</h2>
 <div class="cell" data-layout-align="center">
 <details class="code-fold">
 <summary>Code</summary>

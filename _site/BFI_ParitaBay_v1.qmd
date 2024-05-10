@@ -54,8 +54,6 @@ library(lubridate)
 library(stringr)
 library(readxl)
 
-library(DT)
-library(kableExtra)
 
 # setwd("C:/CodigoR/AudubonPanama/R/BFI")
 
@@ -63,6 +61,8 @@ options(scipen=99999)
 options(max.print=99999)
 options(stringsAsFactors=F)
 ```
+
+## Load Data
 
 ```{r}
 
