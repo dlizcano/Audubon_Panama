@@ -1,0 +1,164 @@
+---
+title: "BFI predictors, Parita Bay, Panama"
+subtitle: "A spatial modeling approach "
+date: "`r Sys.Date()`"
+author: 
+  - name: Diego J. Lizcano
+    orcid: https://orcid.org/0000-0002-9648-0576
+  - name: Jorge Velásquez-Tibata
+    orcid: https://orcid.org/0000-0002-7773-7348
+license: CC BY-SA
+toc: true
+format: 
+  html:
+    theme: cosmo
+    code-fold: true
+    code-block-bg: "gray70"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  dev = "png",
+  dev.args = list(type = "cairo-png"),
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center",
+  eval = TRUE,
+  echo = TRUE,
+  warning = FALSE,
+  error = FALSE,
+  message = FALSE,
+  cache=TRUE)
+```
+
+## Why spatial model?
+
+A spatial linear model is a statistical linear model that incorporates spatial covariance among neighboring observations. Formally incorporating this spatial covariance generally yields models that more realistically represent spatial processes.
+
+## Question
+
+Which are the best spatial predictors for BFI?
+
+## Set up analysis
+
+Load libraries and set some options.
+
+```{r set_up}
+# set up
+
+library(tidyverse)
+library(gt)
+library(lubridate)
+library(stringr)
+library(readxl)
+library(sf)
+library(tidymodels)
+library(spmodel)
+library(terra)
+library(broom)
+library(StepGWR)
+library(mapview)
+
+# setwd("C:/CodigoR/AudubonPanama/R/BFI")
+
+options(scipen=99999)
+options(max.print=99999)
+options(stringsAsFactors=F)
+```
+
+## Load Data
+
+```{r}
+
+
+covs <- read_csv("C:/CodigoR/AudubonPanama/shp/sites_covs_parita_nona.csv") |> mutate(site=Name) 
+
+BFI_site<- read.csv("C:/CodigoR/AudubonPanama/data/BFI_site.csv", header = TRUE) |> left_join(covs)
+# convierte covs a puntos terra
+puntos <- vect(BFI_site, geom=c("Longitude", "Latitude"), crs="EPSG:4326")
+# convierte a sf
+BFI_sf <- sf::st_as_sf(puntos)
+
+```
+
+## Which covariates are best?
+
+We ran a stepwise procedure for Geographically Weighed Regression to eliminate any
+redundant variables. This is a hybrid spatial model that combines the variable selection capabilities of stepwise regression with the predictive power of Geographically Weighted Regression (GWR) model.
+
+```{r}
+data_sp <- BFI_site |> select(bfi_unscaled, AGB_Spawn, BGB_Spawn, canopy_height_jetz2, coast_final_v2,  forest_integrity_index, Latitude, Longitude)
+
+StepGWR_exp<-StepGWR_exponential(data_sp,0.25,0.8,exponential_kernel)
+
+```
+
+The most important variables are: `r StepGWR_exp$Important_vars` 
+
+
+## Multiple models using the most important variables 
+
+```{r}
+spmods_Spawn1 <- splm(formula = bfi_unscaled ~ AGB_Spawn, data = BFI_sf,
+              spcov_type = c("exponential"))
+
+spmods_Spawn2 <- splm(formula = bfi_unscaled ~ BGB_Spawn, data = BFI_sf,
+              spcov_type = c("exponential"))
+
+spmods_Spawn3 <- splm(formula = bfi_unscaled ~ AGB_Spawn + BGB_Spawn, data = BFI_sf,
+              spcov_type = c("exponential"))
+
+spmods_Spawn4 <- splm(formula = bfi_unscaled ~ BGB_Spawn + AGB_Spawn + forest_integrity_index, data = BFI_sf,
+              spcov_type = c("exponential"))
+
+
+glances(spmods_Spawn1, spmods_Spawn2, spmods_Spawn3, spmods_Spawn4)
+summary(spmods_Spawn4)
+loocv(spmods_Spawn4, cv_predict = TRUE, se.fit = TRUE)
+augment(spmods_Spawn4)
+
+
+
+```
+
+## Predict BFI in map
+
+
+```{r}
+BGB_Spawn <- rast("C:/CodigoR/AudubonPanama/raster/BGB Spawn.tif")
+AGB_Spawn <- rast("C:/CodigoR/AudubonPanama/raster/AGB Spawn.tif")
+forest_integrity_index <- rast("C:/CodigoR/AudubonPanama/raster/forest_integrity_index.tif")
+
+# list of terras SpatRasters  
+many_rasters <- list(BGB_Spawn, AGB_Spawn, forest_integrity_index)
+# terra stack
+covs_raster <- rast(many_rasters)
+names(covs_raster) <- c("BGB_Spawn", "AGB_Spawn",  "forest_integrity_index")
+
+# regular points
+pointopred <- spatSample(covs_raster, 100000, "regular", cells=FALSE, xy=TRUE, na.rm=TRUE)
+
+# convierte covs a puntos terra
+pointopredt <- vect(pointopred, geom=c("x", "y"), crs="EPSG:4326")
+# convierte a sf
+pointopredsf <- sf::st_as_sf(pointopredt)
+
+pointopredsf$prediction <- predict(spmods_Spawn4, newdata = pointopredsf)
+# augment(spmods_Spawn4, newdata = pointopredsf, interval = "prediction")
+
+mapview(pointopredsf, zcol = c("prediction"))
+
+
+```
+
+
+## Sesion info
+
+```{r}
+print(sessionInfo(), locale = FALSE)
+```
+
+
+
