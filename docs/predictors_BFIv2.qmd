@@ -1,0 +1,300 @@
+---
+title: "BFI predictors, Parita Bay, Panama"
+subtitle: "A spatial modeling approach "
+date: "`r Sys.Date()`"
+author: 
+  - name: Diego J. Lizcano
+    orcid: https://orcid.org/0000-0002-9648-0576
+  - name: Jorge Velásquez-Tibata
+    orcid: https://orcid.org/0000-0002-7773-7348
+license: CC BY-SA
+toc: true
+format: 
+  html:
+    theme: cosmo
+    code-fold: true
+    code-block-bg: "gray70"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  dev = "png",
+  dev.args = list(type = "cairo-png"),
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center",
+  eval = TRUE,
+  echo = TRUE,
+  warning = FALSE,
+  error = FALSE,
+  message = FALSE,
+  cache=TRUE)
+```
+
+
+
+## Question
+
+Which are the best spatial predictors for BFI?
+
+## Set up analysis
+
+Load libraries and set some options.
+
+```{r set_up}
+#| warning: false
+#| message: false
+
+
+library(gt)
+library(lubridate)
+library(stringr)
+library(readxl)
+library(sf)
+library(MuMIn) # multimodel inference
+library(metafor)
+eval(metafor:::.MuMIn) # helper functions we need so that MuMIn and metafor can interact 
+library(visreg) # see trend
+library(MASS) # stepAIC
+library(terra)
+library(sjPlot)
+# library(mapview)
+library(corrplot)
+
+library(tidyverse)
+
+
+
+options(scipen=99999)
+options(max.print=99999)
+options(stringsAsFactors=F)
+```
+
+## Load Data
+
+```{r}
+#| warning: false
+#| message: false
+
+covs <- read_csv("C:/CodigoR/AudubonPanama/shp/sites_covs_parita_nona.csv") |> mutate(site=Name) 
+
+BFI_site<- read.csv("C:/CodigoR/AudubonPanama/data/BFI_site.csv", header = TRUE) # |> left_join(covs)
+# convierte covs a puntos terra
+# puntos <- vect(BFI_site, geom=c("Longitude", "Latitude"), crs="EPSG:4326")
+# convierte a sf
+# BFI_sf <- sf::st_as_sf(puntos)
+
+```
+
+## Correlation in rasters
+
+First examine correlation between possible predictors as raster layers
+
+```{r}
+BGB_Spawn <- rast("C:/CodigoR/AudubonPanama/raster/BGB Spawn.tif")
+AGB_Spawn <- rast("C:/CodigoR/AudubonPanama/raster/AGB Spawn.tif")
+NDVI <- rast("C:/CodigoR/AudubonPanama/raster/S2_NDVI_median_v2.tif")
+roads <- rast("C:/CodigoR/AudubonPanama/raster/roads_final_v2.tif")
+carbon_stock <- rast("C:/CodigoR/AudubonPanama/raster/soil_organic_carbon_stock_0-30m.tif")
+canopy <- rast("C:/CodigoR/AudubonPanama/raster/canopy_height_jetz2.tif")
+human_foot <- rast("C:/CodigoR/AudubonPanama/raster/human_footprint.tif")
+river <- rast("C:/CodigoR/AudubonPanama/raster/rivers_final_v2.tif")
+coast <- rast("C:/CodigoR/AudubonPanama/raster/coast_final_v2.tif")
+
+forest_integrity <- rast("C:/CodigoR/AudubonPanama/raster/forest_integrity_index.tif")
+# make elevation equal
+# srtm_projected <- projectRaster(srtm_crop, crs=projection(NDVI), method="ngb") 
+# elev <- mask(resample(rast(srtm_projected), NDVI), NDVI)
+
+# list of terras SpatRasters  
+many_rasters <- list(BGB_Spawn, AGB_Spawn, human_foot, NDVI, river, canopy, roads, forest_integrity, coast)
+# terra stack
+covs_many_raster <- rast(many_rasters)
+names(covs_many_raster) <- c("BGB_Spawn","AGB_Spawn", 
+                        "human_foot", "NDVI", "river",  
+                        "canopy", "roads", "forest_integrity",
+                        "coast")
+
+plot(covs_many_raster)
+
+co <- layerCor(covs_many_raster, "pearson")
+corrplot(co$correlation)
+
+
+```
+
+## Correlation in sites (points) where the Audiomoth was installed
+
+```{r}
+# extract values from raster 
+# covs_all1 <- terra::extract(covs_many_raster, puntos) 
+
+# saved to avoid conflict between terra::extract and dplyr
+# saveRDS(covs_all1, "C:/CodigoR/AudubonPanama/data/BFI/covs_all.RDS")
+# save(covs_all, file = "C:/CodigoR/AudubonPanama/data/BFI/covs_all.Rda")
+covs_all <- readRDS("C:/CodigoR/AudubonPanama/data/BFI/covs_all.RDS")
+#load the rda file
+# covs_all <- load(file = "C:/CodigoR/AudubonPanama/data/BFI/covs_all.Rda")
+# write.csv(covs_all)
+
+# covs_all$site <- puntos$site # ad site name
+
+# change NA to 0 
+# covs_all <- substr(covs_all, NA, 0) #r eplace in terra
+covs_all[is.na(covs_all)] <- 0
+M = cor(covs_all[,c(-1, -11)]) # removes ID and site
+corrplot(M)
+
+```
+
+> layer removed: BGB_Spawn, 
+
+```{r}
+#| warning: false
+#| message: false
+#| eval: false
+#| echo: false
+
+
+# many_rasters <- list(AGB_Spawn, human_foot, NDVI, river, canopy, roads, forest_integrity, coast)
+# terra stack
+# # covs_many_raster <- terra::rast(many_rasters)
+# names(covs_many_raster) <- c("BGB_Spawn", "AGB_Spawn",
+#                         "human_foot", "NDVI", "river",  
+#                         "canopy", "roads", "forest_integrity",
+#                         "coast")
+# 
+# writeRaster(covs_many_raster, "C:/CodigoR/AudubonPanama/raster/covs_many_raster.tif", overwrite=TRUE)
+
+# covs_many_raster <- rast("C:/CodigoR/AudubonPanama/raster/covs_many_raster.tif")
+
+# extract values from raster 
+# covs_all <- terra::extract(covs_many_raster, puntos) 
+# covs_all$site <- puntos$site # ad site name
+
+# change NA to 0 
+# covs_all <- substr(covs_all, NA, 0) #replace in terra
+# covs_all[is.na(covs_all)] <- 0
+
+
+```
+
+
+## Which model predicts BFI the best?
+
+Information-theoretic approaches provide methods for model selection and (multi)model inference that differ quite a bit from more traditional methods based on null hypothesis testing (e.g., Anderson, 2008; Burnham & Anderson, 2002). These methods can also be used in the meta-analytic context when model fitting is based on likelihood methods.
+
+We will now examine the fit and plausibility of various models, focusing on models that contain none, one, and up to seven (i.e., all) of these possible predictors covariates.
+
+With level = 1, we stick to models with main effects only. This implies that there are $2^8$ = 256 possible models in the candidate set to consider. Since we want to keep the results for all these models (the default is to only keep up to 100 model fits), I set confsetsize=256. With crit="aicc", we select the information criterion in this case: the AICc which is the AIC corrected by small sample size, that we would like to compute for each model and that should be used for model selection and multimodel inference.
+
+### lets put all data in the same table 
+
+```{r}
+
+# put in a table
+dat1 <- BFI_site |> left_join(covs_all)
+dat <- dat1 |> dplyr::select(bfi_unscaled, AGB_Spawn, human_foot, NDVI, river, canopy, roads, forest_integrity, coast) #bfi_scaled_scale
+
+
+```
+
+
+### Next, we fit the full models with:
+
+```{r}
+
+
+full <- lm(bfi_unscaled~., data=dat)
+
+# Now we can fit all 256 models and examine those models whose AICc value is no more than 2 units away from that of the best model with:
+options(na.action = "na.fail")
+res <- dredge(full,rank = "AIC")
+# subset(res, delta <= 2, recalc.weights=FALSE)
+summary(model.avg(res))
+plot(res)
+
+
+
+
+
+```
+The graph shows the number of times the variable was selected in each model
+
+
+### Now we refit best linear model
+
+```{r}
+
+# 8. Refit best linear model
+bestmodel <- get.models(res, 1)[[1]]
+z <- lm(bestmodel, data = dat)
+tab_model(summary(z))
+
+
+
+```
+
+They are not statistically significant. However let's go the next step
+
+### And finally see the trends
+
+```{r}
+
+visreg(z, xvar = c("AGB_Spawn", "NDVI", "human_foot"))
+
+```
+
+
+#### is there any interaction?
+
+
+```{r}
+
+# put in a table
+dat2 <- dat1 |> dplyr::select(bfi_unscaled, AGB_Spawn, NDVI, human_foot)
+
+# 12. Include all two-way interactions
+z <- lm(bfi_unscaled ~ (.)^2, data = dat2)
+z2 <- stepAIC(z, upper = ~., lower = ~1, direction = "both")
+tab_model(summary(z2))
+
+```
+
+
+The answer is no!
+
+
+### lets try stepwise model selection by AIC
+
+Let’s try analyzing the data using stepAIC() from the MASS package instead. Despite its name the method is not carrying out stepwise multiple regression. Rather, it is using a stepwise search strategy (hopefully) to find the “best” model (the model minimizing the AIC score) given certain restrictions.
+
+```{r}
+# 
+z1 <- stepAIC(full, direction = "both")
+tab_model(summary(z1))
+```
+
+Again no statistical significant predictor. However lets see the trends
+
+
+#### and the trends 
+
+```{r}
+
+visreg(z1, xvar = c("forest_integrity", "canopy"))
+```
+
+
+
+
+## Sesion info
+
+```{r}
+print(sessionInfo(), locale = FALSE)
+```
+
+
+
