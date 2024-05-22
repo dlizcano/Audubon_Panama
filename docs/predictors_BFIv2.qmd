@@ -62,6 +62,7 @@ library(terra)
 library(sjPlot)
 # library(mapview)
 library(corrplot)
+library(DT)
 
 library(tidyverse)
 
@@ -188,7 +189,7 @@ Information-theoretic approaches provide methods for model selection and (multi)
 
 We will now examine the fit and plausibility of various models, focusing on models that contain none, one, and up to eight of these possible predictors covariates.
 
-With level = 1, we stick to models with main effects only. This implies that there are $2^8$ = 256 possible models in the candidate set to consider. Since we want to keep the results for all these models (the default is to only keep up to 100 model fits), We set confsetsize=256. With crit="aic", we select the information criterion in this case: the AIC that we would like to compute for each model and that should be used for model selection and multimodel inference.
+With level = 1, we stick to models with main effects only. This implies that there are $2^8$ = 256 possible models in the candidate set to consider. Since we want to keep the results for all these models (the default is to only keep up to 100 model fits), We set confsetsize=256. With crit="AICc", we select the Akaike Information Criterion corrected by small sample size, in this case: the AICc that we would like to compute for each model and that should be used for model selection and multimodel inference.
 
 ### lets put all data in the same table 
 
@@ -211,7 +212,11 @@ full <- lm(bfi_unscaled~., data=dat)
 
 # Now we can fit all 256 models and examine those models whose AICc value is no more than 2 units away from that of the best model with:
 options(na.action = "na.fail")
-res <- dredge(full,rank = "AIC")
+res <- dredge(full, 
+              rank = "AICc", 
+              beta="none", 
+              # extra = c("R^2"),
+              m.lim = c(1, 2))
 # subset(res, delta <= 2, recalc.weights=FALSE)
 summary(model.avg(res))
 plot(res)
@@ -239,22 +244,47 @@ tab_model(summary(z))
 
 They are not statistically significant. However let's go the next step
 
+### Checking assumptions 
+
+```{r}
+library(see)
+library(performance)
+result2 <- check_normality(z)
+plot(result2, type = "density")
+plot(result2, type = "qq")
+plot(result2, type = "pp")
+
+result3 <- check_heteroscedasticity(z)
+plot(result3)
+check_predictions(z, check_range = TRUE)
+
+
+out <- check_model(z)
+plot(out, type = "discrete_both")
+```
+In seems our "best" model according to the AIC: 
+  
+bfi_unscaled ~  human_foot 
+  
+Do not meet normality and the posterior predictive check is not that good. But normality is that important...? 
+
 ### And finally see the trends
 
 ```{r}
 
-visreg(z, xvar = c("AGB_Spawn", "NDVI", "human_foot"))
+visreg(z, xvar = c("human_foot"))
 
 ```
 
 
 #### is there any interaction?
 
+between forest_integrity, AGB_Spawn, NDVI and human_foot
 
 ```{r}
 
 # put in a table
-dat2 <- dat1 |> dplyr::select(bfi_unscaled, AGB_Spawn, NDVI, human_foot)
+dat2 <- dat1 |> dplyr::select(bfi_unscaled, AGB_Spawn, NDVI, human_foot, forest_integrity)
 
 # 12. Include all two-way interactions
 z <- lm(bfi_unscaled ~ (.)^2, data = dat2)
@@ -264,8 +294,7 @@ tab_model(summary(z2))
 ```
 
 
-The answer is no!
-
+The answer is: it seems to be between human_foot and forest_integrity. So another plausible model is: bfi_unscaled ~  human_foot +human_foot:forest_integrity
 
 ### lets try stepwise model selection by AIC
 
@@ -275,7 +304,15 @@ Let’s try analyzing the data using stepAIC() from the MASS package instead. De
 # 
 z1 <- stepAIC(full, direction = "both")
 tab_model(summary(z1))
+
+out2 <- check_model(z1)
+plot(out2, type = "discrete_both")
 ```
+In seems our "best" model according to the AIC: 
+  
+bfi_unscaled ~ canopy + forest_integrity 
+  
+Do not meet normality and the posterior predictive check is not that good.
 
 Again no statistical significant predictor. However lets see the trends
 
@@ -287,6 +324,20 @@ Again no statistical significant predictor. However lets see the trends
 visreg(z1, xvar = c("forest_integrity", "canopy"))
 ```
 
+## Which model can be the best?
+
+Lets compare the model performance
+
+```{r}
+lm1 <- lm(bfi_unscaled ~  human_foot, data = dat )
+lm2 <- lm(bfi_unscaled ~  human_foot + human_foot:forest_integrity, data = dat)
+lm3 <- lm(formula = bfi_unscaled ~ canopy + forest_integrity, data = dat)
+result <- compare_performance(lm1, lm2, lm3)
+
+DT::datatable(result)
+plot(result)
+
+```
 
 
 
