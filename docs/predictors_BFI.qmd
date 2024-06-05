@@ -48,18 +48,23 @@ Load libraries and set some options.
 ```{r set_up}
 # set up
 
-library(tidyverse)
+
 library(gt)
 library(lubridate)
 library(stringr)
 library(readxl)
 library(sf)
-library(tidymodels)
+
 library(spmodel)
 library(terra)
 library(broom)
 library(StepGWR)
 library(mapview)
+library(corrplot)
+
+library(tidyverse)
+library(tidymodels)
+
 
 # setwd("C:/CodigoR/AudubonPanama/R/BFI")
 
@@ -83,15 +88,109 @@ BFI_sf <- sf::st_as_sf(puntos)
 
 ```
 
-## Which covariates are best?
-
-We ran a stepwise procedure for Geographically Weighed Regression to eliminate any
-redundant variables. This is a hybrid spatial model that combines the variable selection capabilities of stepwise regression with the predictive power of Geographically Weighted Regression (GWR) model.
+# Correlation in rasters
 
 ```{r}
-data_sp <- BFI_site |> select(bfi_unscaled, AGB_Spawn, BGB_Spawn, canopy_height_jetz2, coast_final_v2,  forest_integrity_index, Latitude, Longitude)
+BGB_Spawn <- rast("C:/CodigoR/AudubonPanama/raster/BGB Spawn.tif")
+AGB_Spawn <- rast("C:/CodigoR/AudubonPanama/raster/AGB Spawn.tif")
+NDVI <- rast("C:/CodigoR/AudubonPanama/raster/S2_NDVI_median_v2.tif")
+roads <- rast("C:/CodigoR/AudubonPanama/raster/roads_final_v2.tif")
+carbon_stock <- rast("C:/CodigoR/AudubonPanama/raster/soil_organic_carbon_stock_0-30m.tif")
+canopy <- rast("C:/CodigoR/AudubonPanama/raster/canopy_height_jetz2.tif")
+human_foot <- rast("C:/CodigoR/AudubonPanama/raster/human_footprint.tif")
+river <- rast("C:/CodigoR/AudubonPanama/raster/rivers_final_v2.tif")
+coast <- rast("C:/CodigoR/AudubonPanama/raster/coast_final_v2.tif")
 
-StepGWR_exp<-StepGWR_exponential(data_sp,0.25,0.8,exponential_kernel)
+forest_integrity <- rast("C:/CodigoR/AudubonPanama/raster/forest_integrity_index.tif")
+# make elevation equal
+# srtm_projected <- projectRaster(srtm_crop, crs=projection(NDVI), method="ngb") 
+# elev <- mask(resample(rast(srtm_projected), NDVI), NDVI)
+
+# list of terras SpatRasters  
+many_rasters <- list(BGB_Spawn, AGB_Spawn, human_foot, NDVI, river, canopy, roads, forest_integrity, coast)
+# terra stack
+covs_many_raster <- rast(many_rasters)
+names(covs_many_raster) <- c("BGB_Spawn","AGB_Spawn", 
+                        "human_foot", "NDVI", "river",  
+                        "canopy", "roads", "forest_integrity",
+                        "coast")
+
+
+
+co <- layerCor(covs_many_raster, "pearson")
+corrplot(co$correlation)
+
+
+```
+
+## Correlation in sites (points)
+
+```{r}
+# extract values from raster 
+# covs_all1 <- terra::extract(covs_many_raster, puntos) 
+
+#saveRDS(covs_all1, "C:/CodigoR/AudubonPanama/data/BFI/covs_all.RDS")
+# save(covs_all, file = "C:/CodigoR/AudubonPanama/data/BFI/covs_all.Rda")
+covs_all <- readRDS("C:/CodigoR/AudubonPanama/data/BFI/covs_all.RDS")
+#load the rda file
+# covs_all <- load(file = "C:/CodigoR/AudubonPanama/data/BFI/covs_all.Rda")
+# write.csv(covs_all)
+
+# covs_all$site <- puntos$site # ad site name
+
+# change NA to 0 
+# covs_all <- substr(covs_all, NA, 0) #r eplace in terra
+covs_all[is.na(covs_all)] <- 0
+M = cor(covs_all[,c(-1, -11)]) # removes ID and site
+corrplot(M)
+
+```
+
+> layer removed: 
+
+```{r}
+
+many_rasters <- list(BGB_Spawn, AGB_Spawn, human_foot, NDVI, river, canopy, roads, forest_integrity, coast)
+# terra stack
+# # covs_many_raster <- terra::rast(many_rasters)
+# names(covs_many_raster) <- c("BGB_Spawn", "AGB_Spawn",
+#                         "human_foot", "NDVI", "river",  
+#                         "canopy", "roads", "forest_integrity",
+#                         "coast")
+# 
+# writeRaster(covs_many_raster, "C:/CodigoR/AudubonPanama/raster/covs_many_raster.tif", overwrite=TRUE)
+
+covs_many_raster <- rast("C:/CodigoR/AudubonPanama/raster/covs_many_raster.tif")
+
+# extract values from raster 
+# covs_all <- terra::extract(covs_many_raster, puntos) 
+# covs_all$site <- puntos$site # ad site name
+
+# change NA to 0 
+# covs_all <- substr(covs_all, NA, 0) #r eplace in terra
+# covs_all[is.na(covs_all)] <- 0
+
+
+```
+
+
+## Which covariates are best?
+
+We ran a stepwise procedure for Geographically Weighed Regression to eliminate any redundant variables. This is a hybrid spatial model that combines the variable selection capabilities of stepwise regression with the predictive power of Geographically Weighted Regression (GWR) model.
+
+```{r}
+
+
+
+data_site <- BFI_site |> dplyr::select(site, bfi_unscaled, Latitude, Longitude) |> left_join(covs_all)
+
+data_site <- data_site[,c(-1,-5)] # remove Site and ID
+data_site <- data_site |> relocate("Latitude", .after = last_col())
+data_site <- data_site |> relocate("Longitude", .after = last_col()) |> dplyr::select(bfi_unscaled,BGB_Spawn,AGB_Spawn,human_foot,canopy,forest_integrity, coast, Latitude,Longitude)
+
+StepGWR_exp<-StepGWR_exponential(data_site,
+                                 0.5, 0.7,
+                                 exponential_kernel)
 
 ```
 
@@ -101,16 +200,22 @@ The most important variables are: `r StepGWR_exp$Important_vars`
 ## Multiple models using the most important variables 
 
 ```{r}
+
+# convierte covs a puntos terra
+puntos <- vect(data_site, geom=c("Longitude", "Latitude"), crs="EPSG:4326")
+# convierte a sf
+BFI_sf <- sf::st_as_sf(puntos)
+
 spmods_Spawn1 <- splm(formula = bfi_unscaled ~ AGB_Spawn, data = BFI_sf,
               spcov_type = c("exponential"))
 
 spmods_Spawn2 <- splm(formula = bfi_unscaled ~ BGB_Spawn, data = BFI_sf,
               spcov_type = c("exponential"))
 
-spmods_Spawn3 <- splm(formula = bfi_unscaled ~ AGB_Spawn + BGB_Spawn, data = BFI_sf,
+spmods_Spawn3 <- splm(formula = bfi_unscaled ~ AGB_Spawn + scale(BGB_Spawn), data = BFI_sf,
               spcov_type = c("exponential"))
 
-spmods_Spawn4 <- splm(formula = bfi_unscaled ~ BGB_Spawn + AGB_Spawn + forest_integrity_index, data = BFI_sf,
+spmods_Spawn4 <- splm(formula = bfi_unscaled ~ BGB_Spawn + AGB_Spawn + forest_integrity, data = BFI_sf,
               spcov_type = c("exponential"))
 
 
@@ -119,36 +224,66 @@ summary(spmods_Spawn4)
 loocv(spmods_Spawn4, cv_predict = TRUE, se.fit = TRUE)
 augment(spmods_Spawn4)
 
+# plot(spmods_Spawn4, which = c(7))
 
 
 ```
 
-## Predict BFI in map
+
 
 
 ```{r}
-BGB_Spawn <- rast("C:/CodigoR/AudubonPanama/raster/BGB Spawn.tif")
-AGB_Spawn <- rast("C:/CodigoR/AudubonPanama/raster/AGB Spawn.tif")
-forest_integrity_index <- rast("C:/CodigoR/AudubonPanama/raster/forest_integrity_index.tif")
+m1 <- glm(bfi_unscaled ~  AGB_Spawn+BGB_Spawn +forest_integrity, data = BFI_sf, family = gaussian(link = "identity"))
+library (sjPlot)
+plot_model(m1)
+
+library(ggeffects)
+mydf <- predict_response(m1, terms = "AGB_Spawn")
+plot(mydf)
+mydf <- predict_response(m1, terms = "BGB_Spawn")
+plot(mydf)
+mydf <- predict_response(m1, terms = "forest_integrity")
+plot(mydf)
+```
+
+## Predict BFI in map
+
+```{r}
+BGB_Spawn <- terra::rast("C:/CodigoR/AudubonPanama/raster/BGB Spawn.tif")
+AGB_Spawn <- terra::rast("C:/CodigoR/AudubonPanama/raster/AGB Spawn.tif")
+forest_integrity <- terra::rast("C:/CodigoR/AudubonPanama/raster/forest_integrity_index.tif")
 
 # list of terras SpatRasters  
-many_rasters <- list(BGB_Spawn, AGB_Spawn, forest_integrity_index)
+final_rasters <- list(BGB_Spawn, AGB_Spawn, forest_integrity)
 # terra stack
-covs_raster <- rast(many_rasters)
-names(covs_raster) <- c("BGB_Spawn", "AGB_Spawn",  "forest_integrity_index")
+final_covs_raster <- rast(final_rasters)
+names(final_covs_raster) <- c("BGB_Spawn", "AGB_Spawn",  "forest_integrity")
 
 # regular points
-pointopred <- spatSample(covs_raster, 100000, "regular", cells=FALSE, xy=TRUE, na.rm=TRUE)
+pointopred <- spatSample(final_covs_raster, 100000, "regular", cells=FALSE, xy=TRUE, na.rm=TRUE)
+
+pointopred_data <- as.data.frame(as.points(as.points(final_covs_raster), multi=TRUE))
+pointopred_geom <- as.data.frame(geom(as.points(as.points(final_covs_raster), multi=TRUE))) 
+
+pointopred_data$x <- pointopred_geom$x
+pointopred_data$y <- pointopred_geom$y
+
 
 # convierte covs a puntos terra
-pointopredt <- vect(pointopred, geom=c("x", "y"), crs="EPSG:4326")
+# pointopredt <- vect(pointopred, geom=c("x", "y"), crs="EPSG:4326")
+pointopredt <- vect(pointopred_data, geom=c("x", "y"), crs="EPSG:4326")
+
 # convierte a sf
-pointopredsf <- sf::st_as_sf(pointopredt)
-
-pointopredsf$prediction <- predict(spmods_Spawn4, newdata = pointopredsf)
+# pointopredsf <- sf::st_as_sf(pointopredt)
+# makes prediction on top of vector... SLOW!!!!
+pointopredt$prediction <- predict(spmods_Spawn4, newdata = pointopredt)
 # augment(spmods_Spawn4, newdata = pointopredsf, interval = "prediction")
+# mapapredicho <- rast(pointopredsf$prediction)
 
-mapview(pointopredsf, zcol = c("prediction"))
+predgrid = terra::rast(pointopredt, nrow=2880, ncol=2274)
+ncr = rasterize(pointopredt, predgrid, field="prediction")
+# ncr[is.na(ncr)] = 0 # make na to 
+mapview(ncr)#, zcol = c("prediction"))
 
 
 ```

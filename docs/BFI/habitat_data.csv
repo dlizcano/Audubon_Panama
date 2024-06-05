@@ -1,0 +1,109 @@
+watershed,property,path,site_point,x,y,perc_forest_fence,perc_forest_no_fence,perc_old_restoration,perc_savanna,perc_live_fences,percent_young_restoration,perc_agroforestry,perc_shrubs,perc_pasture,perc_other_crops,perc_water
+Guacaica,El recreo,Pueblo viejo,1087-1,-75.52861812,5.153491683,0,5,0,15,25,0,0,0,55,0,0
+Guacaica,Boca del monte,Guacaica,1060-1,-75.50747592,5.149997933,0,30,0,5,50,0,0,0,15,0,0
+Guacaica,la judea,quebrada negra ,1092-1,-75.48405,5.153853333,0,100,0,0,0,0,0,0,0,0,0
+Guabas,La estrella,Cocuyos,356-1,-76.19832864,3.772689403,0,100,0,0,0,0,0,0,0,0,0
+Guabas,La estrella,Cocuyos,356-2,-76.19671555,3.77357905,0,0,0,20,0,50,0,0,0,30,0
+Guabas,La estrella,Cocuyos,356-3,-76.19541497,3.7728213,20,0,0,0,0,0,80,0,0,0,0
+Guabas,La estrella,Cocuyos,356-4,-76.19404208,3.771048817,0,30,0,0,0,0,0,0,70,0,0
+Guabas,la estrella,Cocuyos,356-5,-76.19259187,3.770152884,50,0,0,30,0,0,0,0,20,0,0
+Guabas,la estrella,Cocuyos,356-6,-76.19870333,3.770895,0,40,0,10,0,0,0,0,50,0,0
+Guabas,la estrella,Cocuyos,356-7,-76.19869167,3.769003333,0,5,0,55,5,10,0,0,25,0,0
+Guabas,la estrella,Cocuyos,356-8,-76.198855,3.767121666,0,5,0,30,0,0,65,0,0,0,0
+Guabas,la estrella,Cocuyos,356-9,-76.19703667,3.767293906,10,0,0,0,0,90,0,0,0,0,0
+Guabas,la estrella,Cocuyos,356-10,-76.19509833,3.766853333,100,0,0,0,0,0,0,0,0,0,0
+Guabas,la estrella,Cocuyos,356-11,-76.19508667,3.768606667,30,0,0,15,0,0,0,0,55,0,0
+Guabas,la estrella,Cocuyos,356-13,-76.19703167,3.769016667,100,0,0,0,0,0,0,0,0,0,0
+Guabas,Cantalia,Cocuyos,318-1,-76.20254075,3.759122383,0,20,0,30,0,0,0,0,50,0,0
+Guabas,Cantalia,Cocuyos,318-2,-76.20747552,3.760644367,0,0,0,60,0,0,0,0,40,0,0
+Guabas,Cantalia,Cocuyos,318-3,-76.20782032,3.7589674,0,30,0,0,0,0,70,0,0,0,0
+Guabas,carretera,cocuyos,318-4,-76.20578435,3.75892145,50,50,0,0,0,0,0,0,0,0,0
+Guabas,carretera,Cocuyos,318-5,-76.20425522,3.757681167,0,50,0,30,0,0,0,0,0,0,20
+Guabas,Cantalia,Cocuyos,318-6,-76.20532052,3.76028035,0,100,0,0,0,0,0,0,0,0,0
+Guabas,Cantalia,Cocuyos,318-7,-76.20505497,3.762430783,0,20,0,15,5,0,0,0,60,0,0
+Guabas,Cantalia,cocuyos,318-8,-76.20248366,3.764382832,50,0,0,30,0,0,0,0,20,0,0
+Guabas,Cantalia,cocuyos,318-9,-76.20268785,3.762224505,0,0,0,50,0,0,0,0,40,10,0
+Guabas,Cantalia,cocuyos,318-10,-76.20621,3.764161667,0,25,0,40,0,0,0,0,35,0,0
+Guabas,Cantalia,cocuyos,318-11,-76.20717316,3.762833501,0,0,0,60,0,0,0,0,30,10,0
+Guabas,cantalia,cocuyos,318-12 ,-76.20390667,3.761121666,0,90,0,10,0,0,0,0,0,0,0
+Guabas,Finca los criollo,La cecilia,472-1,-76.1548147,3.800449867,0,80,0,0,0,0,20,0,0,0,0
+Guabas,,La cecilia,472-3,-76.15461627,3.796425016,0,50,0,0,0,0,10,0,30,0,10
+Guabas,,La cecilia,472-2,-76.15465498,3.798465407,0,0,0,50,0,0,20,0,20,0,10
+Guabas,predio Heberto Rodriguez,La cecilia,472-4,-76.1528175,3.79640206,0,50,0,15,0,0,5,0,25,0,5
+Guabas,patio bonito,patio bonito,205-1,-76.22146,3.737373333,0,80,0,0,0,0,0,0,15,0,5
+Guabas,patio bonito,patio bonito,205-2,-76.22129833,3.735393333,0,30,0,15,0,0,0,0,5,50,0
+Guabas,patio bonito,patio bonito,205-3,-76.220535,3.733521667,0,0,0,20,0,0,0,0,0,80,0
+Guabas,patio bonito,patio bonito,205-4,-76.21966333,3.731965,10,0,0,25,0,0,0,0,0,65,0
+Guabas,patio bonito,patio bonito,205-5,-76.22177833,3.731933333,0,20,0,10,0,0,0,0,20,50,0
+Guabas,patio bonito,patio bonito,205-6,-76.22355,3.731815,0,0,0,25,0,0,0,0,50,25,0
+Guabas,patio bonito,patio bonito,205-7,-76.22412333,3.733541667,10,50,0,5,0,0,0,0,25,10,0
+Guabas,patio bonito,patio bonito ,205-8,-76.22306167,3.73481,0,15,0,15,0,0,0,0,0,70,0
+Guabas,patio bonito,patio bonito,205-9,-76.225445,3.731338333,15,5,0,20,0,0,0,0,60,0,0
+Guabas,patio bonito,patio bonito,205-10,-76.22211333,3.733598333,0,35,0,10,0,0,0,0,55,0,0
+Guabas,patio bonito,patio bonito,205-11,-76.223305,3.737701667,40,0,0,5,0,0,0,0,55,0,0
+Guabas,Predios cartón Colombia,patio bonito,170-1,-76.20453333,3.727885,50,0,0,0,0,0,0,0,50,0,0
+Guabas,,patio bonito,170-2,-76.20634167,3.728106667,0,30,0,0,0,0,0,0,70,0,0
+Guabas,,patio bonito,170-3,-76.20473167,3.726171667,0,0,0,50,0,0,0,0,50,0,0
+Guabas,,patio bonito,170-4,-76.20273667,3.727881667,0,50,0,0,0,0,0,0,50,0,0
+Guabas,,patio bonito,170-5,-76.20290667,3.726083333,0,20,0,5,0,0,0,0,60,15,0
+Guabas,,patio bonito,170-6,-76.20262167,3.72436,0,0,0,0,0,0,0,0,30,70,0
+Guabas,,patio bonito,170-7,-76.20261833,3.722396667,0,20,0,0,0,0,0,0,75,5,0
+Guabas,,patio bonito,170-8,-76.20435167,3.724366667,0,30,0,5,0,0,0,0,65,0,0
+Guabas,,patio bonito,170-9,-76.20436,3.722525,0,20,0,0,0,0,0,0,50,30,0
+Guabas,,patio bonito,170-10,-76.20610833,3.72245,0,15,0,0,0,0,0,0,0,85,0
+Guabas,,patio bonito,170-11,-76.206235,3.72405,0,20,0,0,0,0,0,0,0,80,0
+Guabas,,patio bonito,170-12,-76.20777948,3.722497541,0,20,0,0,0,0,0,0,0,80,0
+Guabas,,patio bonito,170-13,-76.20646,3.726075,0,15,0,0,0,0,0,0,85,0,0
+Guabas,la estrella,Cocuyos,356-12,-76.196,3.770441666,0,55,0,10,0,0,0,0,35,0,0
+Guacaica,El recreo,Pueblo viejo,1087-3,-75.52428333,5.159438333,10,0,0,10,5,0,0,0,75,0,0
+Guacaica,el recreo,pueblo viejo,1087-4,-75.52733167,5.157715,0,0,0,35,5,0,0,0,60,0,0
+Guacaica,el recreo,pueblo viejo,1087-5,-75.529415,5.157998333,0,25,0,10,0,0,0,0,60,5,0
+Guacaica,el recreo,pueblo viejo,1087-6,-75.526845,5.155423333,20,0,0,10,0,0,0,0,70,0,0
+Guacaica,El recreo,pueblo viejo,1087-9,-75.52698982,5.153697233,40,5,0,5,0,0,10,0,35,0,5
+Guacaica,el recreo,pueblo viejo,1087-7,-75.52509667,5.155508333,0,60,0,20,0,0,0,0,20,0,0
+Guacaica,el recreo,pueblo viejo,1087-8,-75.52558801,5.156947993,0,20,0,15,0,0,0,0,40,25,0
+Guacaica,Boca del monte,Guacaica,1060-2,-75.50562398,5.150232467,0,100,0,0,0,0,0,0,0,0,0
+Guacaica,Boca del monte,Guacaica,1060-3,-75.5046274,5.148254883,0,70,0,0,0,0,0,0,30,0,0
+Guacaica,Boca del monte,Guacaica,1060-4,-75.50565337,5.143994617,0,80,0,0,0,0,0,0,20,0,0
+Guacaica,Boca del monte,Guacaica,1060-5,-75.50753967,5.144328233,0,30,0,10,0,0,0,0,60,0,0
+Guacaica,Boca del monte,Guacaica,1060-6,-75.50983455,5.143934383,0,45,0,5,0,0,0,0,30,20,0
+Guacaica,Boca del monte,Guacaica,1060-7,-75.51073167,5.145712383,20,0,0,10,0,0,0,0,70,0,0
+Guacaica,Boca del monte,Guacaica,1060-8,-75.51083237,5.147519333,0,60,0,0,0,0,0,0,40,0,0
+Guacaica,Boca del monte,Guacaica,1060-9,-75.51166592,5.149473633,0,20,0,20,0,0,0,0,60,0,0
+Guacaica,Boca del monte,Guacaica,1060-10,-75.50921747,5.150605167,0,30,0,40,10,0,0,0,20,0,0
+Guacaica,Boca del Monte ,Guacaica,1060-11,-75.50651677,5.14866385,40,15,0,10,0,0,0,0,35,0,0
+Guacaica,el recreo,pueblo viejo,1087-10,-75.52989333,5.156215,0,30,0,0,0,0,0,0,70,0,0
+Guacaica,el recreo ,pueblo viejo,1087-2,-75.52856167,5.155238334,0,15,0,10,0,0,0,0,75,0,0
+Guacaica,el recreo,pueblo viejo,1087-11,-75.52470333,5.153691666,0,15,0,5,0,0,0,0,80,0,0
+Guacaica,boca del monte,Guacaica,1060-12,-75.50746333,5.1462,30,40,0,5,0,0,0,0,25,0,0
+Guacaica,la judea,quebrada negra ,1092-2,-75.48262,5.155003333,0,100,0,0,0,0,0,0,0,0,0
+Guacaica,la judea,quebrada negra ,1092-3,-75.481885,5.156706666,0,92,0,0,0,0,0,0,0,0,8
+Guacaica,la judea,quebrada negra ,1092-4,-75.48090333,5.155186667,0,60,0,0,0,0,0,0,40,0,0
+Guacaica,la judea ,quebrada negra ,1092-5,-75.47975833,5.15369,0,20,0,5,0,0,0,0,70,5,0
+Guacaica,la judea,quebrada negra ,1092-6,-75.47941667,5.155566666,0,90,0,0,0,0,0,0,0,0,10
+Guacaica,la judea ,quebrada negra ,1092-7,-75.47971833,5.15725,0,0,0,5,0,0,95,0,0,0,0
+Guacaica,la judea ,quebrada negra ,1092-8,-75.47969833,5.159018333,0,35,0,0,0,0,60,0,0,0,5
+Guacaica,la judea ,quebrada negra ,1092-9,-75.48130667,5.158646666,0,50,0,0,0,0,50,0,0,0,0
+Guacaica,la judea,quebrada negra ,1092-10,-75.48369333,5.155646667,0,95,0,0,0,0,5,0,0,0,0
+Guacaica,la judea ,quebrada negra ,1092-11,-75.48406,5.157496667,0,10,0,0,0,20,70,0,0,0,0
+Guacaica,Pancitara,Quebrada negra,1063-1,-75.48343877,5.149981667,50,0,0,5,0,0,0,0,15,30,0
+Guacaica,Pancitara,Quebrada negra,1063-2,-75.48332535,5.148123017,0,0,0,25,0,0,0,0,75,0,0
+Guacaica,Pancitara,Quebrada negra,1063-3,-75.48346013,5.146244267,0,0,0,0,20,0,0,0,50,30,0
+Guacaica,La Palma,bajo Corinto ,837-1,-75.51074333,5.09033,0,35,0,0,0,0,0,0,65,0,0
+Guacaica,la Palma ,bajo Corinto ,837-2,-75.50892333,5.090271666,0,20,0,10,0,5,0,0,65,0,0
+Guacaica,la Palma ,bajo Corinto ,837-3,-75.50727333,5.089676666,0,50,0,0,0,0,0,0,50,0,0
+Guacaica,la Palma ,bajo Corinto ,837-4,-75.50896667,5.091988333,0,10,0,10,0,0,0,0,80,0,0
+Guacaica,la Palma ,bajo Corinto ,837-5,-75.50925,5.093843333,0,60,0,0,0,0,0,0,38,0,2
+Guacaica,la Palma ,bajo Corinto ,837-6,-75.51083,5.095755,10,20,0,0,0,0,0,0,70,0,0
+Guacaica,la palma,bajo Corinto ,837-7,-75.50911167,5.095948334,0,100,0,0,0,0,0,0,0,0,0
+Guacaica,la palma ,bajo Corinto ,837-8,-75.51102833,5.09404,0,35,0,0,0,0,0,0,65,0,0
+Guacaica,la Palma ,bajo Corinto ,837-9,-75.51119667,5.092145,0,30,0,0,0,0,0,0,70,0,0
+Guacaica,,,916-1,-75.50289667,5.115021667,0,70,0,0,0,0,0,0,20,10,0
+Guacaica,pancitara,Guacaica,1063-4,-75.48184788,5.14960125,0,60,0,5,0,0,0,0,35,0,0
+Guacaica,pancitara,,1063-5,-75.48198858,5.148065767,0,70,0,10,0,0,0,0,20,0,0
+Guacaica,pancitara,quebrada negra ,1063-6,-75.48446167,5.144946666,50,0,0,15,0,0,0,0,35,0,0
+Guacaica,pancitara,quebrada negra ,1063-7,-75.48190667,5.146116666,70,0,0,0,0,0,0,0,0,0,30
+Guacaica,pancitara,,1063-8,-75.480215,5.148448333,0,80,0,0,0,0,0,0,0,0,20
+Guacaica,pancitara,quebrada negra ,1063-9,-75.48126667,5.144543334,0,0,0,20,0,10,0,0,60,10,0
+Guacaica,pancitara,quebrada negra ,1063-10,-75.48009333,5.146285,0,10,0,20,0,0,0,0,60,10,0
+Guacaica,pancitara,quebrada negra ,1063-11,-75.478165,5.145991667,0,20,0,40,5,0,0,0,25,10,0

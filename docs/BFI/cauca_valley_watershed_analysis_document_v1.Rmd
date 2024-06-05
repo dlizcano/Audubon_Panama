@@ -1,0 +1,477 @@
+---
+title: "Restoration in Cauca Valley Watersheds"
+author: "Tim Meehan"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: cerulean
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  dev = "png",
+  dev.args = list(type = "cairo-png"),
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center",
+  eval = TRUE,
+  echo = TRUE,
+  warning = FALSE,
+  error = FALSE,
+  message = FALSE,
+  cache=TRUE)
+```
+
+## Question
+
+Can we make forested areas in the Cauca Valley more bird friendly through 
+restoration? First let's look at baseline BFI values across possible restoration
+sites and see if it can be related to current land cover.
+
+## Set up analysis
+
+First, we load a bunch of libraries and set some options.
+
+```{r set_up}
+# set up
+library(cluster)
+library(NbClust)
+library(vegan)
+library(unmarked)
+library(mgcv)
+library(mgcViz)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+
+setwd("C:/CodigoR/AudubonPanama/R/BFI")
+
+options(scipen=99999)
+options(max.print=99999)
+options(stringsAsFactors=F)
+```
+
+## Get data
+
+Next, we get the count data, remove flyover birds, add a month column, and change 
+Spanish words to English for the gringos on staff. We then select 
+only landbird species and only those with trait data for functional species 
+assignment. We end up analyzing data for 225 species. 
+
+The species table that is imported at the end of this code block is a critical 
+input to the analysis as it has species detection scores derived from 
+professional opinion, species conservation scores from Partners in Flight, and 
+a bunch of traits related to food type, foraging stratum, and body size for
+functional species determination.
+
+```{r get_data}
+# get raw count data
+d0 <- read.csv("count_data.csv") %>% 
+  rename_all(tolower) %>% 
+  rename_all(~ gsub(".", "_", ., fixed=T)) %>% 
+  filter(tipo_de_registro %in% c("Visual","Auditivo","visual","auditivo")) %>%
+  mutate(distance=as.numeric(stringr::str_trim(distancia))) %>% 
+  mutate(date=dmy(paste0(str_trim(fecha), "-2023"))) %>% 
+  mutate(hora_inicio=hm(hora_inicio),
+         hora_final=hm(hora_final)) %>% 
+  mutate(start_time=hour(hora_inicio)+(minute(hora_inicio)/60),
+         end_time=hour(hora_final)+(minute(hora_final)/60),
+         month=month(date)) %>% 
+  mutate(count=as.numeric(str_trim(individuos)),
+         observador=str_trim(observador),
+         cuenca=str_trim(cuenca),
+         celda=str_trim(celda),
+         punto=str_trim(punto)) %>% 
+  filter(!is.na(count)) %>% 
+  select(watershed=cuenca, site=celda, point=punto, date, month, 
+         observer_id=observador, start_time, end_time, species=especie, 
+         distance, count) %>% 
+  uncount(count) %>% 
+  mutate(month=ifelse(month==9, 8, month))
+
+# just landbird species with trait data
+spp1 <- read.csv("species_data.csv") %>% 
+  filter(guild=="landbird")
+d1 <- d0 %>% filter(species %in% spp1$species)
+```
+
+## Distance analysis
+
+Next, we take advantage of the distance data collected and calculate distance
+based detection probabilities per species. First, we trim the observations to 
+80 m to capture the data most informative for distance analysis. Then we 
+restrict the data to species with at least 20 observations. Then, for each 
+species, site, point, and month, we count the number of individuals per 4 distance
+bins. Then we zero fill the bins. Then we loop through the species and calculate 
+species-specific distance functions and detection probabilities. The histogram 
+at the bottom shows the variation across species in distance-based detection
+probabilities within 80 m of an observer.
+
+```{r distance_analysis}
+# filter out no distance data and distance over 80 m
+max_d <- 80
+d2 <- d1 %>% 
+  filter(!is.na(distance),
+         distance<=max_d)
+
+# just species with large sample more than 20
+thresh_ss <- 20
+d2 <- d2 %>% group_by(species) %>% mutate(n_counted=n()) %>% 
+  ungroup() %>% 
+  filter(n_counted>=thresh_ss) %>% 
+  arrange(species)
+
+# info
+n_species <- length(unique(d2$species))
+spp_nams <- unique(d2$species)
+
+# make counts per bin
+d3 <- d2 %>% 
+  mutate(distance_bin=ifelse(distance<max_d/4, max_d/4, ifelse(
+    distance>=max_d/4 & distance<max_d/2, max_d/2, ifelse(
+      distance>=max_d/2 & distance<max_d*3/4, max_d*3/4, max_d)))) %>% 
+  group_by(site, point, month, species, distance_bin) %>% 
+  count() 
+
+# zero fill
+all_combos <- expand_grid(site=unique(d3$site),
+                          point=unique(d3$point),
+                          month=unique(d3$month),
+                          species=unique(d3$species),
+                          distance_bin=unique(d3$distance_bin))
+d4 <- all_combos %>% left_join(d3) %>% mutate(n=ifelse(is.na(n), 0, n)) %>% 
+  arrange(distance_bin, species, n)
+
+# loop through species
+dist_out <- c()
+for(i in 1:length(spp_nams)){
+  # data
+  d_i <- d4 %>% filter(species==spp_nams[i]) %>% 
+    pivot_wider(values_from=n, names_from=distance_bin)
+  # umf
+  umf_i <- unmarkedFrameDS(y=as.matrix(d_i[,5:8]),
+                            #siteCovs=data.frame(),
+                            dist.breaks=c(0,max_d/4,max_d/2,max_d*3/4, max_d), 
+                            unitsIn="m", survey="point")
+  # model
+  dm_i <- distsamp(~1 ~1, umf_i)
+  # effective area
+  sig <- exp(coef(dm_i, type="det"))
+  ea <- 2*pi * integrate(grhn, 0, max_d, sigma=sig)$value
+  # detection probability
+  dp_i <- ea / (pi*max_d^2)
+  df_i <- data.frame(species=spp_nams[i], dist_det_p=dp_i)
+  dist_out <- rbind(dist_out, df_i)
+}
+
+# show histogram of detection
+ggplot(dist_out) + geom_histogram(aes(x=dist_det_p), col="white") +
+  theme_bw()
+```
+
+## Occupancy analysis
+
+Next, we take advantage of repeat observations by two observers and calculate 
+occupancy based detection probabilities. Again, this analysis is for species
+where there are at least 20 observations. The histogram at the bottom shows the 
+variation across species in occupancy-based detection probabilities.
+
+```{r occupancy_analysis}
+# just species with large sample more than 20
+d2 <- d1 %>% group_by(species) %>% mutate(n_counted=n()) %>% 
+  ungroup() %>% 
+  filter(n_counted>=thresh_ss) %>% 
+  arrange(species)
+
+# info
+n_species <- length(unique(d2$species))
+spp_nams <- unique(d2$species)
+
+# make counts
+d3 <- d2 %>%
+  mutate(observer_id=str_trim(observer_id)) %>% 
+  group_by(site, point, month, species, observer_id) %>% 
+  count() 
+
+# zero fill
+all_combos <- expand_grid(site=unique(d3$site),
+                          point=unique(d3$point),
+                          month=unique(d3$month),
+                          species=unique(d3$species),
+                          observer_id=unique(d3$observer_id))
+d4 <- all_combos %>% left_join(d3) %>% 
+  mutate(n=ifelse(is.na(n), 0, n)) %>% 
+  arrange(site, point, month, species) %>% 
+  pivot_wider(values_from = n, names_from=observer_id) %>% 
+  rename(y1=SANTIAGO, y2=JUAN) %>% 
+  arrange(species, site, point, month) %>% 
+  mutate(y2=ifelse(y2>0, 1, 0),
+         y1=ifelse(y1>0, 1, 0))
+
+# loop through species
+occ_out <- c()
+for(i in 1:length(spp_nams)){
+  d_i <- d4 %>% filter(species==spp_nams[i]) %>% select(y1, y2) %>% as.matrix()
+  umf_i <- unmarkedFrameOccu(y=d_i)
+  om_i <- occu(~1 ~1, umf_i)
+  p_i <- as.numeric(plogis(coef(om_i)[2]))
+  df_i <- data.frame(species=spp_nams[i],
+                      occ_det_p=p_i)
+  occ_out <- rbind(occ_out, df_i)
+}
+
+# show histogram of detection
+ggplot(occ_out) + geom_histogram(aes(x=occ_det_p), col="white") + theme_bw()
+```
+
+
+## Detection scores
+
+Now we have distance based and occupancy based detection probabilities for a
+subset of the 225 species. We use the detection scores from the species table to 
+apply these modeled detection probabilities to species where there were not enough 
+observations to build a model. This is done by applying the group mean detection 
+probability per 3 detection scores to unmodeled species based on their own 
+detection score. Note that detection scores 1, 2, and 3 coincide with average 
+detection probabilities of 0.10, 0.17, and 0.17 for distance analysis and 0.11, 
+0.13, and 0.18 for occupancy analysis.
+
+
+```{r distribute_probs}
+# combine and distribute detection probabilities
+detect_scores <- spp1 %>% select(species, com_name=Clements_2023_com_name,
+                                detect_score=detectability_score) %>% 
+  left_join(dist_out) %>% left_join(occ_out)
+
+# get distance detection probability means per score
+(dist_mean_coefs <- coef(lm(dist_det_p~-1+factor(detect_score), 
+                            data=detect_scores)))
+
+# get occupancy detection probability means per score
+(occ_mean_coefs <- coef(lm(occ_det_p~-1+factor(detect_score), 
+                           data=detect_scores)))
+
+# distribute estimates to NA values
+detect_scores <- detect_scores %>% 
+  mutate(dist_det_p=ifelse(is.na(dist_det_p) & detect_score==1, 
+                           dist_mean_coefs[1], 
+                           ifelse(is.na(dist_det_p) & detect_score==2,
+                                  dist_mean_coefs[2], 
+                                  ifelse(is.na(dist_det_p) & 
+                                           detect_score==3,
+                                         dist_mean_coefs[3], dist_det_p)))) %>% 
+  mutate(occ_det_p=ifelse(is.na(occ_det_p) & detect_score==1, 
+                           occ_mean_coefs[1], 
+                           ifelse(is.na(occ_det_p) & detect_score==2,
+                                  occ_mean_coefs[2], 
+                                  ifelse(is.na(occ_det_p) & 
+                                           detect_score==3,
+                                         occ_mean_coefs[3], occ_det_p))))
+```
+
+## Make functional species
+
+Next we group species into functional species based on ecological traits. This is
+done by making a Gower dissimilarity matrix from the traits data. When making
+the dissimilarity matrix, traits are weighted equally for diet composition, 
+foraging stratum and body size. Then we use the dissimilarity matrix in
+a hierarchical cluster analysis that produces a functional species tree. The 
+optimal number of tree clusters can be determined using a fit metric such as 
+the silhouette width. We end up with 13 functional species in these communities.
+
+```{r func_species, warning=FALSE, message=FALSE, error=FALSE}
+# functional data for clustering
+t1 <- spp1 %>% filter(guild=="landbird") %>% 
+  rename_with(~tolower(gsub(".", "_", .x, fixed=T))) %>% 
+  select(-(2:7))
+
+# make a distance matrix
+d_gower <- daisy(t1[,-1], metric="gower", stand=TRUE,
+                 weights=c(rep(3/9/10, 10), 
+                           rep(3/9/8, 8),
+                           rep(3/9/1, 1)))
+# create clusters
+clust <- NbClust(diss=d_gower, distance=NULL, method="ward.D", 
+                 index="silhouette")
+clust$Best.nc
+
+# best clusters
+func_out <-  spp1 %>% filter(guild=="landbird") %>% 
+  select(species, com_name=Clements_2023_com_name) %>% 
+  mutate(func_spec=clust$Best.partition) %>% 
+  arrange(func_spec)
+```
+
+## Conservation scores
+
+Then we grab conservation scores per species from the species table and combine
+the species IDs, detection probabilities, functional species IDs, and 
+conservation scores into a new species table. Then we join this species level 
+data with the count data and adjust counts based on detection probability. We are
+skeptical about the use of the occupancy based probabilities given only two
+repeat measures and given the ecological characteristics of tropical species 
+(e.g., movement through large territories). So we go with the distance based 
+detection corrections and ignore those from occupancy analysis. 
+
+```{r conservation_scores}
+# get conservation scores
+cscore_out <- spp1 %>% filter(guild=="landbird") %>% 
+  rename_with(~tolower(gsub(".", "_", .x, fixed=T))) %>% 
+  select(species, ccs_b)
+
+# combine all species level info 
+final_spp_tab <- detect_scores %>% 
+  left_join(func_out %>% select(-2)) %>% 
+  left_join(cscore_out)
+write_csv(final_spp_tab, "final_species_table_030824.csv")
+
+# combine counts and species level data 
+d5 <- d1 %>% 
+  filter(distance<=max_d) %>% 
+  group_by(watershed, site, point, month, observer_id, species) %>% 
+  count() %>% 
+  ungroup %>% 
+  group_by(watershed, site, point, month, species) %>% 
+  summarise(mean_count=mean(n)) %>% 
+  ungroup() %>% 
+  left_join(final_spp_tab) %>% 
+  mutate(occ_correct_mean_count=mean_count*(1/occ_det_p)) %>% # occupancy adjust
+  mutate(detect_correct_mean_density=(mean_count*(1/dist_det_p))*
+           (pi*max_d*max_d/(100*100))) %>% # distance adjust
+  mutate(score_weighted_dens=detect_correct_mean_density*ccs_b)
+```
+
+## Calculate BFI
+
+Now we calculate BFI components and BFI per site, point, and month. One 
+component is the sum of the products of the detection-corrected species counts and 
+conservation scores. A second component is the Shannon diversity of functional 
+groups. Once the components are computed, total BFI is calculated and scaled 
+so that the range is 0 to 1 and 0.5 represents an average value.
+
+```{r point_level_bfi}
+# point level bfi and other metrics
+point_bfi <- d5 %>% group_by(watershed, site, point, month) %>% 
+  summarize(spp_rich=n(), 
+            func_rich=length(unique(func_spec)),
+            func_shannon=diversity(detect_correct_mean_density),
+            sum_cw_abund=sum(score_weighted_dens)) %>% 
+  ungroup() %>% 
+  mutate(bfi_unscaled=func_shannon*sum_cw_abund,
+         bfi_scaled=plogis(as.numeric(scale(bfi_unscaled))))
+```
+
+## Habitat data
+
+Once we have BFI per site, point, and month, we grab the habitat data associated
+with each site and point and merge the that with BFI values. We plot it for fun.
+
+```{r add_habitat, fig.height = 12}
+# join bfi with habitat
+h1 <- read_csv("habitat_data.csv") %>% 
+  mutate(site_point=str_trim(site_point),
+         site=str_split(site_point, pattern="-", simplify = T)[,1],
+         point=str_split(site_point, pattern="-", simplify = T)[,2]) %>% 
+  select(-site_point) %>% 
+  select(watershed, site, point, x, y, starts_with("perc")) %>% 
+  arrange(site, point)
+point_bfi_habitat <- point_bfi %>% left_join(h1) %>% 
+  mutate(watershed=factor(watershed),
+         site=factor(site), 
+         point=factor(point),
+         month=factor(month))
+
+# map it
+point_bfi_habitat %>% filter(watershed=="Guacaica") %>% 
+  ggplot() +
+  geom_point(aes(x=x, y=y, color=bfi_scaled)) +
+  scale_color_distiller(palette="Spectral") +
+  facet_wrap(vars(month, site), scales="free", nrow=5) +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        axis.title=element_blank(),
+        axis.text=element_blank(),
+        axis.ticks=element_blank())
+point_bfi_habitat %>% filter(watershed!="Guacaica") %>% 
+  ggplot() +
+  geom_point(aes(x=x, y=y, color=bfi_scaled)) +
+  scale_color_distiller(palette="Spectral") +
+  facet_wrap(vars(month, site), scales="free", nrow=5) +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        axis.title=element_blank(),
+        axis.text=element_blank(),
+        axis.ticks=element_blank())
+```
+
+## BFI model
+
+Next, we run a quick exploratory GAM model to see if baseline BFI is related to 
+land cover in the area. We find that BFI increases greatly with forest cover, 
+is quadratically related to pasture and water, and varies by month and site.
+
+```{r first_model}
+# quick model
+mod1 <- gam(bfi_scaled ~ 1 + site + month +
+              s(perc_forest_no_fence, k=3) + 
+              s(perc_savanna, k=3) +
+              s(perc_pasture, k=3) +
+              s(perc_water, k=3),
+            data=point_bfi_habitat)
+
+# model summary
+summary(mod1)
+
+# plot effects
+b <- getViz(mod1)
+print(plot(b, allTerms = T), pages = 1)
+```
+
+## Treatment effects
+
+Next we look to see if there are any systematic differences between the control
+and treatment sites in terms of BFI and find that there are none.
+
+```{r treatments}
+treat1 <- read.csv("site_treatment.csv") %>% distinct() %>% 
+  mutate_all(as.factor)
+bfi_hab_treat <- point_bfi_habitat %>% left_join(treat1, by="site")
+
+# quick model
+mod1 <- gam(bfi_scaled ~ 1 + 
+              s(site, bs="re") + 
+              s(watershed, bs="re") +
+              s(month, bs="re") +
+              treatment,
+            data=bfi_hab_treat)
+
+# model summary
+summary(mod1)
+
+# plot per treatment and site
+ggplot(bfi_hab_treat, aes(x=treatment, y=bfi_scaled, fill=site)) +
+  geom_boxplot() +
+  facet_wrap(~watershed) +
+  scale_color_brewer(palette="Dark2") +
+  labs(x="Treatment", y="Scaled BFI", fill="Site") +
+  theme_bw() +
+  theme(legend.position = "bottom")
+```
+
+## Conclusion
+
+This is the first pass of the analysis. Please let Tim Meehan know what you
+would like added or taken away. Or you can take it from here. If there is
+anything at all that is not clear in this document. Please do not hestitate
+to contact Tim Meehan at tmeehan@audubon.org
+
+
+

@@ -1,0 +1,612 @@
+---
+title: "Rice in Colombian Sugarcane"
+author: "Tim Meehan"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: cerulean
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  dev = "png",
+  dev.args = list(type = "cairo-png"),
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center",
+  eval = TRUE,
+  echo = TRUE,
+  warning = FALSE,
+  error = FALSE,
+  message = FALSE,
+  cache=TRUE)
+```
+
+## Question
+
+Is it possible to make Colombian sugarcane farms more bird-friendly by 
+introducing a rice crop into the rotation? 
+
+## Set up analysis
+
+First, load a bunch of libraries and set options.
+
+```{r}
+# set up
+library(tibble)
+library(vegan)
+library(cowplot)
+library(cluster)
+library(NbClust)
+library(glmmTMB)
+library(ggplot2)
+library(stringr)
+library(car)
+library(tidyr)
+library(sf)
+library(dplyr)
+setwd(paste0("C:/Users/tmeehan/Box/-.Science Team shared/2_Projects/",
+      "5_IAP/Valle de Cauca Colombia/Sugarcane rice surveys"))
+options(scipen=99999)
+options(max.print=99999)
+options(stringsAsFactors=F)
+```
+
+## Get data
+
+Next, get the data. Remove flyover birds and one species of vulture. Change the
+month ID so that it reflects rice stage and not actual month. Clean up column
+names.
+
+```{r}
+# get data
+d1 <- read.csv("Puntos muestreo finales_v3.csv") %>% 
+  rename_all(tolower) %>% 
+  filter(!is.na(count), habitat_observed!="Flyover", 
+         species!="Cathartes burrovianus") %>% 
+  rename(rep_id=replicate, month_id=sampling_event, 
+         pc_station_id=point_count_id) %>%
+  group_by(farm) %>% 
+  mutate(month_id=paste0("m", as.integer(factor(month_id)))) %>% 
+  ungroup() %>% 
+  mutate(pc_station_id=paste0("pc", str_pad(
+    str_extract(pc_station_id, "[[:digit:]]+"), width=2, pad=0))) %>% 
+  mutate(obs_id=paste(farm, pc_station_id, month_id, rep_id, sep="_")) %>% 
+  select(obs_id, species, farm, pc_station_id, month_id, rep_id, count) %>% 
+  group_by(obs_id, species, farm, pc_station_id, month_id, rep_id) %>% 
+  summarise(count=max(count, na.rm=T)) %>% 
+  ungroup() %>% 
+  arrange(species, farm, pc_station_id, month_id, rep_id) %>% 
+  distinct()
+```
+
+## Clean data
+
+Next, we get some data properties. We extract maximum counts per species, 
+count site, and month. Detection probability analyses did not work out because 
+of violated closure assumptions and very low detection probabilities. Then we
+zero fill the data and add US English bird names.
+
+```{r, results='hide'}
+# get some ids
+spp <- sort(as.character(unique(d1$species)))
+farms <- sort(as.character(unique(d1$farm)))
+months <- sort(as.character(unique(d1$month_id)))
+pc_stations <- sort(as.character(unique(d1$pc_station_id)))
+reps <- sort(as.character(unique(d1$rep_id)))
+obs_ids <- sort(as.character(unique(d1$obs_id)))
+
+# get max counts
+d2 <- d1 %>% group_by(species, farm, pc_station_id, month_id) %>% 
+  summarise(max_count=max(count, na.rm=T))
+
+# all possible obs
+d3 <- expand.grid(species=unique(d2$species),
+                      farm=unique(d2$farm), 
+                      pc_station_id=unique(d2$pc_station_id), 
+                      month_id=unique(d2$month_id)) %>% 
+  left_join(d2) %>% 
+  mutate(max_count=ifelse(is.na(max_count), 0, max_count))
+
+# make sure there are not all-zeros
+d3 %>% group_by(farm, pc_station_id) %>% 
+  summarise(sum_count=sum(max_count)) %>% 
+  arrange(sum_count)
+
+# join common names and habitat
+d4 <- read.csv("VdC_NumberDetections_ACAD_JV.csv") %>% 
+  select(species=Species, eng_name=CommonName, habitat, group=Group, 
+         ccs_b=CCS.b) %>% right_join(d3)
+
+# save 
+write.csv(d4, "zero_filled_max_count.csv", row.names=F, na="")
+```
+
+## Species traits
+
+Next, we get species trait data so that we can make functional species groups for BFI
+calculation. After getting data, we reconcile species names. Then we select relevant
+traits. Then fill in missing body masses from Birds of the World. Then add
+habitat type as a species trait.
+
+```{r, results='hide'}
+# read traits table
+t1 <- read.csv("EltonTraits_BirdFuncDat.csv")
+
+# fix name mismatches
+d4 %>% distinct(Scientific=species) %>% 
+  left_join(t1 %>% select(Scientific, English, SpecID)) %>% 
+  filter(is.na(English))
+t1$Scientific[t1$Scientific=="Buteo magnirostris"] <- "Rupornis magnirostris"
+t1$Scientific[t1$Scientific=="Casmerodius albus"] <- "Ardea alba"
+t1$Scientific[t1$Scientific=="Cyanocompsa brissonii"] <- "Cyanoloxia brissonii"
+t1$Scientific[t1$Scientific=="Phalacrocorax brasilianus"] <- "Nannopterum brasilianus"
+t1$Scientific[t1$Scientific=="Dendroica petechia"] <- "Setophaga petechia"
+t1$Scientific[t1$Scientific=="Sturnella militaris"] <- "Leistes militaris"
+t1$Scientific[t1$Scientific=="Aramides cajanea"] <- "Aramides cajaneus"
+t1$Scientific[t1$Scientific=="Tangara vitriolina"] <- "Stilpnia vitriolina"
+t1$Scientific[t1$Scientific=="Oryzoborus crassirostris"] <- "Sporophila crassirostris"
+t1$Scientific[t1$Scientific=="Gallinula chloropus"] <- "Gallinula galeata"
+t1$Scientific[t1$Scientific=="Amazilia saucerrottei"] <- "Saucerottia saucerottei"
+t1$Scientific[t1$Scientific=="Tryngites subruficollis"] <- "Calidris subruficollis"
+t1$Scientific[t1$Scientific=="Carduelis psaltria"] <- "Spinus psaltria"
+d4 %>% distinct(Scientific=species) %>% 
+  left_join(t1 %>% select(Scientific, English, SpecID)) %>% 
+  filter(is.na(English))
+
+# filter t1 for particular species and traits
+t2 <- t1 %>% 
+  select(Scientific, 
+         Diet.Inv, Diet.Vend, Diet.Vect, Diet.Vfish, Diet.Vunk, Diet.Scav, 
+         Diet.Fruit, Diet.Nect, Diet.Seed, Diet.PlantO,
+         ForStrat.watbelowsurf, ForStrat.wataroundsurf, 
+         ForStrat.ground, ForStrat.understory, ForStrat.midhigh, 
+         ForStrat.canopy, ForStrat.aerial, BodyMass.Value) %>% 
+  filter(Scientific %in% unique(d4$species)) %>% 
+  arrange(Scientific) 
+summary(t2)  
+
+# fill in missing body masses from BotW
+t2 %>% select(Scientific, BodyMass.Value) %>% filter(is.na(BodyMass.Value))
+t2$BodyMass.Value[t2$Scientific=="Sicalis flaveola"] <- (12 + 23) / 2
+t2$BodyMass.Value[t2$Scientific=="Sicalis luteola"] <- (15 + 18) / 2
+t2$BodyMass.Value[t2$Scientific=="Emberizoides herbicola"] <- (21 + 37) / 2
+t2$BodyMass.Value[t2$Scientific=="Volatinia jacarina"] <- (8 + 12) / 2
+t2$BodyMass.Value[t2$Scientific=="Sporophila schistacea"] <- (12 + 14) / 2
+t2$BodyMass.Value[t2$Scientific=="Sporophila luctuosa"] <- (12 + 13) / 2
+t2$BodyMass.Value[t2$Scientific=="Sporophila nigricollis"] <- (9 + 11) / 2
+t2$BodyMass.Value[t2$Scientific=="Sporophila minuta"] <- (7 + 9) / 2
+t2$BodyMass.Value[t2$Scientific=="Sporophila crassirostris"] <- (20 + 22) / 2
+summary(t2)
+
+# add habitat to t2
+t3 <- t2 %>%
+  rename_with(~tolower(gsub(".", "_", .x, fixed=T))) %>% 
+  left_join(d4 %>% distinct(scientific=species, primary_habitat=habitat)) %>% 
+  mutate(primary_habitat=str_split(primary_habitat, ":", 
+                                          simplify=T)[,1],
+         primary_habitat=factor(gsub(" Aerial", "", primary_habitat))) %>% 
+  rename(species=scientific) %>% 
+  bind_cols(model.matrix(~ -1 + primary_habitat, .)) %>% 
+  select(-primary_habitat)
+```
+
+## Make functional species
+
+Next we group species into functional species groups based on traits. This is
+done by making a Gower dissimilarity matrix from the traits matrix. When making
+the dissimilarity matrix, traits are weighted towards (1) diet composition, (2) 
+body size, then (3) foraging stratum and habitat type. Then we use the 
+dissimilarity matrix in a hierarchical cluster analysis that produces a
+functional species tree. The optimal number of tree clusters can be determined
+using a fit metric such as the silhouette width.
+
+```{r}
+# diss matirx
+names(t3)
+d_gower <- daisy(t3[,-1], metric="gower", stand=TRUE,
+                 weights=c(rep(1/2/10, 10), 
+                           rep(1/8/7, 7),
+                           rep(1/8, 1),
+                           rep(1/4/7, 7)))
+# clusters
+clust <- NbClust(diss=d_gower, distance=NULL, method="ward.D", 
+                index="silhouette")
+# best clusters
+inddf <- t3 %>% select(species) %>% 
+  mutate(func_spec=clust$Best.partition) %>% 
+  arrange(func_spec)
+write.csv(inddf %>% left_join(d4 %>% distinct(species, eng_name)),
+          "func_species_groupings.csv", row.names=F)
+```
+
+## Conservation scores
+
+Then we grab conservation scores per species to produce BFI.
+
+```{r}
+# get conservation scores
+cs1 <- read.csv("VdC_NumberDetections_ACAD_JV.csv") %>% 
+  select(species=Species, eng_name=CommonName, group=Group, 
+         ccs_b=CCS.b)
+```
+
+## Calculate BFI
+
+Now we join the different data tables and calculate BFI components per count 
+site and month.  One component is the product of the species max count and 
+conservation score. A second component is the Shannon diversity of functional 
+groups. This is done twice, once for all species and once for just waterbirds.
+Once the components are done, all species BFI and waterbird BFI are calculated.
+
+```{r}
+# join functional species and conservation scores to max counts
+score_wt_counts <- d4 %>% left_join(inddf) %>% left_join(cs1) %>% 
+  mutate(count_score=max_count*ccs_b) %>% 
+  select(farm, pc_station_id, month_id, count_score) %>% 
+  group_by(farm, pc_station_id, month_id) %>% 
+  summarise(tot_wt_count=sum(count_score)) %>% 
+  ungroup()
+
+# join functional species and conservation scores to max counts
+score_wt_counts_wb <- d4 %>% left_join(inddf) %>% left_join(cs1) %>% 
+  filter(group=="waterbird") %>% 
+  mutate(count_score=max_count*ccs_b) %>% 
+  select(farm, pc_station_id, month_id, count_score) %>% 
+  group_by(farm, pc_station_id, month_id) %>% 
+  summarise(tot_wt_count_wb=sum(count_score)) %>% 
+  ungroup()
+  
+# calc shannon
+shan_div <- d4 %>% left_join(inddf) %>% left_join(cs1) %>% 
+  select(farm, pc_station_id, month_id, func_spec, max_count) %>% 
+  group_by(farm, pc_station_id, month_id, func_spec) %>% 
+  summarise(tot_count=sum(max_count)) %>% 
+  ungroup() %>% 
+  group_by(farm, pc_station_id, month_id) %>% 
+  summarise(shan=diversity(tot_count)) %>% 
+  ungroup() %>% 
+  mutate(shan=ifelse(shan==0, min(shan[shan!=0]), shan))
+
+# calc shannon waterbirds
+shan_div_wb <- d4 %>% left_join(inddf) %>% left_join(cs1) %>% 
+  filter(group=="waterbird") %>% 
+  select(farm, pc_station_id, month_id, func_spec, max_count) %>% 
+  group_by(farm, pc_station_id, month_id, func_spec) %>% 
+  summarise(tot_count=sum(max_count)) %>% 
+  ungroup() %>% 
+  group_by(farm, pc_station_id, month_id) %>% 
+  summarise(shan_wb=diversity(tot_count)) %>% 
+  ungroup() %>% 
+  mutate(shan_wb=ifelse(shan_wb==0, min(shan_wb[shan_wb!=0]), shan_wb))
+
+# merge to bfi table
+bfi_site <- score_wt_counts %>% left_join(shan_div) %>% 
+  mutate(bfi=tot_wt_count*shan) %>% 
+  left_join(score_wt_counts_wb) %>% 
+  left_join(shan_div_wb) %>% 
+  rename(month=month_id, station=pc_station_id) %>% 
+  mutate(bfi_wb=tot_wt_count_wb*shan_wb)
+```
+
+## Habitat data
+
+Once we have BFI per count site and month, we grab the habitat data associated
+with each site and merge the two datasets.
+
+```{r}
+# get habitat data
+d5 <- read.csv("Puntos muestreo finales_v3.csv") %>% 
+  rename_all(tolower) %>% 
+  filter(!is.na(count), habitat_observed!="Flyover", 
+         species!="Cathartes burrovianus") %>% 
+  rename(rep_id=replicate, month_id=sampling_event, 
+         pc_station_id=point_count_id) %>%
+  group_by(farm) %>% 
+  mutate(month_id=paste0("m", as.integer(factor(month_id)))) %>% 
+  ungroup() %>% 
+  mutate(pc_station_id=paste0("pc", str_pad(
+    str_extract(pc_station_id, "[[:digit:]]+"), width=2, pad=0))) %>% 
+  mutate(obs_id=paste(farm, pc_station_id, month_id, rep_id, sep="_")) %>% 
+  select(farm, station=pc_station_id, month=month_id,
+         sugar=sugarcane_cover, trees=isolated_trees, bamboo=bamboo_patch, 
+         rice=rice_field, canal, wetland, reservoir, scrub, 
+         electric_pole, alley, lat=latitude, lon=longitude) %>% 
+  arrange(farm, station, month) %>% 
+  distinct()
+
+# merge habitat and bfi
+dat1 <- bfi_site %>% left_join(d5) %>% drop_na() %>% 
+  mutate(month_int=as.numeric(factor(month)),
+         sum_rice=rice/100,
+         sum_trees=(trees+bamboo+scrub)/100,
+         sum_water=(canal+wetland+reservoir)/100,
+         any_sugar=ifelse(sugar>0, 1, 0),
+         any_rice=ifelse(rice>0, 1, 0),
+         any_trees=ifelse(trees>0|bamboo>0|scrub>0, 1, 0),
+         any_water=ifelse(canal>0|wetland>0|reservoir>0, 1, 0))
+```
+
+## BFI per farm
+
+Next, we take the full data set, with site, month, BFI, and habitat, and start
+exploring the data with some plots. First, plot the data per farm.
+
+```{r}
+# some plots
+pl1 <- dat1 %>% group_by(farm, month_int) %>% 
+  summarise(mean_bfi=mean(bfi), 
+            sd_bfi=sd(bfi),
+            mean_rice=mean(rice)) %>% 
+  ggplot(aes(x=month_int, y=mean_bfi, 
+             ymax=mean_bfi+sd_bfi, ymin=mean_bfi-sd_bfi,
+             col=farm, group=farm)) +
+  geom_point(position = position_dodge2(width = 0.5))+ 
+  geom_linerange(position = position_dodge2(width = 0.5)) + 
+  geom_line(position = position_dodge2(width = 0.5)) +
+  labs(x="Month", y="Mean BFI")
+pl2 <- dat1 %>% group_by(farm, month_int) %>% 
+  summarise(mean_bfi_wb=mean(bfi_wb), 
+            sd_bfi_wb=sd(bfi_wb),
+            mean_rice=mean(rice)) %>% 
+  ggplot(aes(x=month_int, y=mean_bfi_wb, 
+             ymax=mean_bfi_wb+sd_bfi_wb, ymin=mean_bfi_wb-sd_bfi_wb,
+             col=farm, group=farm)) +
+  geom_point(position = position_dodge2(width = 0.5))+ 
+  geom_linerange(position = position_dodge2(width = 0.5)) + 
+  geom_line(position = position_dodge2(width = 0.5)) +
+  labs(x="Month", y="Mean waterbird BFI")
+plot_grid(pl1, pl2, ncol = 1)
+```
+
+## Statistical model -- all species
+
+Next we create a statistical model that tests the idea that adding a rice crop
+to the sugarcane rotation will make the farm more bird friendly. The habitat
+terms have an interaction with month so the effects can vary. There is a random
+effect of month within farm to deal with nesting and repeat measures. It looks
+like having trees and open water contribute a lot to BFI regardless of month. 
+It looks like rice might contribute to BFI during the second month. But the 
+effect is not particularly clear and the interaction is not significant.
+
+```{r}
+# a model
+library(glmmTMB)
+m1 <- glmmTMB(bfi ~ 1 + (sum_rice + sum_trees + sum_water) * month + 
+                (1|farm), data=dat1)
+summary(m1)
+Anova(m1, type=3)
+```
+
+## Model predictions
+
+To view the possible rice effect, we can plot a model prediction. We start with
+a prediction data set, then compute the model prediction, and plot it. The base
+case for these comparisons is 100% sugarcane, versus 50% sugarcane and 50% other.
+
+```{r}
+# rice predictions
+p1 <- dat1 %>% 
+  select(farm, month, sum_rice, sum_trees, sum_water) %>% 
+  mutate(farm=NA, sum_rice=0, sum_trees=0, sum_water=0) %>% 
+  distinct() %>% 
+  bind_rows(dat1 %>% 
+              select(farm, month, sum_rice, sum_trees, sum_water) %>% 
+              mutate(farm=NA, sum_rice=0.50, sum_trees=0, sum_water=0) %>% 
+              distinct())
+p1$fit <- predict(m1, p1, se.fit = T)$fit
+p1$se_fit <- predict(m1, p1, se.fit = T)$se.fit
+pl3 <- p1 %>% 
+  ggplot(aes(x=month, y=fit, 
+             ymax=fit+se_fit, ymin=fit-se_fit,
+             group=factor(sum_rice), col=factor(sum_rice))) +
+  geom_point(position = position_dodge2(width = 0.3))+ 
+  geom_linerange(position = position_dodge2(width = 0.3)) + 
+  geom_line(position = position_dodge2(width = 0.3)) +
+  labs(x="Month", y="Predicted BFI", col="Proportion\nrice")
+
+# trees predictions
+p1 <- dat1 %>% 
+  select(farm, month, sum_rice, sum_trees, sum_water) %>% 
+  mutate(farm=NA, sum_rice=0, sum_trees=0, sum_water=0) %>% 
+  distinct() %>% 
+  bind_rows(dat1 %>% 
+              select(farm, month, sum_rice, sum_trees, sum_water) %>% 
+              mutate(farm=NA, sum_rice=0, sum_trees=0.50, sum_water=0) %>% 
+              distinct())
+p1$fit <- predict(m1, p1, se.fit = T)$fit
+p1$se_fit <- predict(m1, p1, se.fit = T)$se.fit
+pl4 <- p1 %>% 
+  ggplot(aes(x=month, y=fit, 
+             ymax=fit+se_fit, ymin=fit-se_fit,
+             group=factor(sum_trees), col=factor(sum_trees))) +
+  geom_point(position = position_dodge2(width = 0.3))+ 
+  geom_linerange(position = position_dodge2(width = 0.3)) + 
+  geom_line(position = position_dodge2(width = 0.3)) +
+  labs(x="Month", y="Predicted BFI", col="Proportion\ntrees")
+
+# water predictions
+p1 <- dat1 %>% 
+  select(farm, month, sum_rice, sum_trees, sum_water) %>% 
+  mutate(farm=NA, sum_rice=0, sum_trees=0, sum_water=0) %>% 
+  distinct() %>% 
+  bind_rows(dat1 %>% 
+              select(farm, month, sum_rice, sum_trees, sum_water) %>% 
+              mutate(farm=NA, sum_rice=0, sum_trees=0, sum_water=0.50) %>% 
+              distinct())
+p1$fit <- predict(m1, p1, se.fit = T)$fit
+p1$se_fit <- predict(m1, p1, se.fit = T)$se.fit
+pl5 <- p1 %>% 
+  ggplot(aes(x=month, y=fit, 
+             ymax=fit+se_fit, ymin=fit-se_fit,
+             group=factor(sum_water), col=factor(sum_water))) +
+  geom_point(position = position_dodge2(width = 0.3))+ 
+  geom_linerange(position = position_dodge2(width = 0.3)) + 
+  geom_line(position = position_dodge2(width = 0.3)) +
+  labs(x="Month", y="Predicted BFI", col="Proportion\nwater")
+plot_grid(pl3, pl4, pl5)
+```
+
+## Statistical model -- waterbirds
+
+Next we create a statistical model that tests the idea that adding a rice crop
+to the sugarcane rotation will make the farm more bird friendly for waterbirds
+in particular. We find that this is indeed the case. Very clearly.
+
+```{r}
+# a model
+m2 <- glmmTMB(bfi_wb ~ 1 + (sum_rice + sum_trees + sum_water) * month + 
+                (1|farm), data=dat1)
+summary(m2)
+Anova(m2, type=3)
+```
+
+## Model predictions
+
+Here are prediction plots that show the magnitude of the effects.
+
+```{r}
+# rice predictions
+p1 <- dat1 %>% 
+  select(farm, month, sum_rice, sum_trees, sum_water) %>% 
+  mutate(farm=NA, sum_rice=0, sum_trees=0, sum_water=0) %>% 
+  distinct() %>% 
+  bind_rows(dat1 %>% 
+              select(farm, month, sum_rice, sum_trees, sum_water) %>% 
+              mutate(farm=NA, sum_rice=0.50, sum_trees=0, sum_water=0) %>% 
+              distinct())
+p1$fit <- predict(m2, p1, se.fit = T)$fit
+p1$se_fit <- predict(m2, p1, se.fit = T)$se.fit
+pl6 <- p1 %>% 
+  ggplot(aes(x=month, y=fit, 
+             ymax=fit+se_fit, ymin=fit-se_fit,
+             group=factor(sum_rice), col=factor(sum_rice))) +
+  geom_point(position = position_dodge2(width = 0.3))+ 
+  geom_linerange(position = position_dodge2(width = 0.3)) + 
+  geom_line(position = position_dodge2(width = 0.3)) +
+  labs(x="Month", y="Predicted waterbird BFI", col="Proportion\nrice")
+
+# trees predictions
+p1 <- dat1 %>% 
+  select(farm, month, sum_rice, sum_trees, sum_water) %>% 
+  mutate(farm=NA, sum_rice=0, sum_trees=0, sum_water=0) %>% 
+  distinct() %>% 
+  bind_rows(dat1 %>% 
+              select(farm, month, sum_rice, sum_trees, sum_water) %>% 
+              mutate(farm=NA, sum_rice=0, sum_trees=0.50, sum_water=0) %>% 
+              distinct())
+p1$fit <- predict(m2, p1, se.fit = T)$fit
+p1$se_fit <- predict(m2, p1, se.fit = T)$se.fit
+pl7 <- p1 %>% 
+  ggplot(aes(x=month, y=fit, 
+             ymax=fit+se_fit, ymin=fit-se_fit,
+             group=factor(sum_trees), col=factor(sum_trees))) +
+  geom_point(position = position_dodge2(width = 0.3))+ 
+  geom_linerange(position = position_dodge2(width = 0.3)) + 
+  geom_line(position = position_dodge2(width = 0.3)) +
+  labs(x="Month", y="Predicted waterbird BFI", col="Proportion\ntrees")
+
+# water predictions
+p1 <- dat1 %>% 
+  select(farm, month, sum_rice, sum_trees, sum_water) %>% 
+  mutate(farm=NA, sum_rice=0, sum_trees=0, sum_water=0) %>% 
+  distinct() %>% 
+  bind_rows(dat1 %>% 
+              select(farm, month, sum_rice, sum_trees, sum_water) %>% 
+              mutate(farm=NA, sum_rice=0, sum_trees=0, sum_water=0.50) %>% 
+              distinct())
+p1$fit <- predict(m2, p1, se.fit = T)$fit
+p1$se_fit <- predict(m2, p1, se.fit = T)$se.fit
+pl8 <- p1 %>% 
+  ggplot(aes(x=month, y=fit, 
+             ymax=fit+se_fit, ymin=fit-se_fit,
+             group=factor(sum_water), col=factor(sum_water))) +
+  geom_point(position = position_dodge2(width = 0.3))+ 
+  geom_linerange(position = position_dodge2(width = 0.3)) + 
+  geom_line(position = position_dodge2(width = 0.3)) +
+  labs(x="Month", y="Predicted waterbird BFI", col="Proportion\nwater")
+plot_grid(pl6, pl7, pl8)
+```
+
+## Summary
+
+So it looks like having rice on the farm does not have a huge effect on BFI when
+BFI includes all species. That seems to be because, in this system, BFI is most 
+heavily driven by woodland birds, and it makes sense that woodland birds are not
+highly influenced by adding rice. When looking at just waterbird BFI, having 
+rice on the farm makes a big positive impact, which makes sense since rice is
+often flooded during cultivation.
+
+## Full range of predictions
+
+Here are model predictions for BFI under a range of proportions for trees (0 - 0.1, x), 
+open water (0 - 0.1, y), and rice (0 - 1, panels). 
+
+```{r}
+# make prediction grid
+m_in <- unique(dat1$month)
+r_in <- seq(0, 1, length.out=11)
+t_in <- seq(0, .1, length.out=11)
+w_in <- seq(0, .1, length.out=11)
+pred_grid <- expand.grid(farm=NA, 
+                         month=m_in,
+                         sum_rice=r_in, 
+                         sum_trees=t_in, 
+                         sum_water=w_in)
+
+# predict from bfi model
+pred_grid$predicted <- predict(m1, newdata = pred_grid) 
+pred_grid_sum <- pred_grid %>% 
+  group_by(Rice=factor(sum_rice), Trees=factor(sum_trees), Water=factor(sum_water)) %>% 
+  summarise(mean_pred=mean(predicted)) %>% 
+  ungroup() %>% 
+  mutate(scale_mean_pred=plogis(as.numeric(scale(mean_pred)))) %>% 
+  mutate(Rice=as.numeric(as.character(Rice)),
+         Trees=as.numeric(as.character(Trees)),
+         Water=as.numeric(as.character(Water)))
+
+# plot bfi
+pl9 <- pred_grid_sum %>% 
+  ggplot(aes(x=Trees, y=Water, fill=mean_pred)) +
+  geom_tile() +
+  facet_wrap(~Rice) +
+  labs(x="Proportion Trees", y="Proportion water", fill="BFI") +
+  scale_fill_distiller(palette="Spectral")
+pl9
+```
+
+Here are model predictions for waterbird BFI under a range of proportions for 
+trees (0 - 0.1, x), open water (0 - 0.1, y), and rice (0 - 1, panels). 
+
+```{r}
+#predict from waterbird bfi model
+pred_grid$predicted <- predict(m2, newdata = pred_grid) 
+pred_grid_sum <- pred_grid %>% 
+  group_by(Rice=factor(sum_rice), Trees=factor(sum_trees), Water=factor(sum_water)) %>% 
+  summarise(mean_pred=mean(predicted)) %>% 
+  ungroup() %>% 
+  mutate(scale_mean_pred=plogis(as.numeric(scale(mean_pred)))) %>% 
+  mutate(Rice=as.numeric(as.character(Rice)),
+         Trees=as.numeric(as.character(Trees)),
+         Water=as.numeric(as.character(Water)))
+pl10 <- pred_grid_sum %>% 
+  ggplot(aes(x=Trees, y=Water, fill=mean_pred)) +
+  geom_tile() +
+  facet_wrap(~Rice) +
+  labs(x="Proportion Trees", y="Proportion water", fill="Waterbird BFI") +
+  scale_fill_distiller(palette="Spectral")
+pl10
+```
+
+
+
+
+

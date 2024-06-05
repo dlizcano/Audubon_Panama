@@ -1,0 +1,11 @@
+---
+title: "About Panama-Blue-Natural"
+description: |
+  Consultancy work for Audubon
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Acoustic monitoring in Parita Bay, Panama

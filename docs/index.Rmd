@@ -1,0 +1,40 @@
+---
+title: "Panama-Blue-Natural"
+description: |
+  16 sites sampled for acoustic monitoring in January 2023 in Parita bay, Panama.
+site: distill::distill_website
+---
+
+### Field Report
+
+See the full field report of Audiomoth installation here:
+
+https://acousticpanama.netlify.app/
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+#| 
+library(mapview)
+library(readr) # readr 
+library(readxl) # read excel
+library(sf)
+
+covs <- read_csv("C:/CodigoR/AudubonPanama/shp/sites_covs_parita_nona.csv")
+sites <- read_sf("C:/CodigoR/AudubonPanama/shp/sampled_sites.shp", crs = 4979)
+
+mapview(sites, map.types = "Esri.WorldImagery")
+
+```
+
+
+## Occupancy proof test
+
+https://dlizcano.quarto.pub/occupancy-panama/
+
+## Threshold for species
+
+https://dlizcano.shinyapps.io/Panama_threshold/
+
+

@@ -135,7 +135,7 @@ covs_raster <- rast(many_rasters)
 names(covs_raster) <- c("BGB_Spawn", "human_foot",  "NDVI", "river", "carbon_stock",  "canopy")
 
 # change NA to 0 
-covs_raster0 <- subst(covs_raster, NA, 0)
+covs_raster0 <- subst(covs_raster, NA, 0)# replace in terra
 # extract covariates
 covs_raster_val <- extract(covs_raster0, puntos_sf)
 
@@ -441,7 +441,7 @@ newdat_range<-data.frame(BGB_Spawn=seq(min(covs_raster_val$BGB_Spawn),          
 pred_psi <-predict(fit_unm_sp3_10, type="state", newdata=newdat_range, appendData=TRUE) 
 
 ###  Plot occupancy en escala original
-plot(Predicted~BGB_Spawn, pred_psi,type="l",col="blue", ylim=c(0,0.95),
+plot(Predicted~canopy, pred_psi,type="l",col="blue", ylim=c(-0.1,1.1),
      xlab="canopy",
      ylab="Probabilidad de ocupación")
 lines(lower~canopy, pred_psi,type="l",col=gray(0.5))
