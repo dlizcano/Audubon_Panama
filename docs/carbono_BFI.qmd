@@ -36,8 +36,6 @@ knitr::opts_chunk$set(
   cache=FALSE)
 ```
 
-
-
 ## Question
 
 Which carbon a good predictor of BFI?
@@ -103,7 +101,6 @@ BFI_site<- read.csv("C:/CodigoR/AudubonPanama/data/BFI_site.csv", header = TRUE)
 
 ```
 
-
 ## Correlation in sites (points) where the Audiomoth was installed
 
 ```{r}
@@ -129,8 +126,7 @@ corrplot(M)
 
 ```
 
-> covariate removed: [25] "Average TC top 50 cm"
-> covariate removed: [26] "Average TN top 50 cm" 
+> covariate removed: \[25\] "Average TC top 50 cm" covariate removed: \[26\] "Average TN top 50 cm"
 
 ```{r}
 #| warning: false
@@ -162,16 +158,15 @@ corrplot(M)
 
 ```
 
-
 ## Which model predicts BFI the best?
 
 Information-theoretic approaches provide methods for model selection and (multi)model inference that differ quite a bit from more traditional methods based on null hypothesis testing (e.g., Anderson, 2008; Burnham & Anderson, 2002). These methods can also be used in the meta-analytic context when model fitting is based on likelihood methods.
 
-We will now examine the fit and plausibility of various models, focusing on models that contain none, one, and up to seven of these possible predictors covariates of BFI. 
+We will now examine the fit and plausibility of various models, focusing on models that contain none, one, and up to seven of these possible predictors covariates of BFI.
 
 With level = 1, we stick to models with main effects only. This implies that there are $2^7$ = 128 possible models in the candidate set to consider. Since we want to keep the results for all these models (the default is to only keep up to 100 model fits), We set confsetsize=128. With crit="AIC", we select the Akaike Information Criterion, in this case: the AIC that we would like to compute for each model and that should be used for model selection and multimodel inference.
 
-### lets put all data BFI and all covariates in the same table 
+### lets put all data BFI and all covariates in the same table
 
 ```{r}
 
@@ -188,10 +183,9 @@ dat <- dat1[,c(5,19:24,27:30)]
 
 ```
 
-
 ### Next, we fit all the posible models with function dredge
 
-Now we can fit all 128 models and examine those models whose AICc value is no more than 2 units away from that of the best model. 
+Now we can fit all 128 models and examine those models whose AICc value is no more than 2 units away from that of the best model.
 
 ```{r}
 
@@ -216,8 +210,8 @@ plot(res)
 
 
 ```
-The graph shows the number of times the variable was selected in each model
 
+The graph shows the number of times the variable was selected in each model
 
 ### Now we refit best linear model
 
@@ -238,7 +232,7 @@ $$
 BFIunscaled \sim BGC + LUC impact + intercept 
 $$
 
-### Checking assumptions 
+### Checking assumptions
 
 ```{r}
 
@@ -256,11 +250,10 @@ $$
 out <- check_model(z)
 plot(out, type = "discrete_both")
 ```
+
 In seems our "best" model, according to the AIC $BFIunscaled \sim BGC + LUC impact + intercept$
-  
+
 Do not meet normality fully, and the posterior predictive check is not that good. But normality is that important?. Lets relax that assumption...
-
-
 
 ```{r}
 #| warning: false
@@ -275,10 +268,9 @@ Do not meet normality fully, and the posterior predictive check is not that good
 
 ```
 
-
 #### is there any interaction?
 
-Lets Include all possible two-way interactions between: H_m, BGC, pHw and finally  select the model with lowest AIC.
+Lets Include all possible two-way interactions between: H_m, BGC, pHw and finally select the model with lowest AIC.
 
 ```{r}
 
@@ -296,11 +288,7 @@ tab_model(summary(z2))
 
 ```
 
-
 The answer is: it seems to be an interaction between H_m, BGC and pHw So another plausible model is: $BFI_unscaled ~  H_m * BGC * pHw$
-
-
-
 
 ### lets try some mix models with random effects in LUC_Impact
 
@@ -315,7 +303,6 @@ lm7 <- glmer(bfi_unscaled ~ BGC + H_m + pHw + (1|LUC_Impact), data =  dat)
 
 
 ```
-
 
 ## Which model can be the best?
 
@@ -338,11 +325,12 @@ plot(result1)
 
 Larger values indicate better model performance. Hence, points closer to the center indicate worse fit indices.
 
-#### best model is: 
+#### best model is:
 
 $$
 BFIunscaled \sim pHw + H_m + BGC + H_m:BGC + H_m:pHw + BGC:pHw 
 $$
+
 ```{r}
 sjPlot::tab_model(z2)
 ```
@@ -363,7 +351,8 @@ plot(result2)
 # lmtest::lrtest(z, z2, z3)
 
 ```
-#### best model is: 
+
+#### best model is:
 
 $$
 BFIunscaled \sim BGC + (1|LUCimpact) 
@@ -371,13 +360,9 @@ $$
 
 #### and the fit and trends for the fix effect model
 
-
-
 $$
 BFIunscaled \sim pHw + H_m + BGC + H_m:BGC + H_m:pHw + BGC:pHw 
 $$
-
-
 
 ```{r}
 
@@ -402,16 +387,15 @@ plot_model(z2, type = "pred")
 
 ```
 
-
 #### and the fit and trends the mix model with random effects on LUC_Impact
 
 $$
 BFIunscaled \sim BGC + (1|LUCimpact) 
 $$
+
 ```{r}
 sjPlot::tab_model(lm4)
 ```
-
 
 ```{r}
 
@@ -434,17 +418,13 @@ plot_model(lm4, type = "pred")
 
 ```
 
+In seems our "best" random effect model
 
-
-
-In seems our "best" random effect model 
-  
 $$
 BFIunscaled \sim BGC + (1|LUCimpact) 
 $$
-  
-Is close normality and the posterior predictive check is not that bad.
 
+Is close normality and the posterior predictive check is not that bad.
 
 ## Conclusion
 
@@ -453,6 +433,71 @@ library(report)
 report::report(z2)
 report::report(lm4)
 ```
+
+### fix effect model 
+
+We fitted a linear model (estimated using OLS) to
+predict bfi_unscaled with H_m, BGC and pHw (formula:
+bfi_unscaled ~ (H_m + BGC + pHw)^2). The model
+explains a statistically significant and substantial
+proportion of variance (R2 = 0.78, F(6, 9) = 5.26, p =
+0.014, adj. R2 = 0.63). The model's intercept,
+corresponding to H_m = 0, BGC = 0 and pHw = 0, is at
+-394.49 (95% CI [-2989.33, 2200.35], t(9) = -0.34, p =
+0.739). Within this model:
+
+  - The effect of H m is statistically significant and
+negative (beta = -234.69, 95% CI [-382.24, -87.15],
+t(9) = -3.60, p = 0.006; Std. beta = 0.80, 95% CI
+[-0.36, 1.96])
+  - The effect of BGC is statistically significant and
+positive (beta = 25.56, 95% CI [6.06, 45.06], t(9) =
+2.97, p = 0.016; Std. beta = -1.20, 95% CI [-2.27,
+-0.13])
+  - The effect of pHw is statistically significant and
+positive (beta = 512.94, 95% CI [99.92, 925.95], t(9)
+= 2.81, p = 0.020; Std. beta = -0.62, 95% CI [-1.08,
+-0.17])
+  - The effect of H m × BGC is statistically significant
+and positive (beta = 0.44, 95% CI [0.14, 0.74], t(9) =
+3.31, p = 0.009; Std. beta = 0.80, 95% CI [0.25,
+1.35])
+  - The effect of H m × pHw is statistically significant
+and positive (beta = 29.61, 95% CI [6.62, 52.61], t(9)
+= 2.91, p = 0.017; Std. beta = 1.19, 95% CI [0.27,
+2.11])
+  - The effect of BGC × pHw is statistically significant
+and negative (beta = -5.66, 95% CI [-9.45, -1.86],
+t(9) = -3.37, p = 0.008; Std. beta = -2.36, 95% CI
+[-3.94, -0.78])
+
+Standardized parameters were obtained by fitting the
+model on a standardized version of the dataset. 95%
+Confidence Intervals (CIs) and p-values were computed
+using a Wald t-distribution approximation.
+
+### mixed effect model
+
+We fitted a linear mixed model (estimated using REML
+and nloptwrap optimizer) to predict bfi_unscaled with
+BGC (formula: bfi_unscaled ~ BGC). The model included
+LUC_Impact as random effect (formula: ~1 |
+LUC_Impact). The model's total explanatory power is
+substantial (conditional R2 = 0.65) and the part
+related to the fixed effects alone (marginal R2) is of
+0.25. The model's intercept, corresponding to BGC = 0,
+is at 2043.20 (95% CI [1685.83, 2400.57], t(12) =
+12.46, p < .001). Within this model:
+
+  - The effect of BGC is statistically significant and
+negative (beta = -2.12, 95% CI [-3.89, -0.35], t(12) =
+-2.61, p = 0.023; Std. beta = -0.65, 95% CI [-1.19,
+-0.11])
+
+Standardized parameters were obtained by fitting the
+model on a standardized version of the dataset. 95%
+Confidence Intervals (CIs) and p-values were computed
+using a Wald t-distribution approximation.
 
 ## Package Citation
 
@@ -467,6 +512,3 @@ knitr::kable(pkgs)
 ```{r}
 print(sessionInfo(), locale = FALSE)
 ```
-
-
-
