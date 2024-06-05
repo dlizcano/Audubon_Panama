@@ -1,0 +1,472 @@
+---
+title: "BFI - Carbono, Parita Bay, Panama"
+subtitle: "A model selection approach "
+date: "`r Sys.Date()`"
+author: 
+  - name: Diego Lizcano
+    orcid: https://orcid.org/0000-0002-9648-0576
+  - name: Jorge Velásquez-Tibata
+    orcid: https://orcid.org/0000-0002-7773-7348
+license: CC BY-SA
+toc: true
+format: 
+  html:
+    theme: cosmo
+    code-fold: true
+    code-block-bg: "gray70"
+citation: true
+google-scholar: true
+bibliography: C:/CodigoR/AudubonPanama/grateful-refs.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  dev = "png",
+  dev.args = list(type = "cairo-png"),
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center",
+  eval = TRUE,
+  echo = TRUE,
+  warning = FALSE,
+  error = FALSE,
+  message = FALSE,
+  cache=FALSE)
+```
+
+
+
+## Question
+
+Which carbon a good predictor of BFI?
+
+## Set up analysis
+
+Load libraries and set some options.
+
+```{r set_up}
+#| warning: false
+#| message: false
+
+library(readxl) # Read Excel Files # Read Excel Files
+library(gt) # Easily Create Presentation-Ready Display Tables
+library(lubridate) # Make Dealing with Dates a Little Easier
+library(stringr) # Simple, Consistent Wrappers for Common String Operations
+library(readxl) # Read Excel Files # Read Excel Files
+library(sf) # Simple Features for R
+library(MuMIn) # multimodel inference
+library(metafor) # Meta-Analysis Package for R
+eval(metafor:::.MuMIn) # helper functions we need so that MuMIn and metafor can interact 
+library(visreg) # see trend
+
+library(terra) # Spatial Data Analysis
+library(sjPlot) # Data Visualization for Statistics in Social Science
+# library(mapview)
+library(corrplot) # Visualization of a Correlation Matrix
+library(DT) # A Wrapper of the JavaScript Library 'DataTables'
+library(grateful) # Facilitate Citation of R Packages
+
+library(see) # Model Visualisation Toolbox for 'easystats' and 'ggplot2'
+library(performance) # Assessment of Regression Models Performance
+
+library(tidyverse) # Easily Install and Load the 'Tidyverse'
+library(ggeffects) # Create Tidy Data Frames of Marginal Effects for 'ggplot' from
+
+
+options(scipen=99999)
+options(max.print=99999)
+options(stringsAsFactors=F)
+```
+
+## Load Data
+
+```{r}
+#| warning: false
+#| message: false
+
+
+Subplots_coord <- read_excel("C:/CodigoR/AudubonPanama/data/2024 may 29 Velasquez Muestreo Acustico ParB jhs data.xlsx") |> mutate(site=Name) 
+
+
+
+
+
+# covs <- read_csv("C:/CodigoR/AudubonPanama/shp/sites_covs_parita_nona.csv") |> mutate(site=Name) 
+
+BFI_site<- read.csv("C:/CodigoR/AudubonPanama/data/BFI_site.csv", header = TRUE) |> left_join(Subplots_coord)
+# convierte covs a puntos terra
+# puntos <- vect(BFI_site, geom=c("Longitude", "Latitude"), crs="EPSG:4326")
+# convierte a sf
+# BFI_sf <- sf::st_as_sf(puntos)
+
+```
+
+
+## Correlation in sites (points) where the Audiomoth was installed
+
+```{r}
+# extract values from raster 
+# covs_all1 <- terra::extract(covs_many_raster, puntos) 
+
+# saved to avoid conflict between terra::extract and dplyr
+# saveRDS(covs_all1, "C:/CodigoR/AudubonPanama/data/BFI/covs_all.RDS")
+# save(covs_all, file = "C:/CodigoR/AudubonPanama/data/BFI/covs_all.Rda")
+# covs_all <- readRDS("C:/CodigoR/AudubonPanama/data/BFI/covs_all.RDS")
+#load the rda file
+# covs_all <- load(file = "C:/CodigoR/AudubonPanama/data/BFI/covs_all.Rda")
+# write.csv(covs_all)
+
+# covs_all$site <- puntos$site # ad site name
+
+# change NA to 0 
+# covs_all <- substr(covs_all, NA, 0) #r eplace in terra
+covs_all <- BFI_site
+covs_all[is.na(covs_all)] <- 0
+M = cor(covs_all[,c(20: 29)]) # removes ID and site an many others 
+corrplot(M)
+
+```
+
+> covariate removed: [25] "Average TC top 50 cm"
+> covariate removed: [26] "Average TN top 50 cm" 
+
+```{r}
+#| warning: false
+#| message: false
+#| eval: false
+#| echo: false
+
+
+# many_rasters <- list(AGB_Spawn, human_foot, NDVI, river, canopy, roads, forest_integrity, coast)
+# terra stack
+# # covs_many_raster <- terra::rast(many_rasters)
+# names(covs_many_raster) <- c("BGB_Spawn", "AGB_Spawn",
+#                         "human_foot", "NDVI", "river",  
+#                         "canopy", "roads", "forest_integrity",
+#                         "coast")
+# 
+# writeRaster(covs_many_raster, "C:/CodigoR/AudubonPanama/raster/covs_many_raster.tif", overwrite=TRUE)
+
+# covs_many_raster <- rast("C:/CodigoR/AudubonPanama/raster/covs_many_raster.tif")
+
+# extract values from raster 
+# covs_all <- terra::extract(covs_many_raster, puntos) 
+# covs_all$site <- puntos$site # ad site name
+
+# change NA to 0 
+# covs_all <- substr(covs_all, NA, 0) #replace in terra
+# covs_all[is.na(covs_all)] <- 0
+
+
+```
+
+
+## Which model predicts BFI the best?
+
+Information-theoretic approaches provide methods for model selection and (multi)model inference that differ quite a bit from more traditional methods based on null hypothesis testing (e.g., Anderson, 2008; Burnham & Anderson, 2002). These methods can also be used in the meta-analytic context when model fitting is based on likelihood methods.
+
+We will now examine the fit and plausibility of various models, focusing on models that contain none, one, and up to seven of these possible predictors covariates of BFI. 
+
+With level = 1, we stick to models with main effects only. This implies that there are $2^7$ = 128 possible models in the candidate set to consider. Since we want to keep the results for all these models (the default is to only keep up to 100 model fits), We set confsetsize=128. With crit="AIC", we select the Akaike Information Criterion, in this case: the AIC that we would like to compute for each model and that should be used for model selection and multimodel inference.
+
+### lets put all data BFI and all covariates in the same table 
+
+```{r}
+
+# put in a table
+dat1 <- BFI_site # |> left_join(covs_all)
+# dat <- dat1 |> dplyr::select("bfi_unscaled",  
+#                              "DBH_cm", 
+#                              "H_m", 
+#                              "AGBplot", 
+#                              "AGBsubplot", 
+#                              "BGC", 
+#                              "Phosphorus", "pHw", "Conductivity", "LUC_Impact", "Mangrove_typology") #bfi_scaled_scale
+dat <- dat1[,c(5,19:24,27:30)]
+
+```
+
+
+### Next, we fit all the posible models with function dredge
+
+Now we can fit all 128 models and examine those models whose AICc value is no more than 2 units away from that of the best model. 
+
+```{r}
+
+library(MASS) # stepAIC
+
+full <- lm(bfi_unscaled~., data=dat)
+
+
+# Now we can fit all 128 models and examine those models whose AICc value is no more than 2 units away from that of the best model with:
+options(na.action = "na.fail")
+res <- dredge(full, 
+              rank = "AIC", # can be AICc as well
+              beta="sd", 
+              # extra = c("R^2"),
+              m.lim = c(1, 2))
+# subset(res, delta <= 2, recalc.weights=FALSE)
+res # summary(model.avg(res))
+plot(res)
+
+
+
+
+
+```
+The graph shows the number of times the variable was selected in each model
+
+
+### Now we refit best linear model
+
+```{r}
+
+# 8. Refit best linear model
+bestmodel <- get.models(res, 1)[[1]]
+z <- lm(bestmodel, data = dat)
+tab_model(summary(z), bootstrap=TRUE)
+
+
+
+```
+
+According to lowest AIC of 128 models, the Best model is:
+
+$$
+BFIunscaled \sim BGC + LUC impact + intercept 
+$$
+
+### Checking assumptions 
+
+```{r}
+
+
+# result2 <- check_normality(z)
+# plot(result2, type = "density")
+# plot(result2, type = "qq")
+# plot(result2, type = "pp")
+# 
+# result3 <- check_heteroscedasticity(z)
+# plot(result3)
+# check_predictions(z, check_range = TRUE)
+
+
+out <- check_model(z)
+plot(out, type = "discrete_both")
+```
+In seems our "best" model, according to the AIC $BFIunscaled \sim BGC + LUC impact + intercept$
+  
+Do not meet normality fully, and the posterior predictive check is not that good. But normality is that important?. Lets relax that assumption...
+
+
+
+```{r}
+#| warning: false
+#| message: false
+#| eval: false
+#| echo: false
+
+### And finally see the trends
+
+# visreg(z, xvar = c("BGC"))
+# visreg(z, xvar = c("LUC_Impact"))
+
+```
+
+
+#### is there any interaction?
+
+Lets Include all possible two-way interactions between: H_m, BGC, pHw and finally  select the model with lowest AIC.
+
+```{r}
+
+# put in a table
+# dat2 <- dat1 |>  dplyr::select("bfi_unscaled", 
+#                               "H_m" ,
+#                               `BGC`,
+#                                 "pHw")
+
+dat2 <- dat1[,c(5,21,24,28)]
+# 12. Include all two-way interactions
+z2full <- lm(bfi_unscaled ~ (.)^2, data = dat2)
+z2 <- stepAIC(z2full, upper = ~., lower = ~1, direction = "both")
+tab_model(summary(z2))
+
+```
+
+
+The answer is: it seems to be an interaction between H_m, BGC and pHw So another plausible model is: $BFI_unscaled ~  H_m * BGC * pHw$
+
+
+
+
+### lets try some mix models with random effects in LUC_Impact
+
+```{r}
+
+library(lme4)
+
+lm4 <- glmer(bfi_unscaled ~ BGC + (1|LUC_Impact), data =  dat)
+lm5 <- glmer(bfi_unscaled ~ BGC + (1|Mangrove_typology), data =  dat)
+lm6 <- glmer(bfi_unscaled ~ BGC + H_m + (1|LUC_Impact), data =  dat)
+lm7 <- glmer(bfi_unscaled ~ BGC + H_m + pHw + (1|LUC_Impact), data =  dat)
+
+
+```
+
+
+## Which model can be the best?
+
+### Lets compare the fix effect model performance first
+
+```{r}
+
+z3 <- lm(bfi_unscaled ~ pHw + H_m + BGC * LUC_Impact, dat)
+
+result1 <- compare_performance(z,z2,z3,  rank=TRUE)
+
+DT::datatable(result1)
+plot(result1)
+
+# test_performance(z, z2, z3)
+# test_bf(z, z2, z3)
+# lmtest::lrtest(z, z2, z3)
+
+```
+
+Larger values indicate better model performance. Hence, points closer to the center indicate worse fit indices.
+
+#### best model is: 
+
+$$
+BFIunscaled \sim pHw + H_m + BGC + H_m:BGC + H_m:pHw + BGC:pHw 
+$$
+```{r}
+sjPlot::tab_model(z2)
+```
+
+### Lets compare the mix models with random effects on LUC_Impact
+
+```{r}
+
+
+
+result2 <- compare_performance(lm4,lm5,lm6,lm7,  rank=TRUE)
+
+DT::datatable(result2)
+plot(result2)
+
+# test_performance(z, z2, z3)
+# test_bf(z, z2, z3)
+# lmtest::lrtest(z, z2, z3)
+
+```
+#### best model is: 
+
+$$
+BFIunscaled \sim BGC + (1|LUCimpact) 
+$$
+
+#### and the fit and trends for the fix effect model
+
+
+
+$$
+BFIunscaled \sim pHw + H_m + BGC + H_m:BGC + H_m:pHw + BGC:pHw 
+$$
+
+
+
+```{r}
+
+result4 <- check_normality(z2)
+plot(result4, type = "density")
+plot(result4, type = "qq")
+plot(result4, type = "pp")
+
+out3 <- check_model(z2, panel=TRUE)
+plot(out3, type = "discrete_both")
+
+
+# visreg(z2, xvar = c("DBH_cm", "H_m", "pHw"))
+dat4 <- predict_response(z2, terms = c("BGC", "H_m", "pHw"))
+plot(dat4, facets = TRUE)
+
+
+
+plot_model(z2, type = "est")
+# plot_model(lm2, type = "re") # in case random effect
+plot_model(z2, type = "pred")
+
+```
+
+
+#### and the fit and trends the mix model with random effects on LUC_Impact
+
+$$
+BFIunscaled \sim BGC + (1|LUCimpact) 
+$$
+```{r}
+sjPlot::tab_model(lm4)
+```
+
+
+```{r}
+
+result2 <- check_normality(lm4)
+plot(result2, type = "density")
+plot(result2, type = "qq")
+plot(result2, type = "pp")
+
+out4 <- check_model(lm4, panel=TRUE)
+plot(out4, type = "discrete_both")
+
+
+# visreg(z3, xvar = c("DBH_cm", "H_m", "pHw"))
+dat2 <- predict_response(lm4, terms = c("BGC", "LUC_Impact"))
+plot(dat2, facets = TRUE)
+
+plot_model(lm4, type = "est")
+# plot_model(lm2, type = "re") # in case random effect
+plot_model(lm4, type = "pred")
+
+```
+
+
+
+
+In seems our "best" random effect model 
+  
+$$
+BFIunscaled \sim BGC + (1|LUCimpact) 
+$$
+  
+Is close normality and the posterior predictive check is not that bad.
+
+
+## Conclusion
+
+```{r}
+library(report)
+report::report(z2)
+report::report(lm4)
+```
+
+## Package Citation
+
+```{r }
+pkgs <- cite_packages(output = "paragraph", out.dir = ".")
+knitr::kable(pkgs)
+# pkgs
+```
+
+## Sesion info
+
+```{r}
+print(sessionInfo(), locale = FALSE)
+```
+
+
+
