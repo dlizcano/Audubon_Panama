@@ -38,7 +38,7 @@ knitr::opts_chunk$set(
 
 ## Question
 
-Which carbon a good predictor of BFI?
+Is carbon, measured at AGBsubplot a good predictor of BFI?
 
 ## Set up analysis
 
@@ -65,6 +65,7 @@ library(sjPlot) # Data Visualization for Statistics in Social Science
 library(corrplot) # Visualization of a Correlation Matrix
 library(DT) # A Wrapper of the JavaScript Library 'DataTables'
 library(grateful) # Facilitate Citation of R Packages
+library(geodata) # worlclim data
 
 library(see) # Model Visualisation Toolbox for 'easystats' and 'ggplot2'
 library(performance) # Assessment of Regression Models Performance
@@ -87,8 +88,10 @@ options(stringsAsFactors=F)
 
 Subplots_coord <- read_excel("C:/CodigoR/AudubonPanama/data/2024 may 29 Velasquez Muestreo Acustico ParB jhs data.xlsx") |> mutate(site=Name) 
 
+Subplots_coord2 <- read_excel("C:/CodigoR/AudubonPanama/data/2024 may 30 Hoyos ParB Subplots Acustinc monitoring.xlsx") |> mutate(site=plotId) 
 
 
+covs_manyraster <- rast("C:/CodigoR/AudubonPanama/raster/covs_many_raster.tif")
 
 
 # covs <- read_csv("C:/CodigoR/AudubonPanama/shp/sites_covs_parita_nona.csv") |> mutate(site=Name) 
@@ -97,8 +100,31 @@ BFI_site<- read.csv("C:/CodigoR/AudubonPanama/data/BFI_site.csv", header = TRUE)
 # convierte covs a puntos terra
 # puntos <- vect(BFI_site, geom=c("Longitude", "Latitude"), crs="EPSG:4326")
 # convierte a sf
-# BFI_sf <- sf::st_as_sf(puntos)
+covs_all<- sf::st_as_sf(BFI_site, coords = c("Long", "Lat"),
+           crs = "EPSG:4326")
 
+Carbono <- sf::st_as_sf(Subplots_coord2, coords = c("Long", "Lat"),
+           crs = "EPSG:4326")
+
+# see which is closer
+# mapview(Audiomoths, alpha = 0) + mapview(Carbono)
+
+# get extra Bio vars 9 and 17 requested by Jorge
+bios <- worldclim_tile(var = "bio", res = 0.5,
+  lat=8.000535, lon=-80.39227, path = "C:/CodigoR/AudubonPanama/raster/")
+
+bio_covs <- terra::extract(bios, covs_all)
+otherrast_covs <- terra::extract(covs_manyraster, covs_all)
+
+
+covs_all$bio9 <- bio_covs$tile_28_wc2.1_30s_bio_9
+covs_all$bio17 <- bio_covs$tile_28_wc2.1_30s_bio_17
+covs_all$forest_integrity<- otherrast_covs$forest_integrity
+covs_all$NDVI<- otherrast_covs$NDVI
+
+# remove tology
+covs_all <- as.data.frame(covs_all)[,-33]
+# LUC_Impact
 ```
 
 ## Correlation in sites (points) where the Audiomoth was installed
@@ -118,15 +144,15 @@ BFI_site<- read.csv("C:/CodigoR/AudubonPanama/data/BFI_site.csv", header = TRUE)
 # covs_all$site <- puntos$site # ad site name
 
 # change NA to 0 
-# covs_all <- substr(covs_all, NA, 0) #r eplace in terra
-covs_all <- BFI_site
+# covs_all <- substr(covs_all, NA, 0) #replace in terra
+# covs_all <- BFI_site
 covs_all[is.na(covs_all)] <- 0
-M = cor(covs_all[,c(20: 29)]) # removes ID and site an many others 
+M = cor(covs_all[,c(18:27, 30:32)]) # removes ID and site an many others 
 corrplot(M)
 
 ```
 
-> covariate removed: \[25\] "Average TC top 50 cm" covariate removed: \[26\] "Average TN top 50 cm"
+> covariate removed: \[25\] "Average TC top 50 cm";  \[26\] "Average TN top 50 cm"; \[22\] "BGC"
 
 ```{r}
 #| warning: false
@@ -171,7 +197,7 @@ With level = 1, we stick to models with main effects only. This implies that the
 ```{r}
 
 # put in a table
-dat1 <- BFI_site # |> left_join(covs_all)
+dat1 <- covs_all# BFI_site # |> left_join(covs_all)
 # dat <- dat1 |> dplyr::select("bfi_unscaled",  
 #                              "DBH_cm", 
 #                              "H_m", 
@@ -179,7 +205,7 @@ dat1 <- BFI_site # |> left_join(covs_all)
 #                              "AGBsubplot", 
 #                              "BGC", 
 #                              "Phosphorus", "pHw", "Conductivity", "LUC_Impact", "Mangrove_typology") #bfi_scaled_scale
-dat <- dat1[,c(5,19:24,27:30)]
+dat <- dat1[,c(5,19,20,21,26,28,30,31,32)]
 
 ```
 
@@ -229,7 +255,7 @@ tab_model(summary(z), bootstrap=TRUE)
 According to lowest AIC of 128 models, the Best model is:
 
 $$
-BFIunscaled \sim BGC + LUC impact + intercept 
+BFIunscaled \sim H_m + LUC impact + intercept 
 $$
 
 ### Checking assumptions
@@ -251,7 +277,7 @@ out <- check_model(z)
 plot(out, type = "discrete_both")
 ```
 
-In seems our "best" model, according to the AIC $BFIunscaled \sim BGC + LUC impact + intercept$
+In seems our "best" model, according to the AIC is z = $$BFIunscaled \sim H_m + LUC impact + intercept$$
 
 Do not meet normality fully, and the posterior predictive check is not that good. But normality is that important?. Lets relax that assumption...
 
@@ -270,7 +296,7 @@ Do not meet normality fully, and the posterior predictive check is not that good
 
 #### is there any interaction?
 
-Lets Include all possible two-way interactions between: H_m, BGC, pHw and finally select the model with lowest AIC.
+Lets Include all possible two-way interactions between: H_m, pHw, AGBsubplot and forest_integrity to finally select the model with lowest AIC.
 
 ```{r}
 
@@ -280,7 +306,7 @@ Lets Include all possible two-way interactions between: H_m, BGC, pHw and finall
 #                               `BGC`,
 #                                 "pHw")
 
-dat2 <- dat1[,c(5,21,24,28)]
+dat2 <- dat1[,c(5,19,21,26,32)]
 # 12. Include all two-way interactions
 z2full <- lm(bfi_unscaled ~ (.)^2, data = dat2)
 z2 <- stepAIC(z2full, upper = ~., lower = ~1, direction = "both")
@@ -288,31 +314,30 @@ tab_model(summary(z2))
 
 ```
 
-The answer is: it seems to be an interaction between H_m, BGC and pHw So another plausible model is: $BFI_unscaled ~  H_m * BGC * pHw$
+The answer is: it seems to be an interaction between H_m, BGC and AGBsubplot So another plausible model is z2 =  $$BFI unscaled \sim H_m + AGBsubplot + Forest Integrity + H_m:Forest Integrity$$
 
-### lets try some mix models with random effects in LUC_Impact
-
-```{r}
-
-library(lme4)
-
-lm4 <- glmer(bfi_unscaled ~ BGC + (1|LUC_Impact), data =  dat)
-lm5 <- glmer(bfi_unscaled ~ BGC + (1|Mangrove_typology), data =  dat)
-lm6 <- glmer(bfi_unscaled ~ BGC + H_m + (1|LUC_Impact), data =  dat)
-lm7 <- glmer(bfi_unscaled ~ BGC + H_m + pHw + (1|LUC_Impact), data =  dat)
-
-
-```
 
 ## Which model can be the best?
 
-### Lets compare the fix effect model performance first
+### Lets compare the fix effect model performance of z1 and z2 and several aditional models including LUC_Impact
+
+We use the models:  
+
+z1 <- lm(bfi_unscaled ~  H_m + LUC impact + intercept, dat).  
+z2 <- lm(bfi_unscaled ~ H_m + AGBsubplot + forest_integrity + H_m:forest_integrity), dat).  
+z3 <- lm(bfi_unscaled ~ H_m + AGBsubplot + forest_integrity + H_m:forest_integrity + *LUC_Impact*), dat).  
+z4 <- lm(bfi_unscaled ~ AGBsubplot + H_m * *LUC_Impact*, dat).  
+z5 <- lm(bfi_unscaled ~ AGBsubplot + H_m + forest_integrity + *LUC_Impact*, dat).  
+z6 <- lm(bfi_unscaled ~ (H_m)^2 * AGBsubplot + *LUC_Impact*, dat).  
 
 ```{r}
 
-z3 <- lm(bfi_unscaled ~ pHw + H_m + BGC * LUC_Impact, dat)
+z3 <- lm(bfi_unscaled ~ H_m + AGBsubplot + forest_integrity + H_m:forest_integrity + LUC_Impact, dat)
+z4 <- lm(bfi_unscaled ~ AGBsubplot + H_m * LUC_Impact, dat)
+z5 <- lm(bfi_unscaled ~ AGBsubplot + H_m + forest_integrity + LUC_Impact, dat)
+z6 <- lm(bfi_unscaled ~ (H_m)^2 * AGBsubplot + LUC_Impact, dat)
 
-result1 <- compare_performance(z,z2,z3,  rank=TRUE)
+result1 <- compare_performance(z,z2,z3,z4,z5,z6,  rank=TRUE)
 
 DT::datatable(result1)
 plot(result1)
@@ -325,44 +350,18 @@ plot(result1)
 
 Larger values indicate better model performance. Hence, points closer to the center indicate worse fit indices.
 
-#### best model is:
+> best model is again z2
 
 $$
-BFIunscaled \sim pHw + H_m + BGC + H_m:BGC + H_m:pHw + BGC:pHw 
+BFIunscaled \sim H_m + AGBsubplot + ForestIntegrity + H_m:ForestIntegrity
 $$
 
 ```{r}
 sjPlot::tab_model(z2)
 ```
 
-### Lets compare the mix models with random effects on LUC_Impact
+#### Lets see how well z2 meet normality asumptions
 
-```{r}
-
-
-
-result2 <- compare_performance(lm4,lm5,lm6,lm7,  rank=TRUE)
-
-DT::datatable(result2)
-plot(result2)
-
-# test_performance(z, z2, z3)
-# test_bf(z, z2, z3)
-# lmtest::lrtest(z, z2, z3)
-
-```
-
-#### best model is:
-
-$$
-BFIunscaled \sim BGC + (1|LUCimpact) 
-$$
-
-#### and the fit and trends for the fix effect model
-
-$$
-BFIunscaled \sim pHw + H_m + BGC + H_m:BGC + H_m:pHw + BGC:pHw 
-$$
 
 ```{r}
 
@@ -375,8 +374,14 @@ out3 <- check_model(z2, panel=TRUE)
 plot(out3, type = "discrete_both")
 
 
+
+```
+#### Lets see the model coeficients and predictions for z2
+
+```{r}
+
 # visreg(z2, xvar = c("DBH_cm", "H_m", "pHw"))
-dat4 <- predict_response(z2, terms = c("BGC", "H_m", "pHw"))
+dat4 <- predict_response(z2, terms = c("AGBsubplot", "H_m", "forest_integrity"))
 plot(dat4, facets = TRUE)
 
 
@@ -384,120 +389,154 @@ plot(dat4, facets = TRUE)
 plot_model(z2, type = "est")
 # plot_model(lm2, type = "re") # in case random effect
 plot_model(z2, type = "pred")
+```
+
+### Lets try some mix models with random effects in LUC_Impact
+We used the models:  
+
+
+lm4 <- glmer(bfi_unscaled ~ AGBsubplot + (1|LUC_Impact), data = dat).  
+lm5 <- glmer(bfi_unscaled ~ AGBsubplot + forest_integrity + (1|LUC_Impact), data =dat).  
+lm6 <- glmer(bfi_unscaled ~ AGBsubplot + H_m + (1|LUC_Impact), data = dat).  
+lm7 <- glmer(bfi_unscaled ~ AGBsubplot + H_m + LUC_Impact + (1|LUC_Impact), data = dat).  
+lm8 <- glmer(bfi_unscaled ~ AGBsubplot * LUC_Impact + H_m + (1|LUC_Impact), data = dat).  
+lm9 <- glmer(bfi_unscaled ~ AGBsubplot + H_m + LUC_Impact + (1|LUC_Impact), data = dat).  
+
+
+```{r}
+
+library(lme4)
+
+lm4 <- glmer(bfi_unscaled ~ AGBsubplot + (1|LUC_Impact), data =  dat)
+lm5 <- glmer(bfi_unscaled ~ AGBsubplot + forest_integrity + (1|LUC_Impact), data =  dat)
+lm6 <- glmer(bfi_unscaled ~ AGBsubplot + H_m + (1|LUC_Impact), data =  dat)
+lm7 <- glmer(bfi_unscaled ~ AGBsubplot + H_m + LUC_Impact + (1|LUC_Impact), data =  dat)
+lm8 <- glmer(bfi_unscaled ~ AGBsubplot * LUC_Impact + H_m + (1|LUC_Impact), data =  dat)
+lm9 <- glmer(bfi_unscaled ~ AGBsubplot + H_m + LUC_Impact + (1|LUC_Impact), data =  dat)
+
 
 ```
 
-#### and the fit and trends the mix model with random effects on LUC_Impact
-
-$$
-BFIunscaled \sim BGC + (1|LUCimpact) 
-$$
+### Lets compare the mix models with random effects on LUC_Impact
 
 ```{r}
-sjPlot::tab_model(lm4)
+
+
+
+result2 <- compare_performance(lm4,lm5,lm6,lm7,lm8,lm9,  rank=TRUE)
+
+DT::datatable(result2)
+plot(result2)
+
+# test_performance(z, z2, z3)
+# test_bf(z, z2, z3)
+# lmtest::lrtest(z, z2, z3)
+
 ```
 
+> best model is lm6
+
+$$
+BFIunscaled \sim AGBsubplot + H_m + (1|LUC impact)
+$$
+
+```{r}
+sjPlot::tab_model(lm6)
+```
+
+
+#### Lets see wow well lm6 meet model assumptions 
+
+
 ```{r}
 
-result2 <- check_normality(lm4)
+result2 <- check_normality(lm6)
 plot(result2, type = "density")
 plot(result2, type = "qq")
 plot(result2, type = "pp")
 
-out4 <- check_model(lm4, panel=TRUE)
+out4 <- check_model(lm6, panel=TRUE)
 plot(out4, type = "discrete_both")
 
 
+```
+
+#### Lets see the model coeficients and predictions for lm6 
+
+```{r}
+
 # visreg(z3, xvar = c("DBH_cm", "H_m", "pHw"))
-dat2 <- predict_response(lm4, terms = c("BGC", "LUC_Impact"))
+dat2 <- predict_response(lm6, terms = c("AGBsubplot",  "H_m", "LUC_Impact"))
 plot(dat2, facets = TRUE)
 
-plot_model(lm4, type = "est")
+plot_model(lm6, type = "est")
 # plot_model(lm2, type = "re") # in case random effect
-plot_model(lm4, type = "pred")
+plot_model(lm6, type = "pred")
 
 ```
 
-In seems our "best" random effect model
 
-$$
-BFIunscaled \sim BGC + (1|LUCimpact) 
-$$
 
-Is close normality and the posterior predictive check is not that bad.
-
-## Conclusion
+## Result of model selection
 
 ```{r}
 library(report)
 report::report(z2)
-report::report(lm4)
+report::report(lm6)
 ```
 
 ### fix effect model 
 
-We fitted a linear model (estimated using OLS) to
-predict bfi_unscaled with H_m, BGC and pHw (formula:
-bfi_unscaled ~ (H_m + BGC + pHw)^2). The model
-explains a statistically significant and substantial
-proportion of variance (R2 = 0.78, F(6, 9) = 5.26, p =
-0.014, adj. R2 = 0.63). The model's intercept,
-corresponding to H_m = 0, BGC = 0 and pHw = 0, is at
--394.49 (95% CI [-2989.33, 2200.35], t(9) = -0.34, p =
-0.739). Within this model:
+We fitted a linear model (estimated using OLS) to predict bfi_unscaled with H_m,
+AGBsubplot and forest_integrity (formula: bfi_unscaled ~ H_m + AGBsubplot +
+forest_integrity + H_m:forest_integrity). The model explains a statistically significant
+and substantial proportion of variance (R2 = 0.62, F(4, 11) = 4.47, p = 0.022, adj. R2 =
+0.48). The model's intercept, corresponding to H_m = 0, AGBsubplot = 0 and
+forest_integrity = 0, is at 2374.34 (95% CI [1850.24, 2898.43], t(11) = 9.97, p < .001).
+Within this model:
 
-  - The effect of H m is statistically significant and
-negative (beta = -234.69, 95% CI [-382.24, -87.15],
-t(9) = -3.60, p = 0.006; Std. beta = 0.80, 95% CI
-[-0.36, 1.96])
-  - The effect of BGC is statistically significant and
-positive (beta = 25.56, 95% CI [6.06, 45.06], t(9) =
-2.97, p = 0.016; Std. beta = -1.20, 95% CI [-2.27,
--0.13])
-  - The effect of pHw is statistically significant and
-positive (beta = 512.94, 95% CI [99.92, 925.95], t(9)
-= 2.81, p = 0.020; Std. beta = -0.62, 95% CI [-1.08,
--0.17])
-  - The effect of H m × BGC is statistically significant
-and positive (beta = 0.44, 95% CI [0.14, 0.74], t(9) =
-3.31, p = 0.009; Std. beta = 0.80, 95% CI [0.25,
-1.35])
-  - The effect of H m × pHw is statistically significant
-and positive (beta = 29.61, 95% CI [6.62, 52.61], t(9)
-= 2.91, p = 0.017; Std. beta = 1.19, 95% CI [0.27,
-2.11])
-  - The effect of BGC × pHw is statistically significant
-and negative (beta = -5.66, 95% CI [-9.45, -1.86],
-t(9) = -3.37, p = 0.008; Std. beta = -2.36, 95% CI
-[-3.94, -0.78])
+  - The effect of H m is statistically significant and negative (beta = -74.95, 95% CI
+[-120.89, -29.01], t(11) = -3.59, p = 0.004; Std. beta = -0.93, 95% CI [-1.49, -0.37])
+  - The effect of AGBsubplot is statistically non-significant and positive (beta = 1.01,
+95% CI [-0.23, 2.25], t(11) = 1.79, p = 0.101; Std. beta = 0.51, 95% CI [-0.12, 1.15])
+  - The effect of forest integrity is statistically non-significant and negative (beta =
+-105.07, 95% CI [-215.97, 5.82], t(11) = -2.09, p = 0.061; Std. beta = 0.25, 95% CI
+[-0.25, 0.76])
+  - The effect of H m × forest integrity is statistically significant and positive (beta =
+9.40, 95% CI [2.10, 16.69], t(11) = 2.83, p = 0.016; Std. beta = 0.74, 95% CI [0.17,
+1.31])
 
-Standardized parameters were obtained by fitting the
-model on a standardized version of the dataset. 95%
-Confidence Intervals (CIs) and p-values were computed
-using a Wald t-distribution approximation.
+Standardized parameters were obtained by fitting the model on a standardized version of
+the dataset. 95% Confidence Intervals (CIs) and p-values were computed using a Wald
+t-distribution approximation.
+
 
 ### mixed effect model
 
-We fitted a linear mixed model (estimated using REML
-and nloptwrap optimizer) to predict bfi_unscaled with
-BGC (formula: bfi_unscaled ~ BGC). The model included
-LUC_Impact as random effect (formula: ~1 |
-LUC_Impact). The model's total explanatory power is
-substantial (conditional R2 = 0.65) and the part
-related to the fixed effects alone (marginal R2) is of
-0.25. The model's intercept, corresponding to BGC = 0,
-is at 2043.20 (95% CI [1685.83, 2400.57], t(12) =
-12.46, p < .001). Within this model:
+We fitted a linear mixed model (estimated using REML and nloptwrap optimizer) to predict
+bfi_unscaled with AGBsubplot and H_m (formula: bfi_unscaled ~ AGBsubplot + H_m). The
+model included LUC_Impact as random effect (formula: ~1 | LUC_Impact). The model's total
+explanatory power is substantial (conditional R2 = 0.33) and the part related to the
+fixed effects alone (marginal R2) is of 0.20. The model's intercept, corresponding to
+AGBsubplot = 0 and H_m = 0, is at 1861.87 (95% CI [1586.25, 2137.49], t(11) = 14.87, p <
+.001). Within this model:
 
-  - The effect of BGC is statistically significant and
-negative (beta = -2.12, 95% CI [-3.89, -0.35], t(12) =
--2.61, p = 0.023; Std. beta = -0.65, 95% CI [-1.19,
--0.11])
+  - The effect of AGBsubplot is statistically non-significant and positive (beta = 0.45,
+95% CI [-0.96, 1.86], t(11) = 0.70, p = 0.497; Std. beta = 0.23, 95% CI [-0.49, 0.95])
+  - The effect of H m is statistically non-significant and negative (beta = -19.39, 95% CI
+[-40.41, 1.63], t(11) = -2.03, p = 0.067; Std. beta = -0.57, 95% CI [-1.19, 0.05])
 
-Standardized parameters were obtained by fitting the
-model on a standardized version of the dataset. 95%
-Confidence Intervals (CIs) and p-values were computed
-using a Wald t-distribution approximation.
+Standardized parameters were obtained by fitting the model on a standardized version of
+the dataset. 95% Confidence Intervals (CIs) and p-values were computed using a Wald
+t-distribution approximation.
+
+
+## Conclusion
+
+> The answer to the initial question: Is carbon, measured at AGBsubplot a good predictor of BFI? is YES!
+
+In both models (fix effects model with interaction and mixed effect) carbon at AGBsubplot shows a positive relationship with BFI. However the AGBsubplot in both "best" models is not significant. 
+
 
 ## Package Citation
 
